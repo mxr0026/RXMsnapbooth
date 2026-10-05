@@ -1099,12 +1099,9 @@ function openQR(){
   if(CFG.imgbb&&CFG.imgbb.trim()){
     uploadImgbb(function(imgUrl){
       if(imgUrl){
-        /* Build a link to dl.html with the image URL as a parameter */
-        var base=window.location.href.split('?')[0].split('#')[0];
-        base=base.replace(/index\.html$/,'').replace(/\/$/,'');
-        var dlUrl=base+'/dl.html?img='+encodeURIComponent(imgUrl);
-        renderQR(dlUrl);
-        if(msg)msg.textContent='Guest scans QR \u2192 sees photo \u2192 can save it!';
+        /* Link QR directly to ImgBB viewer page — fast, has download button built in */
+        renderQR(imgUrl);
+        if(msg)msg.textContent='Guest scans QR \u2192 opens photo \u2192 taps download!';
       }else{
         if(cont)cont.innerHTML='<p style="color:var(--err)">Upload failed. Try the Share button instead.</p>';
         if(msg)msg.textContent='Check your ImgBB API key in Settings, or try again.';
@@ -1156,7 +1153,10 @@ function uploadImgbb(cb){
     xhr.onload=function(){
       try{
         var res=JSON.parse(xhr.responseText);
-        if(res.success&&res.data&&res.data.url){cb(res.data.url)}
+        if(res.success&&res.data){
+          /* Use url_viewer (ImgBB page with download button) — no CORS issues */
+          cb(res.data.url_viewer||res.data.url)
+        }
         else{cb(null)}
       }catch(e){cb(null)}
     };
