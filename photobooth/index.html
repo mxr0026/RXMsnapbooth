@@ -1611,6 +1611,9 @@ function regSW(){
   try{
     if(window.self!==window.top)return;
     if('serviceWorker' in navigator){
+      navigator.serviceWorker.getRegistrations().then(function(regs){
+        for(var i=0;i<regs.length;i++){regs[i].update()}
+      }).catch(function(){});
       navigator.serviceWorker.register('sw.js').catch(function(){});
     }
   }catch(e){}
