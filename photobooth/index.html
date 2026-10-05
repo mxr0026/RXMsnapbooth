@@ -1,0 +1,1645 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#1a1a2e">
+<title>SnapBooth</title>
+<link rel="manifest" href="manifest.json">
+<script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
+<style>
+:root {
+  --pri:#6c5ce7;--pri-d:#5a4bd1;--pri-l:#a29bfe;
+  --acc:#fd79a8;--acc-d:#e84393;
+  --bg:#1a1a2e;--bg2:#16213e;--bg3:#0f3460;
+  --tx:#ffffff;--tx2:#b8c5d6;--txm:#7f8c9b;
+  --brd:#2a3a5c;--ok:#00b894;--err:#d63031;
+  --rad:12px;--rad2:8px;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;width:100%;overflow:hidden;font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--tx);-webkit-tap-highlight-color:transparent}
+.hidden{display:none!important}
+
+/* ===== SCREENS ===== */
+.scr{position:absolute;inset:0;display:none;flex-direction:column;overflow:hidden;transition:opacity .25s}
+.scr.active{display:flex}
+
+/* ===== HOME ===== */
+#home{background:linear-gradient(135deg,var(--bg),var(--bg2),var(--bg3));align-items:center;justify-content:center;gap:28px;padding:24px}
+.logo-wrap{text-align:center}
+.logo-icon{font-size:56px;display:block;margin-bottom:8px}
+.logo{font-size:44px;font-weight:800;background:linear-gradient(135deg,var(--pri-l),var(--acc));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.sub{color:var(--tx2);font-size:15px;text-align:center;margin-top:-8px}
+.modes{display:flex;flex-wrap:wrap;gap:14px;justify-content:center;max-width:520px;width:100%}
+.mcard{flex:1 1 180px;max-width:230px;background:var(--bg2);border:2px solid var(--brd);border-radius:var(--rad);padding:20px 14px;text-align:center;cursor:pointer;transition:all .2s}
+.mcard:hover,.mcard:active{border-color:var(--pri);transform:translateY(-2px);box-shadow:0 4px 20px rgba(0,0,0,.3)}
+.mcard .ic{font-size:32px;margin-bottom:10px}
+.mcard h3{font-size:16px;margin-bottom:4px}
+.mcard p{color:var(--txm);font-size:12px}
+.gear{position:absolute;top:14px;right:14px;background:var(--bg2);border:1px solid var(--brd);border-radius:50%;width:44px;height:44px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:18px;transition:all .2s}
+.gear:hover{background:var(--bg3)}
+.gal-btn{position:absolute;top:14px;left:14px;background:var(--bg2);border:1px solid var(--brd);border-radius:50%;width:44px;height:44px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:18px;transition:all .2s}
+.gal-btn:hover{background:var(--bg3)}
+#homeLogo{max-width:100px;max-height:60px;display:none;margin-bottom:4px}
+
+/* ===== CAPTURE ===== */
+#capture{background:#000}
+.cap-hdr{position:absolute;top:0;left:0;right:0;z-index:10;display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:linear-gradient(180deg,rgba(0,0,0,.7),transparent)}
+.ibtn{background:rgba(255,255,255,.15);backdrop-filter:blur(6px);border:none;border-radius:50%;width:42px;height:42px;color:#fff;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.ibtn:hover{background:rgba(255,255,255,.25)}
+.cap-info{background:rgba(255,255,255,.15);backdrop-filter:blur(6px);border-radius:18px;padding:5px 14px;font-size:13px;font-weight:600}
+#vidBox{flex:1;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center}
+#vid{width:100%;height:100%;object-fit:cover}
+#tmpCanvas{display:none}
+.cap-ctrl{position:absolute;bottom:0;left:0;right:0;padding:20px;display:flex;justify-content:center;align-items:center;gap:28px;background:linear-gradient(0deg,rgba(0,0,0,.7),transparent)}
+.shutter{width:68px;height:68px;border-radius:50%;background:#fff;border:4px solid rgba(255,255,255,.4);cursor:pointer;position:relative;transition:transform .1s}
+.shutter:active{transform:scale(.9)}
+.shutter-in{width:52px;height:52px;border-radius:50%;background:#fff;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);transition:all .15s}
+.shutter:hover .shutter-in{background:var(--acc)}
+#cntOvl{position:absolute;inset:0;z-index:20;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center}
+#cntOvl.on{display:flex}
+#cntNum{font-size:110px;font-weight:800;color:#fff;text-shadow:0 0 40px rgba(108,92,231,.8);animation:cntPop .4s ease}
+@keyframes cntPop{0%{transform:scale(1.5);opacity:0}100%{transform:scale(1);opacity:1}}
+#flashOvl{position:absolute;inset:0;z-index:25;background:#fff;opacity:0;pointer-events:none;transition:opacity .1s}
+#flashOvl.on{opacity:1}
+.fbar{position:absolute;bottom:100px;left:0;right:0;z-index:8;display:flex;gap:8px;padding:6px 14px;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.fbar::-webkit-scrollbar{display:none}
+.fbtn{padding:6px 14px;border-radius:20px;background:rgba(255,255,255,.12);border:1px solid transparent;color:#fff;font-size:12px;white-space:nowrap;cursor:pointer;transition:all .15s;flex-shrink:0}
+.fbtn.active{border-color:var(--pri);background:rgba(108,92,231,.35)}
+
+/* ===== PREVIEW ===== */
+#preview{background:var(--bg);align-items:center;justify-content:center;padding:14px;gap:14px;overflow-y:auto}
+#prevCanvas{max-width:100%;max-height:55vh;border-radius:var(--rad);box-shadow:0 4px 24px rgba(0,0,0,.3)}
+.acts{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;max-width:460px}
+.btn{display:inline-flex;align-items:center;gap:7px;padding:11px 20px;border-radius:var(--rad2);font-size:14px;font-weight:600;cursor:pointer;border:none;transition:all .2s}
+.bp{background:var(--pri);color:#fff}.bp:hover{background:var(--pri-d)}
+.ba{background:var(--acc);color:#fff}.ba:hover{background:var(--acc-d)}
+.bo{background:transparent;color:var(--tx);border:2px solid var(--brd)}.bo:hover{border-color:var(--pri)}
+.bg{background:var(--ok);color:#fff}
+.bd{background:var(--err);color:#fff}
+.send-btn{padding:14px 32px;font-size:16px;border-radius:var(--rad);background:linear-gradient(135deg,var(--pri),var(--acc));color:#fff;border:none;cursor:pointer;font-weight:700;transition:transform .1s,box-shadow .2s;box-shadow:0 4px 16px rgba(108,92,231,.4)}
+.send-btn:hover{transform:translateY(-1px);box-shadow:0 6px 24px rgba(108,92,231,.5)}
+.send-btn:active{transform:scale(.97)}
+
+/* ===== MODALS ===== */
+.modal{position:fixed;inset:0;z-index:100;background:rgba(0,0,0,.8);backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center}
+.modal.on{display:flex}
+.m-box{background:var(--bg2);border:1px solid var(--brd);border-radius:var(--rad);padding:24px;text-align:center;max-width:380px;width:90%;max-height:90vh;overflow-y:auto}
+.m-box h3{margin-bottom:14px;font-size:18px}
+.m-box input[type=text]{width:100%;padding:10px 14px;border-radius:var(--rad2);border:1px solid var(--brd);background:var(--bg3);color:var(--tx);font-size:15px;margin-bottom:14px}
+#qrImg{margin:12px auto;display:block;border-radius:6px;background:#fff;padding:8px}
+.qr-actions{display:flex;gap:10px;justify-content:center;margin-bottom:16px}
+.qr-msg{color:var(--txm);font-size:12px;margin-top:8px}
+
+/* ===== SETTINGS ===== */
+#settings{background:var(--bg);overflow-y:auto;-webkit-overflow-scrolling:touch}
+.s-hdr{display:flex;align-items:center;gap:12px;padding:14px;border-bottom:1px solid var(--brd);position:sticky;top:0;background:var(--bg);z-index:5}
+.s-hdr h2{flex:1;font-size:18px}
+.s-sec{padding:14px;border-bottom:1px solid var(--brd)}
+.s-sec h3{font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--txm);margin-bottom:10px}
+.s-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0;gap:10px;flex-wrap:wrap}
+.s-row label{font-size:14px;color:var(--tx2);flex:1;min-width:100px}
+.s-row select,.s-row input[type=number],.s-row input[type=text]{background:var(--bg3);border:1px solid var(--brd);border-radius:var(--rad2);color:var(--tx);padding:7px 10px;font-size:13px;min-width:120px}
+.s-row input[type=color]{width:42px;height:32px;border:1px solid var(--brd);border-radius:6px;background:var(--bg3);cursor:pointer;padding:2px}
+.tgl{position:relative;width:48px;height:26px;cursor:pointer;flex-shrink:0}
+.tgl input{display:none}
+.tgl-s{position:absolute;inset:0;background:var(--brd);border-radius:13px;transition:.2s}
+.tgl-s:before{content:'';position:absolute;left:3px;top:3px;width:20px;height:20px;background:#fff;border-radius:50%;transition:.2s}
+.tgl input:checked+.tgl-s{background:var(--pri)}
+.tgl input:checked+.tgl-s:before{transform:translateX(22px)}
+.tpl-up{border:2px dashed var(--brd);border-radius:var(--rad);padding:20px;text-align:center;cursor:pointer;transition:all .2s;margin-top:8px}
+.tpl-up:hover{border-color:var(--pri)}
+.tpl-up p{color:var(--txm);font-size:12px;margin-top:4px}
+.tpl-prv{margin-top:10px;position:relative;display:inline-block}
+.tpl-prv img{max-width:180px;max-height:130px;border-radius:var(--rad2);border:1px solid var(--brd)}
+.rm-btn{position:absolute;top:-8px;right:-8px;background:var(--err);color:#fff;border:none;border-radius:50%;width:22px;height:22px;font-size:11px;cursor:pointer}
+.theme-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+.theme-btn{padding:6px 14px;border-radius:20px;border:2px solid var(--brd);background:var(--bg3);color:var(--tx2);font-size:12px;cursor:pointer;transition:all .15s}
+.theme-btn:hover,.theme-btn.active{border-color:var(--pri);color:var(--tx)}
+.s-note{font-size:11px;color:var(--txm);margin-top:4px}
+.s-note a{color:var(--pri-l)}
+.s-row textarea{background:var(--bg3);border:1px solid var(--brd);border-radius:var(--rad2);color:var(--tx);padding:7px 10px;font-size:13px;min-width:120px;resize:vertical;min-height:50px}
+
+/* ===== GALLERY ===== */
+#gallery{background:var(--bg);overflow-y:auto;-webkit-overflow-scrolling:touch}
+.g-hdr{display:flex;align-items:center;gap:12px;padding:14px;border-bottom:1px solid var(--brd);position:sticky;top:0;background:var(--bg);z-index:5}
+.g-hdr h2{flex:1;font-size:18px}
+.g-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;padding:14px}
+.g-item{position:relative;border-radius:var(--rad2);overflow:hidden;cursor:pointer;aspect-ratio:1;background:var(--bg2)}
+.g-item img{width:100%;height:100%;object-fit:cover;transition:transform .2s}
+.g-item:hover img{transform:scale(1.05)}
+.g-item .g-del{position:absolute;top:6px;right:6px;background:rgba(0,0,0,.6);border:none;color:#fff;border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:12px;display:none;align-items:center;justify-content:center}
+.g-item:hover .g-del{display:flex}
+.g-empty{text-align:center;padding:60px 20px;color:var(--txm)}
+.g-empty span{font-size:48px;display:block;margin-bottom:12px}
+
+/* ===== SLIDESHOW ===== */
+#slideshow{position:fixed;inset:0;z-index:200;background:#000;display:none;align-items:center;justify-content:center}
+#slideshow.on{display:flex}
+#ssImg{max-width:90%;max-height:85vh;border-radius:var(--rad);transition:opacity .6s}
+.ss-ctrl{position:absolute;bottom:30px;display:flex;gap:14px;align-items:center}
+.ss-btn{background:rgba(255,255,255,.15);border:none;color:#fff;border-radius:50%;width:46px;height:46px;font-size:20px;cursor:pointer}
+.ss-btn:hover{background:rgba(255,255,255,.25)}
+.ss-close{position:absolute;top:14px;right:14px}
+.ss-counter{color:var(--tx2);font-size:13px}
+
+/* ===== MARKUP ===== */
+#markup{background:var(--bg);align-items:center;justify-content:center;padding:10px;gap:10px}
+#mkCanvas{max-width:100%;max-height:60vh;border-radius:var(--rad);touch-action:none}
+.mk-bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:center}
+.mk-btn{background:var(--bg2);border:1px solid var(--brd);border-radius:var(--rad2);padding:8px 14px;color:var(--tx);cursor:pointer;font-size:13px;transition:all .15s}
+.mk-btn:hover,.mk-btn.active{border-color:var(--pri);background:var(--bg3)}
+.mk-color{width:34px;height:34px;border-radius:50%;border:2px solid var(--brd);cursor:pointer;padding:0;background:none}
+.mk-color input[type=color]{width:100%;height:100%;border:none;border-radius:50%;cursor:pointer;padding:0;background:none}
+.mk-size{width:80px;accent-color:var(--pri)}
+.stk-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;padding:10px}
+.stk-grid button{font-size:24px;background:var(--bg3);border:1px solid var(--brd);border-radius:var(--rad2);padding:8px;cursor:pointer}
+.stk-grid button:hover{border-color:var(--pri)}
+
+/* ===== RECEIPT ===== */
+.receipt-wrap{background:#f5f0e8;color:#333;font-family:'Courier New',monospace;padding:24px 16px;text-align:center;max-width:320px;position:relative}
+.receipt-wrap::before,.receipt-wrap::after{content:'';position:absolute;left:0;right:0;height:12px;background:linear-gradient(135deg,var(--bg) 33.33%,transparent 33.33%) 0 0/12px 100%,linear-gradient(225deg,var(--bg) 33.33%,transparent 33.33%) 0 0/12px 100%;background-repeat:repeat-x}
+.receipt-wrap::before{top:-12px}
+.receipt-wrap::after{bottom:-12px;transform:rotate(180deg)}
+.receipt-biz{font-size:18px;font-weight:700;margin-bottom:2px}
+.receipt-tag{font-size:11px;margin-bottom:8px;color:#666}
+.receipt-line{border-top:1px dashed #999;margin:8px 0}
+.receipt-row{display:flex;justify-content:space-between;font-size:12px;padding:2px 0}
+.receipt-msg{font-size:11px;font-style:italic;margin:8px 0;color:#555}
+.receipt-photo{width:100%;border-radius:4px;margin:8px 0}
+.receipt-footer{font-size:10px;color:#888;margin-top:8px}
+.receipt-order{font-size:11px;color:#666}
+
+/* ===== SCROLLBAR ===== */
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--brd);border-radius:3px}
+
+/* ===== RESPONSIVE ===== */
+@media(max-width:480px){
+  .mcard{flex:1 1 140px;padding:16px 10px}
+  .logo{font-size:32px}
+  .logo-icon{font-size:42px}
+  .btn{padding:9px 14px;font-size:13px}
+  .send-btn{padding:12px 24px;font-size:15px}
+  #cntNum{font-size:80px}
+}
+</style>
+</head>
+<body>
+
+<!-- ===== HOME SCREEN ===== -->
+<div id="home" class="scr active">
+  <div class="gal-btn" onclick="showScreen('gallery');loadGallery()">&#x1f5bc;&#xfe0f;</div>
+  <div class="gear" onclick="showScreen('settings')">&#x2699;&#xfe0f;</div>
+  <div class="logo-wrap">
+    <img id="homeLogo" src="" alt="Logo">
+    <span class="logo-icon">&#x1f4f8;</span>
+    <div class="logo" id="boothTitle">SnapBooth</div>
+  </div>
+  <div class="sub">Tap a mode to start</div>
+  <div class="modes">
+    <div class="mcard" onclick="startMode('classic')">
+      <div class="ic">&#x1f4f7;</div><h3>Classic</h3><p>Single photo with filters</p>
+    </div>
+    <div class="mcard" onclick="startMode('strip')">
+      <div class="ic">&#x1f39e;&#xfe0f;</div><h3>Photo Strip</h3><p>Multi-shot strip layout</p>
+    </div>
+    <div class="mcard" onclick="startMode('receipt')">
+      <div class="ic">&#x1f9fe;</div><h3>Receipt</h3><p>Vintage receipt style</p>
+    </div>
+    <div class="mcard" onclick="showScreen('gallery');loadGallery()">
+      <div class="ic">&#x1f5c2;&#xfe0f;</div><h3>Gallery</h3><p>View saved photos</p>
+    </div>
+  </div>
+</div>
+
+<!-- ===== CAPTURE SCREEN ===== -->
+<div id="capture" class="scr">
+  <div class="cap-hdr">
+    <button class="ibtn" onclick="stopCam();showScreen('home')">&#x2715;</button>
+    <div class="cap-info" id="capInfo">Classic</div>
+    <div style="display:flex;gap:8px">
+      <button class="ibtn" id="mirrorBtn" onclick="toggleMirror()">&#x2194;&#xfe0f;</button>
+      <button class="ibtn" id="flipBtn" onclick="flipCam()">&#x1f504;</button>
+    </div>
+  </div>
+  <div id="vidBox">
+    <video id="vid" autoplay playsinline muted></video>
+    <canvas id="tmpCanvas"></canvas>
+    <div id="cntOvl"><div id="cntNum">3</div></div>
+    <div id="flashOvl"></div>
+  </div>
+  <div class="fbar" id="filterBar">
+    <button class="fbtn active" data-f="none" onclick="setFilter(this)">None</button>
+    <button class="fbtn" data-f="grayscale(100%)" onclick="setFilter(this)">B&amp;W</button>
+    <button class="fbtn" data-f="sepia(100%)" onclick="setFilter(this)">Sepia</button>
+    <button class="fbtn" data-f="sepia(50%) contrast(1.1) brightness(1.05)" onclick="setFilter(this)">Vintage</button>
+    <button class="fbtn" data-f="sepia(30%) saturate(1.4) brightness(1.1)" onclick="setFilter(this)">Warm</button>
+    <button class="fbtn" data-f="saturate(0.8) hue-rotate(180deg) brightness(1.05)" onclick="setFilter(this)">Cool</button>
+    <button class="fbtn" data-f="contrast(1.5) saturate(1.2)" onclick="setFilter(this)">Hi-Contrast</button>
+    <button class="fbtn" data-f="brightness(1.25) saturate(1.1)" onclick="setFilter(this)">Bright</button>
+    <button class="fbtn" data-f="saturate(1.8) contrast(1.1)" onclick="setFilter(this)">Vivid</button>
+    <button class="fbtn" data-f="brightness(1.1) contrast(0.9) saturate(1.2) blur(0.5px)" onclick="setFilter(this)">Dreamy</button>
+  </div>
+  <div class="cap-ctrl">
+    <button class="shutter" id="shutterBtn" onclick="takePhoto()"><div class="shutter-in"></div></button>
+  </div>
+</div>
+
+<!-- ===== PREVIEW SCREEN ===== -->
+<div id="preview" class="scr">
+  <canvas id="prevCanvas"></canvas>
+  <button class="send-btn" onclick="sharePhoto()">&#x1f4e4; Send to Guest</button>
+  <div class="acts">
+    <button class="btn bp" onclick="savePhoto()">&#x1f4be; Save</button>
+    <button class="btn bo" onclick="retake()">&#x1f504; Retake</button>
+    <button class="btn bo" onclick="openMarkup()">&#x270f;&#xfe0f; Markup</button>
+    <button class="btn bo" onclick="printPhoto()">&#x1f5a8;&#xfe0f; Print</button>
+    <button class="btn bo" onclick="openQR()">&#x1f4f1; QR</button>
+    <button class="btn bo" onclick="stopCam();showScreen('home')">&#x1f3e0; Home</button>
+  </div>
+</div>
+
+<!-- ===== SETTINGS SCREEN ===== -->
+<div id="settings" class="scr">
+  <div class="s-hdr">
+    <button class="ibtn" onclick="saveSettings();showScreen('home')" style="background:var(--bg3)">&#x2190;</button>
+    <h2>&#x2699;&#xfe0f; Settings</h2>
+  </div>
+
+  <!-- Branding -->
+  <div class="s-sec">
+    <h3>&#x1f3a8; Branding</h3>
+    <div class="s-row"><label>Booth Name</label><input type="text" id="sName" value="SnapBooth" onchange="saveSettings()"></div>
+    <div class="s-row"><label>Logo</label><input type="file" id="sLogo" accept="image/*" onchange="handleLogo(this)" style="font-size:12px"></div>
+    <div id="logoPreview" class="tpl-prv" style="display:none"><img id="logoPrvImg" src=""><button class="rm-btn" onclick="removeLogo()">&#x2715;</button></div>
+    <div class="s-row"><label>Primary</label><input type="color" id="cPri" value="#6c5ce7" onchange="saveSettings()"></div>
+    <div class="s-row"><label>Accent</label><input type="color" id="cAcc" value="#fd79a8" onchange="saveSettings()"></div>
+    <div class="s-row"><label>Background</label><input type="color" id="cBg" value="#1a1a2e" onchange="saveSettings()"></div>
+    <div class="s-row"><label>Card / Panel</label><input type="color" id="cBg2" value="#16213e" onchange="saveSettings()"></div>
+    <div class="s-row"><label>Text</label><input type="color" id="cTx" value="#ffffff" onchange="saveSettings()"></div>
+    <div class="s-row"><label>Preset Themes</label></div>
+    <div class="theme-row">
+      <button class="theme-btn" onclick="applyTheme('default')">Default</button>
+      <button class="theme-btn" onclick="applyTheme('rosegold')">Rose Gold</button>
+      <button class="theme-btn" onclick="applyTheme('neon')">Neon Purple</button>
+      <button class="theme-btn" onclick="applyTheme('blackgold')">Black &amp; Gold</button>
+      <button class="theme-btn" onclick="applyTheme('minimal')">Minimal White</button>
+      <button class="theme-btn" onclick="applyTheme('retro')">Retro Warm</button>
+    </div>
+  </div>
+
+  <!-- Camera -->
+  <div class="s-sec">
+    <h3>&#x1f4f7; Camera</h3>
+    <div class="s-row"><label>Camera Source</label>
+      <select id="sCamSrc"><option value="user">Front</option><option value="environment">Rear</option></select>
+    </div>
+    <div class="s-row"><label>Countdown (sec)</label><input type="number" id="sCntDown" value="3" min="0" max="10"></div>
+    <div class="s-row"><label>Mirror Camera</label><label class="tgl"><input type="checkbox" id="sMirror" checked><span class="tgl-s"></span></label></div>
+  </div>
+
+  <!-- Photo Strip -->
+  <div class="s-sec">
+    <h3>&#x1f39e;&#xfe0f; Photo Strip</h3>
+    <div class="s-row"><label>Number of Tiles</label><input type="number" id="sTiles" value="4" min="1" max="4"></div>
+    <div class="s-row"><label>Layout</label>
+      <select id="sLayout"><option value="vertical">Vertical</option><option value="horizontal">Horizontal</option><option value="grid">Grid</option></select>
+    </div>
+  </div>
+
+  <!-- Template -->
+  <div class="s-sec">
+    <h3>&#x1f3a8; Template</h3>
+    <div class="s-row"><label>Background Color</label><input type="color" id="sTplBg" value="#1a1a2e"></div>
+    <div class="tpl-up" onclick="document.getElementById('sTplFile').click()">
+      <div style="font-size:28px">&#x1f4c1;</div>
+      <p>Upload overlay PNG</p>
+      <input type="file" id="sTplFile" accept="image/png" style="display:none" onchange="handleOverlay(this)">
+    </div>
+    <div id="tplPreview" class="tpl-prv" style="display:none"><img id="tplPrvImg" src=""><button class="rm-btn" onclick="removeOverlay()">&#x2715;</button></div>
+  </div>
+
+  <!-- Receipt Mode -->
+  <div class="s-sec">
+    <h3>&#x1f9fe; Receipt Mode</h3>
+    <div class="s-row"><label>Business Name</label><input type="text" id="rBizName" value="SnapBooth Studio"></div>
+    <div class="s-row"><label>Tagline</label><input type="text" id="rTagline" value="Memories Made Instantly"></div>
+    <div class="s-row"><label>Line 1 Left</label><input type="text" id="rL1L" value="EVENT"></div>
+    <div class="s-row"><label>Line 1 Right</label><input type="text" id="rL1R" value="Photo Session"></div>
+    <div class="s-row"><label>Line 2 Left</label><input type="text" id="rL2L" value="GUEST"></div>
+    <div class="s-row"><label>Line 2 Right</label><input type="text" id="rL2R" value=""></div>
+    <div class="s-row"><label>Custom Message</label><textarea id="rMsg" rows="2">Thank you for visiting our booth!</textarea></div>
+    <div class="s-row"><label>Footer</label><input type="text" id="rFooter" value="www.snapbooth.app"></div>
+    <div class="s-row"><label>Show Order #</label><label class="tgl"><input type="checkbox" id="rOrder" checked><span class="tgl-s"></span></label></div>
+    <div class="s-row"><label>Show Date/Time</label><label class="tgl"><input type="checkbox" id="rDate" checked><span class="tgl-s"></span></label></div>
+  </div>
+
+  <!-- Guest & Event -->
+  <div class="s-sec">
+    <h3>&#x1f464; Guest &amp; Event</h3>
+    <div class="s-row"><label>Ask Guest Name</label><label class="tgl"><input type="checkbox" id="sAskName"><span class="tgl-s"></span></label></div>
+    <div class="s-row"><label>Print Guest Name</label><label class="tgl"><input type="checkbox" id="sPrintName"><span class="tgl-s"></span></label></div>
+    <div class="s-row"><label>Kiosk Mode</label><label class="tgl"><input type="checkbox" id="sKiosk"><span class="tgl-s"></span></label></div>
+    <div class="s-row"><label>Auto-Restart (sec)</label><input type="number" id="sRestart" value="15" min="5" max="60"></div>
+  </div>
+
+  <!-- Output -->
+  <div class="s-sec">
+    <h3>&#x1f4be; Output</h3>
+    <div class="s-row"><label>ImgBB API Key</label><input type="text" id="sImgbb" placeholder="Enter API key"></div>
+    <div class="s-note">Get a free one at <a href="https://api.imgbb.com/" target="_blank">api.imgbb.com</a> (takes 1 min)</div>
+    <div class="s-row"><label>File Prefix</label><input type="text" id="sPrefix" value="snapbooth"></div>
+    <div class="s-row"><label>File Naming</label>
+      <select id="sNaming"><option value="prefix_seq">Prefix + Sequence</option><option value="date">Date</option><option value="timestamp">Timestamp</option><option value="guest">Guest Name</option></select>
+    </div>
+    <div class="s-row"><label>Auto-Download</label><label class="tgl"><input type="checkbox" id="sAutoDL"><span class="tgl-s"></span></label></div>
+    <div class="s-row"><label>Quality</label>
+      <select id="sQuality"><option value="0.85">Standard</option><option value="0.92">High</option><option value="1">Max</option></select>
+    </div>
+    <div class="s-row"><label>Format</label>
+      <select id="sFormat"><option value="jpeg">JPEG</option><option value="png">PNG</option><option value="webp">WebP</option></select>
+    </div>
+    <div class="s-row"><label>Auto-Save to Gallery</label><label class="tgl"><input type="checkbox" id="sAutoGal" checked><span class="tgl-s"></span></label></div>
+  </div>
+
+  <!-- Storage -->
+  <div class="s-sec">
+    <h3>&#x1f5c4;&#xfe0f; Storage</h3>
+    <div class="s-row"><label>Gallery Items</label><span id="storCount">0</span></div>
+    <div class="s-row"><label>Approx Size</label><span id="storSize">0 KB</span></div>
+    <div class="s-row"><button class="btn bd" onclick="clearStorage()">&#x1f5d1;&#xfe0f; Clear All Data</button></div>
+  </div>
+</div>
+
+<!-- ===== GALLERY SCREEN ===== -->
+<div id="gallery" class="scr">
+  <div class="g-hdr">
+    <button class="ibtn" onclick="showScreen('home')" style="background:var(--bg3)">&#x2190;</button>
+    <h2>&#x1f5bc;&#xfe0f; Gallery</h2>
+    <button class="btn bp" id="ssStartBtn" onclick="startSlideshow()" style="display:none">&#x25b6; Slideshow</button>
+  </div>
+  <div id="galGrid" class="g-grid"></div>
+</div>
+
+<!-- ===== MARKUP SCREEN ===== -->
+<div id="markup" class="scr">
+  <div style="display:flex;gap:8px;width:100%;justify-content:space-between;padding:0 4px">
+    <button class="mk-btn" onclick="finishMarkup()">&#x2713; Done</button>
+    <button class="mk-btn" onclick="cancelMarkup()">&#x2715; Cancel</button>
+  </div>
+  <canvas id="mkCanvas"></canvas>
+  <div class="mk-bar" id="mkToolbar">
+    <button class="mk-btn active" data-tool="draw" onclick="setMkTool(this)">&#x270f;&#xfe0f; Draw</button>
+    <button class="mk-btn" data-tool="text" onclick="setMkTool(this)">&#x1f524; Text</button>
+    <button class="mk-btn" data-tool="sticker" onclick="setMkTool(this)">&#x1f600; Sticker</button>
+    <button class="mk-btn" onclick="mkUndo()">&#x21a9;&#xfe0f; Undo</button>
+    <button class="mk-btn" onclick="mkClear()">&#x1f5d1;&#xfe0f; Clear</button>
+    <div class="mk-color"><input type="color" id="mkColor" value="#ff0000"></div>
+    <input type="range" class="mk-size" id="mkSize" min="2" max="20" value="4">
+  </div>
+  <div id="stickerPanel" class="modal">
+    <div class="m-box">
+      <h3>Choose Sticker</h3>
+      <div class="stk-grid" id="stkGrid"></div>
+      <button class="btn bo" onclick="closeStickerPanel()" style="margin-top:10px">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== GUEST NAME MODAL ===== -->
+<div id="guestMod" class="modal">
+  <div class="m-box">
+    <h3>&#x1f464; What's your name?</h3>
+    <input type="text" id="guestInput" placeholder="Enter your name">
+    <div style="display:flex;gap:10px;justify-content:center">
+      <button class="btn bp" onclick="confirmGuest()">Let's Go! &#x1f4f8;</button>
+      <button class="btn bo" onclick="skipGuest()">Skip</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== QR MODAL ===== -->
+<div id="qrMod" class="modal">
+  <div class="m-box">
+    <h3>&#x1f4f1; Share Photo</h3>
+    <div class="qr-actions">
+      <button class="btn bp" onclick="sharePhoto()">&#x1f4e4; Share</button>
+      <button class="btn bg" onclick="qrSavePhoto()">&#x1f4be; Save</button>
+    </div>
+    <div id="qrContent"></div>
+    <div id="qrMsg" class="qr-msg"></div>
+    <button class="btn bo" onclick="closeQR()" style="margin-top:12px">Close</button>
+  </div>
+</div>
+
+<!-- ===== SLIDESHOW ===== -->
+<div id="slideshow">
+  <button class="ss-btn ss-close" onclick="stopSlideshow()">&#x2715;</button>
+  <img id="ssImg" src="" alt="Slideshow">
+  <div class="ss-ctrl">
+    <button class="ss-btn" onclick="ssPrev()">&#x23ee;</button>
+    <button class="ss-btn" id="ssPlayBtn" onclick="ssToggle()">&#x23f8;</button>
+    <button class="ss-btn" onclick="ssNext()">&#x23ed;</button>
+    <span class="ss-counter" id="ssCounter">1 / 1</span>
+  </div>
+</div>
+
+<script>
+/* === ERROR SUPPRESSION === */
+window.onerror=function(){return true};
+window.addEventListener('error',function(e){e.preventDefault();return true});
+window.addEventListener('unhandledrejection',function(e){e.preventDefault()});
+
+/* === STATE === */
+var S = {
+  mode:'classic', filter:'none', mirror:true, facing:'user',
+  guestName:'', stripShots:[], stripCount:0,
+  currentBlob:null, currentDataUrl:'',
+  seqNum:1, orderNum:1000,
+  audioCtx:null, db:null,
+  ssIdx:0, ssTimer:null, ssPlaying:true,
+  galItems:[], mkHistory:[], mkTool:'draw', mkDrawing:false,
+  camStream:null, overlayImg:null, logoData:null
+};
+
+/* === SETTINGS OBJECT === */
+var CFG = {
+  name:'SnapBooth',pri:'#6c5ce7',acc:'#fd79a8',bg:'#1a1a2e',bg2:'#16213e',tx:'#ffffff',
+  camSrc:'user',countdown:3,mirror:true,
+  tiles:4,layout:'vertical',tplBg:'#1a1a2e',overlayData:null,
+  rBizName:'SnapBooth Studio',rTagline:'Memories Made Instantly',
+  rL1L:'EVENT',rL1R:'Photo Session',rL2L:'GUEST',rL2R:'',
+  rMsg:'Thank you for visiting our booth!',rFooter:'www.snapbooth.app',
+  rOrder:true,rDate:true,
+  askName:false,printName:false,kiosk:false,restart:15,
+  imgbb:'',prefix:'snapbooth',naming:'prefix_seq',autoDL:false,
+  quality:'0.85',format:'jpeg',autoGal:true,
+  logoData:null
+};
+
+/* === THEMES === */
+var THEMES = {
+  'default':{pri:'#6c5ce7',acc:'#fd79a8',bg:'#1a1a2e',bg2:'#16213e',tx:'#ffffff'},
+  'rosegold':{pri:'#b76e79',acc:'#f7cac9',bg:'#2d1f2f',bg2:'#3d2b3d',tx:'#fce4ec'},
+  'neon':{pri:'#b24bf3',acc:'#00f5d4',bg:'#0d0221',bg2:'#1a0a3e',tx:'#e0e0ff'},
+  'blackgold':{pri:'#d4af37',acc:'#ffd700',bg:'#0a0a0a',bg2:'#1a1a1a',tx:'#f0e6cc'},
+  'minimal':{pri:'#333333',acc:'#0066ff',bg:'#ffffff',bg2:'#f5f5f5',tx:'#222222'},
+  'retro':{pri:'#e07a5f',acc:'#81b29a',bg:'#3d405b',bg2:'#2d2f44',tx:'#f4f1de'}
+};
+
+var STICKERS = ['\u{1f600}','\u{1f60d}','\u{1f973}','\u{1f60e}','\u{1f929}','\u{1f389}','\u{1f38a}','\u2764\ufe0f','\u{1f525}','\u2b50','\u{1f308}','\u{1f490}','\u{1f98b}','\u{1f451}','\u{1f48e}','\u{1f355}','\u{1f3b5}','\u2728','\u{1f495}','\u{1f388}'];
+
+/* === DOM HELPERS === */
+function $(id){try{return document.getElementById(id)}catch(e){return null}}
+function showScreen(id){
+  var scrs=document.querySelectorAll('.scr');
+  for(var i=0;i<scrs.length;i++){scrs[i].classList.remove('active')}
+  var el=$(id);
+  if(el)el.classList.add('active');
+}
+
+/* === AUDIO === */
+function getAudioCtx(){
+  if(!S.audioCtx){
+    try{S.audioCtx=new(window.AudioContext||window.webkitAudioContext)()}
+    catch(e){S.audioCtx=null}
+  }
+  if(S.audioCtx&&S.audioCtx.state==='suspended'){
+    try{S.audioCtx.resume()}catch(e){}
+  }
+  return S.audioCtx;
+}
+function playBeep(freq,dur){
+  var ctx=getAudioCtx();if(!ctx)return;
+  try{
+    var o=ctx.createOscillator(),g=ctx.createGain();
+    o.connect(g);g.connect(ctx.destination);
+    o.frequency.value=freq||880;o.type='sine';
+    g.gain.value=0.3;
+    o.start(ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+(dur||0.15));
+    o.stop(ctx.currentTime+(dur||0.15)+0.01);
+  }catch(e){}
+}
+function playShutter(){
+  var ctx=getAudioCtx();if(!ctx)return;
+  try{
+    var buf=ctx.createBuffer(1,ctx.sampleRate*0.08,ctx.sampleRate);
+    var d=buf.getChannelData(0);
+    for(var i=0;i<d.length;i++){d[i]=(Math.random()*2-1)*Math.exp(-i/(d.length*0.1))}
+    var src=ctx.createBufferSource(),g=ctx.createGain();
+    src.buffer=buf;src.connect(g);g.connect(ctx.destination);
+    g.gain.value=0.5;src.start();
+  }catch(e){}
+}
+
+/* === IndexedDB === */
+function openDB(){
+  return new Promise(function(resolve){
+    try{
+      if(S.db){resolve(S.db);return}
+      var req=indexedDB.open('SnapBoothDB',1);
+      req.onupgradeneeded=function(e){
+        var db=e.target.result;
+        if(!db.objectStoreNames.contains('photos')){
+          db.createObjectStore('photos',{keyPath:'id',autoIncrement:true});
+        }
+      };
+      req.onsuccess=function(e){S.db=e.target.result;resolve(S.db)};
+      req.onerror=function(){resolve(null)};
+    }catch(e){resolve(null)}
+  });
+}
+
+function dbSave(data){
+  return openDB().then(function(db){
+    if(!db)return null;
+    return new Promise(function(resolve){
+      try{
+        var tx=db.transaction('photos','readwrite');
+        var st=tx.objectStore('photos');
+        var req=st.add(data);
+        req.onsuccess=function(){resolve(req.result)};
+        req.onerror=function(){resolve(null)};
+      }catch(e){resolve(null)}
+    });
+  }).catch(function(){return null});
+}
+
+function dbGetAll(){
+  return openDB().then(function(db){
+    if(!db)return[];
+    return new Promise(function(resolve){
+      try{
+        var tx=db.transaction('photos','readonly');
+        var st=tx.objectStore('photos');
+        var req=st.getAll();
+        req.onsuccess=function(){resolve(req.result||[])};
+        req.onerror=function(){resolve([])};
+      }catch(e){resolve([])}
+    });
+  }).catch(function(){return[]});
+}
+
+function dbDelete(id){
+  return openDB().then(function(db){
+    if(!db)return;
+    return new Promise(function(resolve){
+      try{
+        var tx=db.transaction('photos','readwrite');
+        tx.objectStore('photos').delete(id);
+        tx.oncomplete=function(){resolve()};
+        tx.onerror=function(){resolve()};
+      }catch(e){resolve()}
+    });
+  }).catch(function(){});
+}
+
+function dbClear(){
+  return openDB().then(function(db){
+    if(!db)return;
+    return new Promise(function(resolve){
+      try{
+        var tx=db.transaction('photos','readwrite');
+        tx.objectStore('photos').clear();
+        tx.oncomplete=function(){resolve()};
+        tx.onerror=function(){resolve()};
+      }catch(e){resolve()}
+    });
+  }).catch(function(){});
+}
+
+/* === CAMERA === */
+function startCam(facingMode){
+  if(!facingMode)facingMode=CFG.camSrc||'user';
+  S.facing=facingMode;
+  var constraints={video:{facingMode:facingMode,width:{ideal:1920},height:{ideal:1080}},audio:false};
+  try{
+    navigator.mediaDevices.getUserMedia(constraints).then(function(stream){
+      S.camStream=stream;
+      var v=$('vid');
+      if(v){v.srcObject=stream;v.play().catch(function(){})}
+      applyMirror();
+      populateCamDevices(stream);
+    }).catch(function(err){
+      console.log('Cam error:',err);
+      navigator.mediaDevices.getUserMedia({video:true,audio:false}).then(function(stream){
+        S.camStream=stream;
+        var v=$('vid');
+        if(v){v.srcObject=stream;v.play().catch(function(){})}
+      }).catch(function(){});
+    });
+  }catch(e){}
+}
+
+function populateCamDevices(stream){
+  try{
+    navigator.mediaDevices.enumerateDevices().then(function(devs){
+      var sel=$('sCamSrc');if(!sel)return;
+      var vids=[];
+      for(var i=0;i<devs.length;i++){
+        if(devs[i].kind==='videoinput')vids.push(devs[i]);
+      }
+      if(vids.length>2){
+        var hasExt=false;
+        for(var j=0;j<sel.options.length;j++){if(sel.options[j].value==='external')hasExt=true}
+        if(!hasExt){var o=document.createElement('option');o.value='external';o.text='External';sel.add(o)}
+      }
+    }).catch(function(){});
+  }catch(e){}
+}
+
+function stopCam(){
+  try{
+    if(S.camStream){
+      var tracks=S.camStream.getTracks();
+      for(var i=0;i<tracks.length;i++){tracks[i].stop()}
+      S.camStream=null;
+    }
+    var v=$('vid');if(v)v.srcObject=null;
+  }catch(e){}
+}
+
+function flipCam(){
+  stopCam();
+  startCam(S.facing==='user'?'environment':'user');
+}
+
+function toggleMirror(){
+  CFG.mirror=!CFG.mirror;
+  applyMirror();
+}
+
+function applyMirror(){
+  var v=$('vid');
+  if(v){v.style.transform=CFG.mirror?'scaleX(-1)':'none'}
+}
+
+/* === FILTERS === */
+function setFilter(btn){
+  var all=document.querySelectorAll('.fbtn');
+  for(var i=0;i<all.length;i++){all[i].classList.remove('active')}
+  btn.classList.add('active');
+  S.filter=btn.getAttribute('data-f')||'none';
+  var v=$('vid');
+  if(v){v.style.filter=S.filter==='none'?'':S.filter}
+}
+
+/* === COUNTDOWN & CAPTURE === */
+function takePhoto(){
+  var cd=parseInt(CFG.countdown)||0;
+  if(cd>0){
+    runCountdown(cd,function(){captureFrame()});
+  }else{
+    captureFrame();
+  }
+}
+
+function runCountdown(n,cb){
+  var ovl=$('cntOvl'),num=$('cntNum');
+  if(!ovl||!num){cb();return}
+  ovl.classList.add('on');
+  num.textContent=n;
+  playBeep(660,0.12);
+  var t=setInterval(function(){
+    n--;
+    if(n<=0){
+      clearInterval(t);
+      ovl.classList.remove('on');
+      cb();
+    }else{
+      num.textContent=n;
+      playBeep(n===1?1100:660,n===1?0.2:0.12);
+    }
+  },1000);
+}
+
+function captureFrame(){
+  playShutter();
+  doFlash();
+  var v=$('vid'),c=$('tmpCanvas');
+  if(!v||!c)return;
+  var w=v.videoWidth||640,h=v.videoHeight||480;
+  c.width=w;c.height=h;
+  var ctx=c.getContext('2d');
+  ctx.save();
+  if(CFG.mirror){ctx.translate(w,0);ctx.scale(-1,1)}
+  if(S.filter&&S.filter!=='none'){ctx.filter=S.filter}
+  ctx.drawImage(v,0,0,w,h);
+  ctx.restore();
+  var imgData=c.toDataURL('image/jpeg',0.92);
+
+  if(S.mode==='strip'){
+    S.stripShots.push(imgData);
+    S.stripCount++;
+    var need=parseInt(CFG.tiles)||4;
+    $('capInfo').textContent='Strip: '+S.stripCount+'/'+need;
+    if(S.stripCount>=need){
+      composeStrip();
+    }
+  }else if(S.mode==='receipt'){
+    composeReceipt(imgData);
+  }else{
+    composeClassic(imgData);
+  }
+}
+
+function doFlash(){
+  var f=$('flashOvl');if(!f)return;
+  f.classList.add('on');
+  setTimeout(function(){f.classList.remove('on')},120);
+}
+
+/* === COMPOSE CLASSIC === */
+function composeClassic(imgData){
+  var img=new Image();
+  img.onload=function(){
+    var pc=$('prevCanvas');if(!pc)return;
+    var w=img.width,h=img.height;
+    pc.width=w;pc.height=h;
+    var ctx=pc.getContext('2d');
+    ctx.fillStyle=CFG.tplBg||'#1a1a2e';
+    ctx.fillRect(0,0,w,h);
+    ctx.drawImage(img,0,0);
+    if(S.overlayImg){
+      try{ctx.drawImage(S.overlayImg,0,0,w,h)}catch(e){}
+    }
+    if(CFG.printName&&S.guestName){
+      ctx.font='bold 28px Segoe UI, sans-serif';
+      ctx.fillStyle='#fff';ctx.textAlign='center';
+      ctx.shadowColor='rgba(0,0,0,0.7)';ctx.shadowBlur=6;
+      ctx.fillText(S.guestName,w/2,h-30);
+      ctx.shadowBlur=0;
+    }
+    finishPreview(pc);
+  };
+  img.src=imgData;
+}
+
+/* === COMPOSE STRIP === */
+function composeStrip(){
+  var imgs=[];var loaded=0;var need=S.stripShots.length;
+  for(var i=0;i<need;i++){
+    (function(idx){
+      var im=new Image();
+      im.onload=function(){imgs[idx]=im;loaded++;if(loaded>=need)renderStrip(imgs)};
+      im.src=S.stripShots[idx];
+    })(i);
+  }
+}
+
+function renderStrip(imgs){
+  var pc=$('prevCanvas');if(!pc)return;
+  var n=imgs.length,layout=CFG.layout||'vertical';
+  var iw=imgs[0].width,ih=imgs[0].height;
+  var gap=16,pad=24;
+  var cw,ch;
+
+  if(layout==='vertical'){
+    cw=iw+pad*2;
+    ch=ih*n+gap*(n-1)+pad*2;
+  }else if(layout==='horizontal'){
+    cw=iw*n+gap*(n-1)+pad*2;
+    ch=ih+pad*2;
+  }else{
+    var cols=Math.ceil(Math.sqrt(n));
+    var rows=Math.ceil(n/cols);
+    cw=iw*cols+gap*(cols-1)+pad*2;
+    ch=ih*rows+gap*(rows-1)+pad*2;
+  }
+
+  pc.width=cw;pc.height=ch;
+  var ctx=pc.getContext('2d');
+  ctx.fillStyle=CFG.tplBg||'#1a1a2e';
+  ctx.fillRect(0,0,cw,ch);
+
+  for(var i=0;i<n;i++){
+    var x,y;
+    if(layout==='vertical'){
+      x=pad;y=pad+i*(ih+gap);
+    }else if(layout==='horizontal'){
+      x=pad+i*(iw+gap);y=pad;
+    }else{
+      var cols2=Math.ceil(Math.sqrt(n));
+      x=pad+(i%cols2)*(iw+gap);
+      y=pad+Math.floor(i/cols2)*(ih+gap);
+    }
+    ctx.save();
+    roundRect(ctx,x,y,iw,ih,8);
+    ctx.clip();
+    ctx.drawImage(imgs[i],x,y,iw,ih);
+    ctx.restore();
+  }
+
+  if(S.overlayImg){
+    try{ctx.drawImage(S.overlayImg,0,0,cw,ch)}catch(e){}
+  }
+  if(CFG.printName&&S.guestName){
+    ctx.font='bold 24px Segoe UI, sans-serif';
+    ctx.fillStyle='#fff';ctx.textAlign='center';
+    ctx.shadowColor='rgba(0,0,0,0.7)';ctx.shadowBlur=6;
+    ctx.fillText(S.guestName,cw/2,ch-12);ctx.shadowBlur=0;
+  }
+  finishPreview(pc);
+}
+
+function roundRect(ctx,x,y,w,h,r){
+  ctx.beginPath();
+  ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.quadraticCurveTo(x+w,y,x+w,y+r);
+  ctx.lineTo(x+w,y+h-r);ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+  ctx.lineTo(x+r,y+h);ctx.quadraticCurveTo(x,y+h,x,y+h-r);
+  ctx.lineTo(x,y+r);ctx.quadraticCurveTo(x,y,x+r,y);
+  ctx.closePath();
+}
+
+/* === COMPOSE RECEIPT === */
+function composeReceipt(imgData){
+  var img=new Image();
+  img.onload=function(){
+    var pc=$('prevCanvas');if(!pc)return;
+    var rw=400,padding=30;
+    var photoH=Math.round((img.height/img.width)*(rw-padding*2));
+    var topH=180,botH=160;
+    var ch=topH+photoH+botH;
+    pc.width=rw;pc.height=ch;
+    var ctx=pc.getContext('2d');
+    ctx.fillStyle='#f5f0e8';ctx.fillRect(0,0,rw,ch);
+    drawJagged(ctx,rw,true);
+    ctx.save();ctx.translate(0,ch);ctx.scale(1,-1);
+    drawJagged(ctx,rw,true);ctx.restore();
+
+    var yy=30;
+    ctx.textAlign='center';
+    ctx.fillStyle='#222';ctx.font='bold 20px Courier New,monospace';
+    ctx.fillText(CFG.rBizName||'SnapBooth',rw/2,yy);yy+=18;
+    ctx.fillStyle='#666';ctx.font='11px Courier New,monospace';
+    ctx.fillText(CFG.rTagline||'',rw/2,yy);yy+=16;
+    drawDash(ctx,padding,yy,rw-padding);yy+=12;
+    if(CFG.rDate){
+      var now=new Date();
+      ctx.textAlign='left';ctx.fillStyle='#444';ctx.font='11px Courier New,monospace';
+      ctx.fillText('DATE: '+now.toLocaleDateString(),padding,yy);
+      ctx.textAlign='right';
+      ctx.fillText('TIME: '+now.toLocaleTimeString(),rw-padding,yy);yy+=14;
+    }
+    if(CFG.rOrder){
+      ctx.textAlign='left';
+      ctx.fillText('ORDER #'+S.orderNum,padding,yy);
+      S.orderNum++;yy+=14;
+    }
+    drawDash(ctx,padding,yy,rw-padding);yy+=12;
+    ctx.textAlign='left';ctx.font='12px Courier New,monospace';ctx.fillStyle='#333';
+    if(CFG.rL1L||CFG.rL1R){
+      ctx.fillText(CFG.rL1L||'',padding,yy);
+      ctx.textAlign='right';ctx.fillText(CFG.rL1R||'',rw-padding,yy);yy+=16;
+    }
+    if(CFG.rL2L||CFG.rL2R||S.guestName){
+      ctx.textAlign='left';ctx.fillText(CFG.rL2L||'',padding,yy);
+      ctx.textAlign='right';ctx.fillText(S.guestName||CFG.rL2R||'',rw-padding,yy);yy+=16;
+    }
+    drawDash(ctx,padding,yy,rw-padding);yy+=14;
+    var px=padding,pw=rw-padding*2;
+    ctx.save();
+    roundRect(ctx,px,yy,pw,photoH,6);ctx.clip();
+    ctx.drawImage(img,px,yy,pw,photoH);ctx.restore();
+    yy+=photoH+14;
+    if(CFG.rMsg){
+      ctx.textAlign='center';ctx.font='italic 11px Courier New,monospace';ctx.fillStyle='#555';
+      wrapText(ctx,CFG.rMsg,rw/2,yy,rw-padding*2,14);yy+=30;
+    }
+    drawDash(ctx,padding,yy,rw-padding);yy+=14;
+    ctx.textAlign='center';ctx.font='10px Courier New,monospace';ctx.fillStyle='#888';
+    ctx.fillText(CFG.rFooter||'',rw/2,yy);
+
+    finishPreview(pc);
+  };
+  img.src=imgData;
+}
+
+function drawJagged(ctx,w,top){
+  ctx.fillStyle='#1a1a2e';
+  var sz=10;
+  ctx.beginPath();ctx.moveTo(0,0);
+  for(var x=0;x<w;x+=sz){
+    ctx.lineTo(x+sz/2,sz);ctx.lineTo(x+sz,0);
+  }
+  ctx.closePath();ctx.fill();
+}
+
+function drawDash(ctx,x1,y,x2){
+  ctx.save();ctx.setLineDash([4,4]);
+  ctx.strokeStyle='#999';ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(x1,y);ctx.lineTo(x2,y);ctx.stroke();
+  ctx.restore();
+}
+
+function wrapText(ctx,text,x,y,maxW,lineH){
+  var words=text.split(' '),line='';
+  for(var i=0;i<words.length;i++){
+    var test=line+words[i]+' ';
+    if(ctx.measureText(test).width>maxW&&i>0){
+      ctx.fillText(line.trim(),x,y);y+=lineH;line=words[i]+' ';
+    }else{line=test}
+  }
+  ctx.fillText(line.trim(),x,y);
+}
+
+/* === FINISH PREVIEW === */
+function finishPreview(canvas){
+  stopCam();
+  S.currentDataUrl=canvas.toDataURL('image/'+CFG.format,parseFloat(CFG.quality)||0.85);
+  canvas.toBlob(function(blob){
+    S.currentBlob=blob;
+  },'image/'+CFG.format,parseFloat(CFG.quality)||0.85);
+  showScreen('preview');
+  if(CFG.autoGal){
+    saveToGallery(S.currentDataUrl);
+  }
+  if(CFG.autoDL){
+    downloadPhotoBlob(S.currentDataUrl);
+  }
+  if(CFG.kiosk){
+    setTimeout(function(){showScreen('home')},parseInt(CFG.restart)*1000||15000);
+  }
+}
+
+/* === MODE START === */
+function startMode(mode){
+  S.mode=mode;
+  S.stripShots=[];S.stripCount=0;S.guestName='';
+  var info=$('capInfo');
+  if(mode==='strip'){if(info)info.textContent='Strip: 0/'+(CFG.tiles||4)}
+  else if(mode==='receipt'){if(info)info.textContent='Receipt'}
+  else{if(info)info.textContent='Classic'}
+  if(CFG.askName){
+    showGuestModal(function(){startCapture()});
+  }else{
+    startCapture();
+  }
+}
+
+function startCapture(){
+  showScreen('capture');
+  startCam();
+}
+
+/* === GUEST NAME === */
+function showGuestModal(cb){
+  S._guestCb=cb;
+  var m=$('guestMod');if(m)m.classList.add('on');
+  var inp=$('guestInput');if(inp){inp.value='';inp.focus()}
+}
+function confirmGuest(){
+  var inp=$('guestInput');
+  S.guestName=inp?inp.value.trim():'';
+  var m=$('guestMod');if(m)m.classList.remove('on');
+  if(S._guestCb)S._guestCb();
+}
+function skipGuest(){
+  S.guestName='';
+  var m=$('guestMod');if(m)m.classList.remove('on');
+  if(S._guestCb)S._guestCb();
+}
+
+/* === RETAKE === */
+function retake(){
+  S.stripShots=[];S.stripCount=0;
+  var info=$('capInfo');
+  if(S.mode==='strip'){if(info)info.textContent='Strip: 0/'+(CFG.tiles||4)}
+  showScreen('capture');startCam();
+}
+
+/* === SHARE === */
+function sharePhoto(){
+  if(!S.currentBlob){return}
+  var fname=getFilename();
+  try{
+    if(navigator.share&&navigator.canShare){
+      var file=new File([S.currentBlob],fname,{type:S.currentBlob.type});
+      var sd={files:[file],title:'SnapBooth Photo'};
+      if(navigator.canShare(sd)){
+        navigator.share(sd).catch(function(){fallbackDownload()});
+        return;
+      }
+    }
+  }catch(e){}
+  fallbackDownload();
+}
+
+function fallbackDownload(){
+  downloadPhotoBlob(S.currentDataUrl);
+}
+
+/* === SAVE / DOWNLOAD === */
+function savePhoto(){
+  downloadPhotoBlob(S.currentDataUrl);
+  if(!CFG.autoGal){saveToGallery(S.currentDataUrl)}
+}
+
+function downloadPhotoBlob(dataUrl){
+  try{
+    var parts=dataUrl.split(',');
+    var mime=parts[0].match(/:(.*?);/)[1];
+    var b64=atob(parts[1]);
+    var arr=new Uint8Array(b64.length);
+    for(var i=0;i<b64.length;i++){arr[i]=b64.charCodeAt(i)}
+    var blob=new Blob([arr],{type:mime});
+    var url=URL.createObjectURL(blob);
+    var a=document.createElement('a');
+    a.href=url;
+    a.download=getFilename();
+    a.style.display='none';
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(function(){
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    },500);
+  }catch(e){}
+}
+
+function getFilename(){
+  var ext=CFG.format==='png'?'.png':CFG.format==='webp'?'.webp':'.jpg';
+  var n=CFG.naming||'prefix_seq';
+  var p=CFG.prefix||'snapbooth';
+  if(n==='date'){return p+'_'+new Date().toISOString().slice(0,10)+ext}
+  if(n==='timestamp'){return p+'_'+Date.now()+ext}
+  if(n==='guest'&&S.guestName){return p+'_'+S.guestName.replace(/[^a-zA-Z0-9]/g,'_')+ext}
+  return p+'_'+String(S.seqNum++).padStart(4,'0')+ext;
+}
+
+/* === SAVE TO GALLERY (IndexedDB) === */
+function saveToGallery(dataUrl){
+  dbSave({data:dataUrl,date:Date.now(),guest:S.guestName||''}).catch(function(){});
+}
+
+/* === PRINT === */
+function printPhoto(){
+  try{
+    var w=window.open('','_blank');
+    if(w){
+      w.document.write('<html><body style="margin:0;display:flex;align-items:center;justify-content:center;min-height:100vh"><img src="'+S.currentDataUrl+'" style="max-width:100%;max-height:100vh"></body></html>');
+      w.document.close();
+      setTimeout(function(){w.print()},300);
+    }
+  }catch(e){}
+}
+
+/* === QR MODAL === */
+function openQR(){
+  var mod=$('qrMod');if(mod)mod.classList.add('on');
+  var cont=$('qrContent');var msg=$('qrMsg');
+  if(cont)cont.innerHTML='<p style="color:var(--txm)">Uploading photo...</p>';
+  if(msg)msg.textContent='';
+
+  if(CFG.imgbb&&CFG.imgbb.trim()){
+    uploadImgbb(function(imgUrl){
+      if(imgUrl){
+        /* Build a link to dl.html with the image URL as a parameter */
+        var base=window.location.href.split('?')[0].split('#')[0];
+        base=base.replace(/index\.html$/,'').replace(/\/$/,'');
+        var dlUrl=base+'/dl.html?img='+encodeURIComponent(imgUrl);
+        renderQR(dlUrl);
+        if(msg)msg.textContent='Guest scans QR \u2192 sees photo \u2192 can save it!';
+      }else{
+        if(cont)cont.innerHTML='<p style="color:var(--err)">Upload failed. Try the Share button instead.</p>';
+        if(msg)msg.textContent='Check your ImgBB API key in Settings, or try again.';
+      }
+    });
+  }else{
+    if(cont)cont.innerHTML='<p style="color:var(--txm)">\u26a0\ufe0f QR photo sharing needs an ImgBB API key.</p><p style="color:var(--tx2);font-size:13px;margin-top:8px">Go to Settings > Output > ImgBB API Key<br>Get a free key at <a href="https://api.imgbb.com/" target="_blank" style="color:var(--pri-l)">api.imgbb.com</a> (takes 1 min)</p>';
+    if(msg)msg.textContent='Use the Share or Save button above to send photos without a key.';
+  }
+}
+
+function renderQR(url){
+  var cont=$('qrContent');if(!cont)return;
+  try{
+    var qr=qrcode(0,'M');
+    qr.addData(url);qr.make();
+    cont.innerHTML=qr.createImgTag(5,10);
+    var img=cont.querySelector('img');
+    if(img){img.id='qrImg';img.style.borderRadius='6px'}
+  }catch(e){
+    cont.innerHTML='<p style="color:var(--err)">QR generation failed</p>';
+  }
+}
+
+function closeQR(){
+  var m=$('qrMod');if(m)m.classList.remove('on');
+}
+
+function qrSavePhoto(){
+  if(!S.currentBlob){downloadPhotoBlob(S.currentDataUrl);return}
+  try{
+    var url=URL.createObjectURL(S.currentBlob);
+    var a=document.createElement('a');
+    a.href=url;a.download=getFilename();
+    document.body.appendChild(a);a.click();
+    document.body.removeChild(a);
+    setTimeout(function(){URL.revokeObjectURL(url)},1000);
+  }catch(e){
+    downloadPhotoBlob(S.currentDataUrl);
+  }
+}
+
+/* === IMGBB UPLOAD === */
+function uploadImgbb(cb){
+  try{
+    var data=S.currentDataUrl.split(',')[1];
+    var xhr=new XMLHttpRequest();
+    xhr.open('POST','https://api.imgbb.com/1/upload?key='+encodeURIComponent(CFG.imgbb.trim()));
+    xhr.onload=function(){
+      try{
+        var res=JSON.parse(xhr.responseText);
+        if(res.success&&res.data&&res.data.url){cb(res.data.url)}
+        else{cb(null)}
+      }catch(e){cb(null)}
+    };
+    xhr.onerror=function(){cb(null)};
+    xhr.timeout=15000;
+    xhr.ontimeout=function(){cb(null)};
+    var fd=new FormData();fd.append('image',data);
+    xhr.send(fd);
+  }catch(e){cb(null)}
+}
+
+/* === GALLERY === */
+function loadGallery(){
+  dbGetAll().then(function(items){
+    S.galItems=items;
+    var grid=$('galGrid');if(!grid)return;
+    var ssBtn=$('ssStartBtn');
+    if(items.length===0){
+      grid.innerHTML='<div class="g-empty"><span>&#x1f4f7;</span><p>No photos yet.<br>Take some shots!</p></div>';
+      if(ssBtn)ssBtn.style.display='none';
+      return;
+    }
+    if(ssBtn)ssBtn.style.display='inline-flex';
+    var html='';
+    for(var i=items.length-1;i>=0;i--){
+      html+='<div class="g-item" onclick="viewGalItem('+items[i].id+')">';
+      html+='<img src="'+items[i].data+'" alt="Photo" loading="lazy">';
+      html+='<button class="g-del" onclick="event.stopPropagation();delGalItem('+items[i].id+')">&#x1f5d1;&#xfe0f;</button>';
+      html+='</div>';
+    }
+    grid.innerHTML=html;
+    updateStorageInfo();
+  }).catch(function(){});
+}
+
+function delGalItem(id){
+  dbDelete(id).then(function(){loadGallery()}).catch(function(){});
+}
+
+function viewGalItem(id){
+  for(var i=0;i<S.galItems.length;i++){
+    if(S.galItems[i].id===id){
+      S.currentDataUrl=S.galItems[i].data;
+      try{
+        var byteStr=atob(S.galItems[i].data.split(',')[1]);
+        var ab=new ArrayBuffer(byteStr.length);
+        var ia=new Uint8Array(ab);
+        for(var j=0;j<byteStr.length;j++){ia[j]=byteStr.charCodeAt(j)}
+        S.currentBlob=new Blob([ab],{type:'image/jpeg'});
+      }catch(e){}
+      var img=new Image();
+      img.onload=function(){
+        var pc=$('prevCanvas');if(!pc)return;
+        pc.width=img.width;pc.height=img.height;
+        pc.getContext('2d').drawImage(img,0,0);
+        showScreen('preview');
+      };
+      img.src=S.galItems[i].data;
+      break;
+    }
+  }
+}
+
+function updateStorageInfo(){
+  dbGetAll().then(function(items){
+    var cnt=$('storCount'),sz=$('storSize');
+    if(cnt)cnt.textContent=items.length;
+    var total=0;
+    for(var i=0;i<items.length;i++){total+=(items[i].data||'').length}
+    if(sz){
+      if(total>1048576){sz.textContent=(total/1048576).toFixed(1)+' MB'}
+      else{sz.textContent=Math.round(total/1024)+' KB'}
+    }
+  }).catch(function(){});
+}
+
+function clearStorage(){
+  if(confirm('Delete all saved photos?')){
+    dbClear().then(function(){
+      loadGallery();updateStorageInfo();
+      alert('All data cleared');
+    }).catch(function(){});
+  }
+}
+
+/* === SLIDESHOW === */
+function startSlideshow(){
+  if(S.galItems.length===0)return;
+  S.ssIdx=0;S.ssPlaying=true;
+  var ss=$('slideshow');if(ss)ss.classList.add('on');
+  showSSImage();
+  S.ssTimer=setInterval(function(){ssNext()},4000);
+  $('ssPlayBtn').textContent='\u23f8';
+}
+function stopSlideshow(){
+  var ss=$('slideshow');if(ss)ss.classList.remove('on');
+  if(S.ssTimer){clearInterval(S.ssTimer);S.ssTimer=null}
+}
+function ssNext(){
+  S.ssIdx=(S.ssIdx+1)%S.galItems.length;
+  showSSImage();
+}
+function ssPrev(){
+  S.ssIdx=(S.ssIdx-1+S.galItems.length)%S.galItems.length;
+  showSSImage();
+}
+function ssToggle(){
+  S.ssPlaying=!S.ssPlaying;
+  if(S.ssPlaying){
+    S.ssTimer=setInterval(function(){ssNext()},4000);
+    $('ssPlayBtn').textContent='\u23f8';
+  }else{
+    if(S.ssTimer){clearInterval(S.ssTimer);S.ssTimer=null}
+    $('ssPlayBtn').textContent='\u25b6';
+  }
+}
+function showSSImage(){
+  var img=$('ssImg'),counter=$('ssCounter');
+  if(!img||!S.galItems[S.ssIdx])return;
+  img.style.opacity='0';
+  setTimeout(function(){
+    img.src=S.galItems[S.ssIdx].data;
+    img.style.opacity='1';
+  },300);
+  if(counter)counter.textContent=(S.ssIdx+1)+' / '+S.galItems.length;
+}
+
+/* === MARKUP EDITOR === */
+function openMarkup(){
+  showScreen('markup');
+  var mc=$('mkCanvas'),pc=$('prevCanvas');
+  if(!mc||!pc)return;
+  mc.width=pc.width;mc.height=pc.height;
+  var ctx=mc.getContext('2d');
+  ctx.drawImage(pc,0,0);
+  S.mkHistory=[ctx.getImageData(0,0,mc.width,mc.height)];
+  S.mkTool='draw';S.mkDrawing=false;
+  var btns=document.querySelectorAll('#mkToolbar .mk-btn[data-tool]');
+  for(var i=0;i<btns.length;i++){
+    btns[i].classList.toggle('active',btns[i].getAttribute('data-tool')==='draw');
+  }
+  initMarkupEvents();
+}
+
+function initMarkupEvents(){
+  var mc=$('mkCanvas');if(!mc)return;
+  mc.onpointerdown=function(e){mkDown(e)};
+  mc.onpointermove=function(e){mkMove(e)};
+  mc.onpointerup=function(e){mkUp(e)};
+}
+
+function mkGetPos(e){
+  var mc=$('mkCanvas');if(!mc)return{x:0,y:0};
+  var r=mc.getBoundingClientRect();
+  return{
+    x:(e.clientX-r.left)*(mc.width/r.width),
+    y:(e.clientY-r.top)*(mc.height/r.height)
+  };
+}
+
+function mkDown(e){
+  if(S.mkTool==='sticker'){openStickerPanel(e);return}
+  if(S.mkTool==='text'){mkAddText(e);return}
+  S.mkDrawing=true;
+  var mc=$('mkCanvas');if(!mc)return;
+  var ctx=mc.getContext('2d');
+  var p=mkGetPos(e);
+  ctx.beginPath();ctx.moveTo(p.x,p.y);
+  ctx.strokeStyle=$('mkColor').value||'#ff0000';
+  ctx.lineWidth=parseInt($('mkSize').value)||4;
+  ctx.lineCap='round';ctx.lineJoin='round';
+}
+
+function mkMove(e){
+  if(!S.mkDrawing)return;
+  var mc=$('mkCanvas');if(!mc)return;
+  var ctx=mc.getContext('2d');
+  var p=mkGetPos(e);
+  ctx.lineTo(p.x,p.y);ctx.stroke();
+}
+
+function mkUp(e){
+  if(S.mkDrawing){
+    S.mkDrawing=false;
+    saveMkState();
+  }
+}
+
+function mkAddText(e){
+  var text=prompt('Enter text:');if(!text)return;
+  var mc=$('mkCanvas');if(!mc)return;
+  var ctx=mc.getContext('2d');
+  var p=mkGetPos(e);
+  var sz=parseInt($('mkSize').value)*6||24;
+  ctx.font='bold '+sz+'px Segoe UI, sans-serif';
+  ctx.fillStyle=$('mkColor').value||'#ff0000';
+  ctx.fillText(text,p.x,p.y);
+  saveMkState();
+}
+
+function openStickerPanel(e){
+  S._stkEvent=e;
+  var panel=$('stickerPanel');if(panel)panel.classList.add('on');
+  var grid=$('stkGrid');if(!grid)return;
+  var html='';
+  for(var i=0;i<STICKERS.length;i++){
+    html+='<button onclick="placeSticker(\''+STICKERS[i]+'\')">'+STICKERS[i]+'</button>';
+  }
+  grid.innerHTML=html;
+}
+
+function closeStickerPanel(){
+  var p=$('stickerPanel');if(p)p.classList.remove('on');
+}
+
+function placeSticker(emoji){
+  closeStickerPanel();
+  var mc=$('mkCanvas');if(!mc)return;
+  var ctx=mc.getContext('2d');
+  var p=S._stkEvent?mkGetPos(S._stkEvent):{x:mc.width/2,y:mc.height/2};
+  var sz=parseInt($('mkSize').value)*8||48;
+  ctx.font=sz+'px serif';
+  ctx.fillText(emoji,p.x-sz/2,p.y+sz/3);
+  saveMkState();
+}
+
+function saveMkState(){
+  var mc=$('mkCanvas');if(!mc)return;
+  S.mkHistory.push(mc.getContext('2d').getImageData(0,0,mc.width,mc.height));
+  if(S.mkHistory.length>30)S.mkHistory.shift();
+}
+
+function mkUndo(){
+  if(S.mkHistory.length<=1)return;
+  S.mkHistory.pop();
+  var mc=$('mkCanvas');if(!mc)return;
+  mc.getContext('2d').putImageData(S.mkHistory[S.mkHistory.length-1],0,0);
+}
+
+function mkClear(){
+  if(S.mkHistory.length<=1)return;
+  var mc=$('mkCanvas');if(!mc)return;
+  mc.getContext('2d').putImageData(S.mkHistory[0],0,0);
+  S.mkHistory=[S.mkHistory[0]];
+}
+
+function setMkTool(btn){
+  S.mkTool=btn.getAttribute('data-tool');
+  var btns=document.querySelectorAll('#mkToolbar .mk-btn[data-tool]');
+  for(var i=0;i<btns.length;i++){btns[i].classList.remove('active')}
+  btn.classList.add('active');
+}
+
+function finishMarkup(){
+  var mc=$('mkCanvas'),pc=$('prevCanvas');
+  if(!mc||!pc)return;
+  pc.width=mc.width;pc.height=mc.height;
+  pc.getContext('2d').drawImage(mc,0,0);
+  S.currentDataUrl=pc.toDataURL('image/'+CFG.format,parseFloat(CFG.quality)||0.85);
+  pc.toBlob(function(blob){S.currentBlob=blob},'image/'+CFG.format,parseFloat(CFG.quality)||0.85);
+  showScreen('preview');
+}
+
+function cancelMarkup(){
+  showScreen('preview');
+}
+
+/* === SETTINGS SAVE/LOAD === */
+function saveSettings(){
+  try{
+    CFG.name=($('sName')||{}).value||'SnapBooth';
+    CFG.pri=($('cPri')||{}).value||'#6c5ce7';
+    CFG.acc=($('cAcc')||{}).value||'#fd79a8';
+    CFG.bg=($('cBg')||{}).value||'#1a1a2e';
+    CFG.bg2=($('cBg2')||{}).value||'#16213e';
+    CFG.tx=($('cTx')||{}).value||'#ffffff';
+    CFG.camSrc=($('sCamSrc')||{}).value||'user';
+    CFG.countdown=parseInt(($('sCntDown')||{}).value)||3;
+    CFG.mirror=($('sMirror')||{}).checked!==false;
+    CFG.tiles=parseInt(($('sTiles')||{}).value)||4;
+    CFG.layout=($('sLayout')||{}).value||'vertical';
+    CFG.tplBg=($('sTplBg')||{}).value||'#1a1a2e';
+    CFG.rBizName=($('rBizName')||{}).value||'';
+    CFG.rTagline=($('rTagline')||{}).value||'';
+    CFG.rL1L=($('rL1L')||{}).value||'';
+    CFG.rL1R=($('rL1R')||{}).value||'';
+    CFG.rL2L=($('rL2L')||{}).value||'';
+    CFG.rL2R=($('rL2R')||{}).value||'';
+    CFG.rMsg=($('rMsg')||{}).value||'';
+    CFG.rFooter=($('rFooter')||{}).value||'';
+    CFG.rOrder=($('rOrder')||{}).checked!==false;
+    CFG.rDate=($('rDate')||{}).checked!==false;
+    CFG.askName=!!($('sAskName')||{}).checked;
+    CFG.printName=!!($('sPrintName')||{}).checked;
+    CFG.kiosk=!!($('sKiosk')||{}).checked;
+    CFG.restart=parseInt(($('sRestart')||{}).value)||15;
+    CFG.imgbb=($('sImgbb')||{}).value||'';
+    CFG.prefix=($('sPrefix')||{}).value||'snapbooth';
+    CFG.naming=($('sNaming')||{}).value||'prefix_seq';
+    CFG.autoDL=!!($('sAutoDL')||{}).checked;
+    CFG.quality=($('sQuality')||{}).value||'0.85';
+    CFG.format=($('sFormat')||{}).value||'jpeg';
+    CFG.autoGal=($('sAutoGal')||{}).checked!==false;
+    applyBranding();
+    localStorage.setItem('snapbooth_cfg',JSON.stringify(CFG));
+  }catch(e){}
+}
+
+function loadSettings(){
+  try{
+    var raw=localStorage.getItem('snapbooth_cfg');
+    if(raw){
+      var c=JSON.parse(raw);
+      for(var k in c){if(c.hasOwnProperty(k))CFG[k]=c[k]}
+    }
+  }catch(e){}
+  populateSettingsUI();
+  applyBranding();
+}
+
+function populateSettingsUI(){
+  try{
+    var map={
+      'sName':'name','cPri':'pri','cAcc':'acc','cBg':'bg','cBg2':'bg2','cTx':'tx',
+      'sCamSrc':'camSrc','sTplBg':'tplBg',
+      'rBizName':'rBizName','rTagline':'rTagline',
+      'rL1L':'rL1L','rL1R':'rL1R','rL2L':'rL2L','rL2R':'rL2R',
+      'rMsg':'rMsg','rFooter':'rFooter',
+      'sImgbb':'imgbb','sPrefix':'prefix','sNaming':'naming',
+      'sQuality':'quality','sFormat':'format'
+    };
+    for(var id in map){
+      var el=$(id);if(el)el.value=CFG[map[id]]||el.value;
+    }
+    var numMap={'sCntDown':'countdown','sTiles':'tiles','sRestart':'restart'};
+    for(var nid in numMap){
+      var nel=$(nid);if(nel)nel.value=CFG[numMap[nid]];
+    }
+    var chkMap={'sMirror':'mirror','rOrder':'rOrder','rDate':'rDate',
+      'sAskName':'askName','sPrintName':'printName','sKiosk':'kiosk',
+      'sAutoDL':'autoDL','sAutoGal':'autoGal'};
+    for(var cid in chkMap){
+      var cel=$(cid);if(cel)cel.checked=!!CFG[chkMap[cid]];
+    }
+    if(CFG.logoData){
+      S.logoData=CFG.logoData;
+      var lp=$('logoPreview'),li=$('logoPrvImg'),hl=$('homeLogo');
+      if(lp)lp.style.display='inline-block';
+      if(li)li.src=CFG.logoData;
+      if(hl){hl.src=CFG.logoData;hl.style.display='block'}
+    }
+    if(CFG.overlayData){
+      var tp=$('tplPreview'),ti=$('tplPrvImg');
+      if(tp)tp.style.display='inline-block';
+      if(ti)ti.src=CFG.overlayData;
+      S.overlayImg=new Image();
+      S.overlayImg.src=CFG.overlayData;
+    }
+  }catch(e){}
+}
+
+function applyBranding(){
+  var r=document.documentElement.style;
+  r.setProperty('--pri',CFG.pri);
+  r.setProperty('--pri-d',darken(CFG.pri,15));
+  r.setProperty('--pri-l',lighten(CFG.pri,30));
+  r.setProperty('--acc',CFG.acc);
+  r.setProperty('--acc-d',darken(CFG.acc,15));
+  r.setProperty('--bg',CFG.bg);
+  r.setProperty('--bg2',CFG.bg2);
+  r.setProperty('--bg3',lighten(CFG.bg2,10));
+  r.setProperty('--tx',CFG.tx);
+  r.setProperty('--tx2',mixColor(CFG.tx,CFG.bg,0.7));
+  r.setProperty('--txm',mixColor(CFG.tx,CFG.bg,0.45));
+  r.setProperty('--brd',lighten(CFG.bg,15));
+  var t=$('boothTitle');if(t)t.textContent=CFG.name||'SnapBooth';
+  document.title=CFG.name||'SnapBooth';
+}
+
+function applyTheme(name){
+  var t=THEMES[name];if(!t)return;
+  CFG.pri=t.pri;CFG.acc=t.acc;CFG.bg=t.bg;CFG.bg2=t.bg2;CFG.tx=t.tx;
+  $('cPri').value=t.pri;$('cAcc').value=t.acc;
+  $('cBg').value=t.bg;$('cBg2').value=t.bg2;$('cTx').value=t.tx;
+  saveSettings();
+  var btns=document.querySelectorAll('.theme-btn');
+  for(var i=0;i<btns.length;i++){btns[i].classList.remove('active')}
+  if(event&&event.target)event.target.classList.add('active');
+}
+
+/* === COLOR HELPERS === */
+function hexToRgb(h){
+  h=h.replace('#','');
+  if(h.length===3)h=h[0]+h[0]+h[1]+h[1]+h[2]+h[2];
+  return{r:parseInt(h.substr(0,2),16),g:parseInt(h.substr(2,2),16),b:parseInt(h.substr(4,2),16)};
+}
+function rgbToHex(r,g,b){
+  return '#'+[r,g,b].map(function(v){v=Math.max(0,Math.min(255,Math.round(v)));return v.toString(16).padStart(2,'0')}).join('');
+}
+function darken(hex,pct){var c=hexToRgb(hex);return rgbToHex(c.r*(1-pct/100),c.g*(1-pct/100),c.b*(1-pct/100))}
+function lighten(hex,pct){var c=hexToRgb(hex);return rgbToHex(c.r+(255-c.r)*pct/100,c.g+(255-c.g)*pct/100,c.b+(255-c.b)*pct/100)}
+function mixColor(h1,h2,t){var a=hexToRgb(h1),b=hexToRgb(h2);return rgbToHex(a.r*t+b.r*(1-t),a.g*t+b.g*(1-t),a.b*t+b.b*(1-t))}
+
+/* === LOGO UPLOAD === */
+function handleLogo(input){
+  if(!input.files||!input.files[0])return;
+  var reader=new FileReader();
+  reader.onload=function(e){
+    CFG.logoData=e.target.result;
+    S.logoData=e.target.result;
+    var lp=$('logoPreview'),li=$('logoPrvImg'),hl=$('homeLogo');
+    if(lp)lp.style.display='inline-block';
+    if(li)li.src=e.target.result;
+    if(hl){hl.src=e.target.result;hl.style.display='block'}
+    saveSettings();
+  };
+  reader.readAsDataURL(input.files[0]);
+}
+
+function removeLogo(){
+  CFG.logoData=null;S.logoData=null;
+  var lp=$('logoPreview'),hl=$('homeLogo');
+  if(lp)lp.style.display='none';
+  if(hl)hl.style.display='none';
+  saveSettings();
+}
+
+/* === OVERLAY UPLOAD === */
+function handleOverlay(input){
+  if(!input.files||!input.files[0])return;
+  var reader=new FileReader();
+  reader.onload=function(e){
+    CFG.overlayData=e.target.result;
+    S.overlayImg=new Image();
+    S.overlayImg.src=e.target.result;
+    var tp=$('tplPreview'),ti=$('tplPrvImg');
+    if(tp)tp.style.display='inline-block';
+    if(ti)ti.src=e.target.result;
+    saveSettings();
+  };
+  reader.readAsDataURL(input.files[0]);
+}
+
+function removeOverlay(){
+  CFG.overlayData=null;S.overlayImg=null;
+  var tp=$('tplPreview');if(tp)tp.style.display='none';
+  saveSettings();
+}
+
+/* === PWA / SERVICE WORKER === */
+function regSW(){
+  try{
+    if(window.self!==window.top)return;
+    if('serviceWorker' in navigator){
+      navigator.serviceWorker.register('sw.js').catch(function(){});
+    }
+  }catch(e){}
+}
+
+/* === INIT === */
+function init(){
+  try{
+    loadSettings();
+    openDB().catch(function(){});
+    updateStorageInfo();
+    regSW();
+    var sg=$('stkGrid');
+    if(sg){
+      var html='';
+      for(var i=0;i<STICKERS.length;i++){
+        html+='<button onclick="placeSticker(\''+STICKERS[i]+'\')">'+STICKERS[i]+'</button>';
+      }
+      sg.innerHTML=html;
+    }
+  }catch(e){}
+}
+
+/* Boot */
+if(document.readyState==='loading'){
+  document.addEventListener('DOMContentLoaded',init);
+}else{
+  init();
+}
+</script>
+</body>
+</html>
