@@ -241,7 +241,7 @@ body.guest #preview .send-btn,body.guest #preview .acts,body.guest #qrMod .qr-ac
   #preview.gflow #prevCanvas{max-height:86vh;max-width:55vw}
 }
 #adminHot{position:fixed;top:0;left:0;width:72px;height:72px;z-index:500;display:none;-webkit-touch-callout:none;user-select:none;-webkit-user-select:none}
-body.guest #adminHot{display:block}
+body.guest.on-idle #adminHot{display:block}
 #pinInput{font-size:28px;letter-spacing:10px;text-align:center}
 #pinMsg{color:var(--err);min-height:20px;font-size:13px;margin:6px 0}
 #pinMod{z-index:600}
@@ -469,8 +469,11 @@ body.guest #adminHot{display:block}
     <div class="s-row"><label>Black &amp; White Output</label>
       <select id="sBW"><option value="receipt">Receipt layout only</option><option value="always">All layouts</option><option value="off">Off</option></select>
     </div>
-    <div class="s-row"><label>Paper Width</label>
-      <select id="sPaper"><option value="58mm">58mm receipt</option><option value="80mm">80mm receipt</option><option value="a4">A4 / Photo paper</option></select>
+    <div class="s-row"><label>Printer / Paper</label>
+      <select id="sPaper"><option value="58mm">Receipt 58mm (2 in)</option><option value="80mm">Receipt 80mm (3 in)</option><option value="wb4x6">Waybill / Shipping label 4x6 in (100x150mm)</option><option value="wb100x100">Waybill label 100x100mm</option><option value="a4">A4 / Photo paper</option><option value="custom">Custom size…</option></select></div>
+    <div class="s-row" id="rowCustom"><label>Custom W × H (mm)</label><span style="display:flex;gap:6px"><input type="number" id="sPW" min="20" max="300" style="width:70px" placeholder="76"><input type="number" id="sPH" min="0" max="500" style="width:70px" placeholder="0 = auto"></span></div>
+    <div class="s-row"><label>Printer DPI</label><select id="sDPI"><option value="203">203 dpi (most thermal / waybill)</option><option value="300">300 dpi</option><option value="180">180 dpi</option></select></div>
+    <div class="s-row"><label>Fill mode</label><select id="sFit"><option value="auto">Auto (by paper type)</option><option value="width">Fill paper width</option><option value="page">Fit whole label (waybill)</option></select>
     </div>
     <div class="s-row"><label>Print Method</label>
       <select id="sPrintMode"><option value="share">Choose printer app (RawBT etc.)</option><option value="system">Android system print</option></select>
@@ -624,7 +627,7 @@ var CFG = {
   askName:false,printName:false,kiosk:false,restart:15,
   cloudName:'',cloudPreset:'',prefix:'snapbooth',naming:'prefix_seq',autoDL:false,
   quality:'0.85',format:'jpeg',autoGal:true,
-  guestMode:true,adminPin:'1234',hashtag:'#RXMPHOTOBOOTH',footDate:true,bw:'receipt',paper:'58mm',printMode:'share',
+  guestMode:true,adminPin:'1234',hashtag:'#RXMPHOTOBOOTH',footDate:true,bw:'receipt',paper:'58mm',printMode:'share',pw:76,ph:0,dpi:203,fit:'auto',
   logoData:null
 };
 
@@ -647,6 +650,11 @@ function showScreen(id){
   for(var i=0;i<scrs.length;i++){scrs[i].classList.remove('active')}
   var el=$(id);
   if(el)el.classList.add('active');
+  /* Admin long-press corner only on the start screen, so it never blocks the X buttons */
+  try{
+    if(id==='idle')document.body.classList.add('on-idle');
+    else document.body.classList.remove('on-idle');
+  }catch(e){}
 }
 
 /* === AUDIO === */
@@ -1626,6 +1634,10 @@ function saveSettings(){
     CFG.bw=($('sBW')||{}).value||'receipt';
     CFG.paper=($('sPaper')||{}).value||'58mm';
     CFG.printMode=($('sPrintMode')||{}).value||'share';
+    CFG.pw=parseFloat(($('sPW')||{}).value)||76;
+    CFG.ph=parseFloat(($('sPH')||{}).value)||0;
+    CFG.dpi=parseInt(($('sDPI')||{}).value)||203;
+    CFG.fit=($('sFit')||{}).value||'auto';
     applyBranding();
     localStorage.setItem('snapbooth_cfg',JSON.stringify(CFG));
   }catch(e){}
@@ -1653,7 +1665,7 @@ function populateSettingsUI(){
       'rMsg':'rMsg','rFooter':'rFooter',
       'sCloudName':'cloudName','sCloudPreset':'cloudPreset','sPrefix':'prefix','sNaming':'naming',
       'sQuality':'quality','sFormat':'format',
-      'sAdminPin':'adminPin','sHashtag':'hashtag','sBW':'bw','sPaper':'paper','sPrintMode':'printMode'
+      'sAdminPin':'adminPin','sHashtag':'hashtag','sBW':'bw','sPaper':'paper','sPrintMode':'printMode','sDPI':'dpi','sFit':'fit','sPW':'pw','sPH':'ph'
     };
     for(var id in map){
       var el=$(id);if(el)el.value=CFG[map[id]]||el.value;
@@ -2249,19 +2261,12 @@ function gRetake(){
   }catch(e){}
 }
 function gPrintCSS(){
-  var p=CFG.paper||'58mm';
-  if(p==='a4'){
-    return '@page{size:A4;margin:8mm}html,body{margin:0;padding:0;background:#fff}'+
-      '.pg{page-break-after:always;break-after:page;display:flex;align-items:center;justify-content:center;height:275mm}'+
-      '.pg:last-child{page-break-after:auto;break-after:auto}'+
-      '.pg img{max-width:100%;max-height:275mm;display:block}';
-  }
-  /* Receipt: fill the full printable width (Android ignores custom @page sizes,
-     so a fixed 58mm box printed tiny on A4). */
-  return '@page{size:'+p+' auto;margin:0}html,body{margin:0;padding:0;background:#fff;width:100%}'+
-    '.pg{width:100%;page-break-after:always;break-after:page}'+
+  var mm=gPaperMM(),w=mm[0],ht=mm[1];
+  var size=ht?(w+'mm '+ht+'mm'):(w+'mm auto');
+  return '@page{size:'+size+';margin:0}html,body{margin:0;padding:0;background:#fff}'+
+    '.pg{width:'+w+'mm;'+(ht?'height:'+ht+'mm;display:flex;align-items:center;justify-content:center;':'')+'page-break-after:always;break-after:page;overflow:hidden}'+
     '.pg:last-child{page-break-after:auto;break-after:auto}'+
-    '.pg img{width:100%;height:auto;display:block}';
+    '.pg img{'+(ht?'max-width:100%;max-height:100%;':'width:100%;height:auto;')+'display:block}';
 }
 /* Print via Android share sheet so the user can pick RawBT (or any printer app) */
 function gDataUrlToBlob(du){
@@ -2270,9 +2275,10 @@ function gDataUrlToBlob(du){
   for(var i=0;i<b.length;i++){a[i]=b.charCodeAt(i)}
   return new Blob([a],{type:mime});
 }
-function gBuildCopies(n,cb){
+function gBuildCopies(n,cb){gBuildCopiesFrom(S.currentDataUrl,n,cb)}
+function gBuildCopiesFrom(src,n,cb){
   try{
-    if(n<=1){cb(S.currentDataUrl);return}
+    if(n<=1){cb(src);return}
     var img=new Image();
     img.onload=function(){
       try{
@@ -2281,16 +2287,56 @@ function gBuildCopies(n,cb){
         var x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);
         for(var i=0;i<n;i++){x.drawImage(img,0,i*(img.height+gap))}
         cb(c.toDataURL('image/png'));
-      }catch(e){cb(S.currentDataUrl)}
+      }catch(e){cb(src)}
     };
-    img.onerror=function(){cb(S.currentDataUrl)};
-    img.src=S.currentDataUrl;
-  }catch(e){cb(S.currentDataUrl)}
+    img.onerror=function(){cb(src)};
+    img.src=src;
+  }catch(e){cb(src)}
+}
+/* Printer paper geometry in mm: [width, height(0=continuous)] */
+function gPaperMM(){
+  var p=CFG.paper||'58mm';
+  if(p==='58mm')return [48,0];      /* 58mm roll, ~48mm printable */
+  if(p==='80mm')return [72,0];      /* 80mm roll, ~72mm printable */
+  if(p==='wb4x6')return [100,150];
+  if(p==='wb100x100')return [100,100];
+  if(p==='a4')return [190,277];
+  return [CFG.pw||76,CFG.ph||0];
+}
+/* Render the photo at the printer's exact dot size so it prints full size */
+function gPrinterImage(src,cb){
+  try{
+    var mm=gPaperMM(),dpi=CFG.dpi||203;
+    var W=Math.round(mm[0]/25.4*dpi),H=mm[1]?Math.round(mm[1]/25.4*dpi):0;
+    var fit=CFG.fit||'auto';if(fit==='auto')fit=H?'page':'width';
+    var img=new Image();
+    img.onload=function(){
+      try{
+        var c=document.createElement('canvas'),x;
+        if(fit==='page'&&H){
+          c.width=W;c.height=H;x=c.getContext('2d');
+          x.fillStyle='#fff';x.fillRect(0,0,W,H);
+          var s=Math.min(W/img.width,H/img.height);
+          var dw=img.width*s,dh=img.height*s;
+          x.drawImage(img,(W-dw)/2,(H-dh)/2,dw,dh);
+        }else{
+          var ch=Math.round(img.height*W/img.width);
+          c.width=W;c.height=ch;x=c.getContext('2d');
+          x.fillStyle='#fff';x.fillRect(0,0,W,ch);
+          x.drawImage(img,0,0,W,ch);
+        }
+        cb(c.toDataURL('image/png'));
+      }catch(e){cb(src)}
+    };
+    img.onerror=function(){cb(src)};
+    img.src=src;
+  }catch(e){cb(src)}
 }
 function gPrintShare(){
   try{
     var n=Math.max(1,Math.min(10,S.gCopies||1));
-    gBuildCopies(n,function(du){
+    gPrinterImage(S.currentDataUrl,function(one){
+     gBuildCopiesFrom(one,n,function(du){
       try{
         var blob=gDataUrlToBlob(du);
         var f=new File([blob],'snapbooth_print.png',{type:'image/png'});
@@ -2300,6 +2346,7 @@ function gPrintShare(){
           gPrintSystem();
         }
       }catch(e){gPrintSystem()}
+     });
     });
     gArmIdle();
   }catch(e){gPrintSystem()}
