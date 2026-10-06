@@ -1,4 +1,4 @@
-var CACHE_NAME = 'snapbooth-v12';
+var CACHE_NAME = 'snapbooth-v13';
 var ASSETS = [
   'index.html',
   'dl.html',
