@@ -245,6 +245,19 @@ body.guest.on-idle #adminHot{display:block}
 #pinInput{font-size:28px;letter-spacing:10px;text-align:center}
 #pinMsg{color:var(--err);min-height:20px;font-size:13px;margin:6px 0}
 #pinMod{z-index:600}
+
+/* ===== CUSTOM TEMPLATES ===== */
+.ltile.ctpl-tile .ctpl-th{max-width:130px;max-height:140px;width:auto;height:auto;background:#fff;border-radius:6px;box-shadow:0 4px 14px rgba(0,0,0,.35);display:block}
+.ltile.ctpl-tile small{color:var(--txm);font-size:13px;margin-top:-6px}
+.ctpl-item{display:flex;align-items:center;gap:10px;padding:8px;border:1px solid var(--brd);border-radius:var(--rad2);margin-top:8px;background:var(--bg)}
+.ctpl-item img{width:52px;height:52px;object-fit:contain;background:#fff;border-radius:6px;flex:0 0 auto}
+.ctpl-meta{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.ctpl-meta b{font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ctpl-meta small{color:var(--txm);font-size:12px}
+.ctpl-src{font-size:11px;padding:3px 8px;border-radius:999px;background:var(--bg3);color:var(--tx2)}
+.ctpl-del{background:var(--err);color:#fff;border:none;border-radius:8px;padding:8px 10px;font-size:14px;cursor:pointer}
+#ctplMsg{font-size:13px;min-height:18px;margin-top:6px}
+#ctplMsg.err{color:var(--err)}#ctplMsg.ok{color:var(--ok)}
 </style>
 </head>
 <body>
@@ -481,6 +494,17 @@ body.guest.on-idle #adminHot{display:block}
     <div class="s-note">Guest Mode opens on the &ldquo;Tap to start&rdquo; screen and hides admin buttons. To exit: long-press the top-left corner for 2 seconds, or tap the logo 5 times on the start screen, then enter the PIN.</div>
   </div>
 
+  <!-- Custom Templates -->
+  <div class="s-sec">
+    <h3>&#x1f5bc;&#xfe0f; Custom Templates</h3>
+    <div class="s-note">Upload a PNG design with <b>transparent windows</b> where the photos go. Each window becomes one photo. Templates appear on the guest layout picker.</div>
+    <div class="s-row"><label>Template Name</label><input type="text" id="ctplName" placeholder="e.g. Wedding 4-Strip"></div>
+    <div class="s-row"><label>PNG File</label><input type="file" id="ctplFile" accept="image/png" style="font-size:12px"></div>
+    <div class="s-row"><label></label><button class="btn bp" onclick="ctplAdd()">&#x2795; Add template</button></div>
+    <div id="ctplMsg"></div>
+    <div id="ctplList"></div>
+  </div>
+
   <!-- Output -->
   <div class="s-sec">
     <h3>&#x1f4be; Output</h3>
@@ -655,6 +679,10 @@ function showScreen(id){
     if(id==='idle')document.body.classList.add('on-idle');
     else document.body.classList.remove('on-idle');
   }catch(e){}
+  try{
+    if(id==='settings')ctplRenderList();
+    if(id==='layouts')ctplRenderTiles();
+  }catch(e){}
 }
 
 /* === AUDIO === */
@@ -697,13 +725,19 @@ function openDB(){
   return new Promise(function(resolve){
     try{
       if(S.db){resolve(S.db);return}
-      var req=indexedDB.open('SnapBoothDB',1);
+      var req=indexedDB.open('SnapBoothDB',2);
       req.onupgradeneeded=function(e){
-        var db=e.target.result;
-        if(!db.objectStoreNames.contains('photos')){
-          db.createObjectStore('photos',{keyPath:'id',autoIncrement:true});
-        }
+        try{
+          var db=e.target.result;
+          if(!db.objectStoreNames.contains('photos')){
+            db.createObjectStore('photos',{keyPath:'id',autoIncrement:true});
+          }
+          if(!db.objectStoreNames.contains('templates')){
+            db.createObjectStore('templates',{keyPath:'id',autoIncrement:true});
+          }
+        }catch(err){}
       };
+      req.onblocked=function(){};
       req.onsuccess=function(e){S.db=e.target.result;resolve(S.db)};
       req.onerror=function(){resolve(null)};
     }catch(e){resolve(null)}
@@ -2109,6 +2143,7 @@ function gRender(imgs,isRe){
     var def=G_LAYOUTS[S.gLayout]||G_LAYOUTS.strip4;
     if(!S.gTime)S.gTime=new Date();
     if(def.type==='receipt'){gRenderReceipt(pc,imgs,def)}
+    else if(def.type==='tpl'){gRenderTpl(pc,imgs,def)}
     else{gRenderGrid(pc,imgs,def)}
     if(gUseBW()){gGray(pc.getContext('2d'),pc.width,pc.height)}
     gFinish(pc,isRe);
@@ -2390,6 +2425,317 @@ function gPrintInline(pages){
   }catch(e){}
 }
 
+
+/* ================= CUSTOM TEMPLATES ================= */
+S.ctpls=[];S.ctplSeq=0;
+
+function ctplEsc(s){
+  return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+function ctplMsgSet(t,isErr){
+  try{var m=$('ctplMsg');if(!m)return;m.textContent=t||'';m.className=t?(isErr?'err':'ok'):''}catch(e){}
+}
+
+/* Find transparent photo windows: alpha<40, connected components (iterative), >=1.5% of area */
+function ctplDetect(img){
+  var res={w:0,h:0,slots:[]};
+  try{
+    var W=img.naturalWidth||img.width,H=img.naturalHeight||img.height;
+    res.w=W;res.h=H;
+    if(!W||!H)return res;
+    var sc=Math.min(1,600/W);
+    var w=Math.max(1,Math.round(W*sc)),h=Math.max(1,Math.round(H*sc));
+    var c=document.createElement('canvas');c.width=w;c.height=h;
+    var x=c.getContext('2d');x.clearRect(0,0,w,h);x.drawImage(img,0,0,w,h);
+    var d=x.getImageData(0,0,w,h).data;
+    var N=w*h,mask=new Uint8Array(N),i;
+    for(i=0;i<N;i++){if(d[i*4+3]<40)mask[i]=1}
+    var seen=new Uint8Array(N),stack=new Int32Array(N),boxes=[],minA=N*0.015,maxA=N*0.97;
+    for(var s=0;s<N;s++){
+      if(!mask[s]||seen[s])continue;
+      var sp=0;stack[sp++]=s;seen[s]=1;
+      var cnt=0,x0=w,y0=h,x1=0,y1=0;
+      while(sp>0){
+        var q=stack[--sp];var qx=q%w,qy=(q-qx)/w;cnt++;
+        if(qx<x0)x0=qx;if(qx>x1)x1=qx;if(qy<y0)y0=qy;if(qy>y1)y1=qy;
+        var nb;
+        if(qx>0){nb=q-1;if(mask[nb]&&!seen[nb]){seen[nb]=1;stack[sp++]=nb}}
+        if(qx<w-1){nb=q+1;if(mask[nb]&&!seen[nb]){seen[nb]=1;stack[sp++]=nb}}
+        if(qy>0){nb=q-w;if(mask[nb]&&!seen[nb]){seen[nb]=1;stack[sp++]=nb}}
+        if(qy<h-1){nb=q+w;if(mask[nb]&&!seen[nb]){seen[nb]=1;stack[sp++]=nb}}
+      }
+      if(cnt>=minA&&cnt<=maxA)boxes.push({x:x0,y:y0,w:x1-x0+1,h:y1-y0+1});
+    }
+    /* Scale back to full resolution, pad slightly so no hairline gaps */
+    var inv=1/sc,pad=Math.ceil(inv),out=[];
+    for(i=0;i<boxes.length;i++){
+      var b=boxes[i];
+      var bx=Math.max(0,Math.floor(b.x*inv)-pad),by=Math.max(0,Math.floor(b.y*inv)-pad);
+      var bx2=Math.min(W,Math.ceil((b.x+b.w)*inv)+pad),by2=Math.min(H,Math.ceil((b.y+b.h)*inv)+pad);
+      out.push({x:bx,y:by,w:bx2-bx,h:by2-by});
+    }
+    /* Sort top-to-bottom, then left-to-right within a row */
+    out.sort(function(a,b){return a.y-b.y});
+    var rows=[],cur=null;
+    for(i=0;i<out.length;i++){
+      var r=out[i];
+      if(cur&&Math.abs(r.y-cur.y)<Math.min(r.h,cur.h)*0.5){cur.items.push(r)}
+      else{cur={y:r.y,h:r.h,items:[r]};rows.push(cur)}
+    }
+    var sorted=[];
+    for(i=0;i<rows.length;i++){
+      rows[i].items.sort(function(a,b){return a.x-b.x});
+      for(var k=0;k<rows[i].items.length;k++)sorted.push(rows[i].items[k]);
+    }
+    res.slots=sorted;
+  }catch(e){}
+  return res;
+}
+
+/* Register a template so the guest flow can use it */
+function ctplRegister(t){
+  try{
+    for(var i=0;i<S.ctpls.length;i++){if(S.ctpls[i].key===t.key){S.ctpls.splice(i,1);break}}
+    S.ctpls.push(t);
+    S.ctpls.sort(function(a,b){
+      if(a.source!==b.source)return a.source==='github'?-1:1;
+      return (a.ord||0)-(b.ord||0);
+    });
+    G_LAYOUTS[t.key]={n:t.slots.length,type:'tpl',label:t.name,tpl:t};
+    ctplRenderTiles();ctplRenderList();
+  }catch(e){}
+}
+function ctplUnregister(key){
+  try{
+    for(var i=0;i<S.ctpls.length;i++){if(S.ctpls[i].key===key){S.ctpls.splice(i,1);break}}
+    try{delete G_LAYOUTS[key]}catch(e){}
+    ctplRenderTiles();ctplRenderList();
+  }catch(e){}
+}
+
+/* --- IndexedDB (tablet templates) --- */
+function ctplDbAll(){
+  return openDB().then(function(db){
+    if(!db)return[];
+    return new Promise(function(resolve){
+      try{
+        if(!db.objectStoreNames.contains('templates')){resolve([]);return}
+        var req=db.transaction('templates','readonly').objectStore('templates').getAll();
+        req.onsuccess=function(){resolve(req.result||[])};
+        req.onerror=function(){resolve([])};
+      }catch(e){resolve([])}
+    });
+  }).catch(function(){return[]});
+}
+function ctplDbAdd(rec){
+  return openDB().then(function(db){
+    if(!db)return null;
+    return new Promise(function(resolve){
+      try{
+        if(!db.objectStoreNames.contains('templates')){resolve(null);return}
+        var req=db.transaction('templates','readwrite').objectStore('templates').add(rec);
+        req.onsuccess=function(){resolve(req.result)};
+        req.onerror=function(){resolve(null)};
+      }catch(e){resolve(null)}
+    });
+  }).catch(function(){return null});
+}
+function ctplDbDel(id){
+  return openDB().then(function(db){
+    if(!db)return;
+    return new Promise(function(resolve){
+      try{
+        var tx=db.transaction('templates','readwrite');
+        tx.objectStore('templates').delete(id);
+        tx.oncomplete=function(){resolve()};
+        tx.onerror=function(){resolve()};
+      }catch(e){resolve()}
+    });
+  }).catch(function(){});
+}
+
+/* --- Boot: load GitHub + tablet templates --- */
+function ctplBoot(){
+  try{ctplLoadGithub()}catch(e){}
+  try{ctplLoadTablet()}catch(e){}
+}
+function ctplLoadGithub(){
+  try{
+    if(!window.fetch)return;
+    fetch('templates/templates.json',{cache:'no-cache'}).then(function(r){
+      if(!r||!r.ok)return null;
+      return r.json();
+    }).then(function(js){
+      var arr=(js&&js.templates)||[];
+      for(var i=0;i<arr.length;i++){
+        (function(item,idx){
+          try{
+            if(!item||!item.file)return;
+            var src='templates/'+encodeURI(String(item.file));
+            var img=new Image();
+            img.onload=function(){
+              try{
+                var r=ctplDetect(img);
+                if(!r.slots.length)return;
+                ctplRegister({
+                  key:'tpl_g'+idx+'_'+String(item.file).replace(/[^a-zA-Z0-9]/g,'_'),
+                  name:item.name||String(item.file).replace(/\.[^.]+$/,''),
+                  src:src,w:r.w,h:r.h,slots:r.slots,source:'github',ord:idx,img:img
+                });
+              }catch(e){}
+            };
+            img.onerror=function(){};
+            img.src=src;
+          }catch(e){}
+        })(arr[i],i);
+      }
+    }).catch(function(){});
+  }catch(e){}
+}
+function ctplLoadTablet(){
+  try{
+    ctplDbAll().then(function(list){
+      for(var i=0;i<list.length;i++){
+        (function(rec){
+          try{
+            var img=new Image();
+            img.onload=function(){
+              try{
+                var slots=rec.slots&&rec.slots.length?rec.slots:ctplDetect(img).slots;
+                if(!slots.length)return;
+                ctplRegister({
+                  key:'tpl_t'+rec.id,id:rec.id,name:rec.name||'Template',src:rec.data,
+                  w:rec.w||img.naturalWidth,h:rec.h||img.naturalHeight,slots:slots,
+                  source:'tablet',ord:rec.added||rec.id,img:img
+                });
+              }catch(e){}
+            };
+            img.onerror=function(){};
+            img.src=rec.data;
+          }catch(e){}
+        })(list[i]);
+      }
+    }).catch(function(){});
+  }catch(e){}
+}
+
+/* --- Settings: add / list / delete --- */
+function ctplAdd(){
+  try{
+    var f=$('ctplFile'),nm=$('ctplName');
+    if(!f||!f.files||!f.files[0]){ctplMsgSet('Choose a PNG file first.',true);return}
+    var file=f.files[0];
+    if(file.type&&file.type!=='image/png'){ctplMsgSet('Please use a PNG file (JPG has no transparency).',true);return}
+    var name=((nm&&nm.value)||'').trim()||String(file.name||'Template').replace(/\.[^.]+$/,'');
+    ctplMsgSet('Reading template\u2026',false);
+    var rd=new FileReader();
+    rd.onload=function(){
+      try{
+        var src=rd.result;
+        var img=new Image();
+        img.onload=function(){
+          try{
+            var r=ctplDetect(img);
+            if(!r.slots.length){ctplMsgSet('No transparent photo windows found \u2014 save PNG with transparent areas',true);return}
+            var rec={name:name,data:src,w:r.w,h:r.h,slots:r.slots,added:Date.now()};
+            ctplDbAdd(rec).then(function(id){
+              try{
+                if(id==null){ctplMsgSet('Could not save on this tablet (browser storage unavailable).',true);return}
+                ctplRegister({key:'tpl_t'+id,id:id,name:name,src:src,w:r.w,h:r.h,slots:r.slots,source:'tablet',ord:rec.added,img:img});
+                ctplMsgSet('\u2705 Added "'+name+'" \u2014 '+r.slots.length+(r.slots.length>1?' photos':' photo')+'.',false);
+                try{f.value=''}catch(e){}
+                try{if(nm)nm.value=''}catch(e){}
+              }catch(e){}
+            }).catch(function(){ctplMsgSet('Could not save the template.',true)});
+          }catch(e){ctplMsgSet('Could not read that image.',true)}
+        };
+        img.onerror=function(){ctplMsgSet('Could not open that file as an image.',true)};
+        img.src=src;
+      }catch(e){ctplMsgSet('Could not read that file.',true)}
+    };
+    rd.onerror=function(){ctplMsgSet('Could not read that file.',true)};
+    rd.readAsDataURL(file);
+  }catch(e){ctplMsgSet('Something went wrong adding the template.',true)}
+}
+function ctplDelete(id){
+  try{
+    var t=null;
+    for(var i=0;i<S.ctpls.length;i++){if(S.ctpls[i].source==='tablet'&&S.ctpls[i].id===id){t=S.ctpls[i];break}}
+    if(!t)return;
+    var ok=true;try{ok=window.confirm('Delete template "'+t.name+'"?')}catch(e){ok=true}
+    if(!ok)return;
+    ctplDbDel(id).then(function(){ctplUnregister(t.key);ctplMsgSet('Template deleted.',false)}).catch(function(){});
+  }catch(e){}
+}
+function ctplRenderList(){
+  try{
+    var el=$('ctplList');if(!el)return;
+    if(!S.ctpls.length){el.innerHTML='<div class="s-note">No custom templates yet.</div>';return}
+    var html='';
+    for(var i=0;i<S.ctpls.length;i++){
+      var t=S.ctpls[i],n=t.slots.length;
+      html+='<div class="ctpl-item"><img src="'+ctplEsc(t.src)+'" alt="">'+
+        '<div class="ctpl-meta"><b>'+ctplEsc(t.name)+'</b><small>'+n+(n>1?' photos':' photo')+' \u2022 '+t.w+'\u00d7'+t.h+'px</small></div>';
+      if(t.source==='tablet'){
+        html+='<span class="ctpl-src">Tablet</span><button class="ctpl-del" onclick="ctplDelete('+Number(t.id)+')">&#x1f5d1;&#xfe0f;</button>';
+      }else{
+        html+='<span class="ctpl-src">GitHub</span>';
+      }
+      html+='</div>';
+    }
+    el.innerHTML=html;
+  }catch(e){}
+}
+function ctplRenderTiles(){
+  try{
+    var grid=document.querySelector('#layouts .lay-grid');if(!grid)return;
+    var old=grid.querySelectorAll('.ctpl-tile');
+    for(var i=0;i<old.length;i++){try{grid.removeChild(old[i])}catch(e){}}
+    for(var j=0;j<S.ctpls.length;j++){
+      (function(t){
+        try{
+          var d=document.createElement('div');
+          d.className='ltile ctpl-tile';
+          var n=t.slots.length;
+          d.innerHTML='<img class="ctpl-th" src="'+ctplEsc(t.src)+'" alt=""><h4>'+ctplEsc(t.name)+'</h4><small>'+n+(n>1?' photos':' photo')+'</small>';
+          d.addEventListener('click',function(){gPickLayout(t.key)});
+          grid.appendChild(d);
+        }catch(e){}
+      })(S.ctpls[j]);
+    }
+  }catch(e){}
+}
+
+/* --- Compose: photos into windows, design on top --- */
+function ctplDrawCoverRect(ctx,img,x,y,w,h,flip){
+  try{
+    if(!img||!w||!h)return;
+    var ir=img.width/img.height,cr=w/h,sx,sy,sw,sh;
+    if(ir>cr){sh=img.height;sw=sh*cr;sx=(img.width-sw)/2;sy=0}
+    else{sw=img.width;sh=sw/cr;sx=0;sy=(img.height-sh)/2}
+    ctx.save();
+    ctx.beginPath();ctx.rect(x,y,w,h);ctx.clip();
+    if(flip){ctx.translate(x+w,y);ctx.scale(-1,1);ctx.drawImage(img,sx,sy,sw,sh,0,0,w,h)}
+    else{ctx.drawImage(img,sx,sy,sw,sh,x,y,w,h)}
+    ctx.restore();
+  }catch(e){}
+}
+function gRenderTpl(pc,imgs,def){
+  try{
+    var t=def.tpl;if(!t)return;
+    var W=t.w||(t.img&&t.img.naturalWidth)||1000,H=t.h||(t.img&&t.img.naturalHeight)||1500;
+    pc.width=W;pc.height=H;
+    var ctx=pc.getContext('2d');
+    ctx.fillStyle='#ffffff';ctx.fillRect(0,0,W,H);
+    for(var i=0;i<t.slots.length;i++){
+      var s=t.slots[i];
+      var im=imgs[i]||imgs[imgs.length-1];
+      ctplDrawCoverRect(ctx,im,s.x,s.y,s.w,s.h,S.gFlip);
+    }
+    if(t.img){try{ctx.drawImage(t.img,0,0,W,H)}catch(e){}}
+  }catch(e){}
+}
+
 /* === INIT === */
 function init(){
   try{
@@ -2398,6 +2744,7 @@ function init(){
     updateStorageInfo();
     regSW();
     try{gBoot()}catch(e){}
+    try{ctplBoot()}catch(e){}
     var sg=$('stkGrid');
     if(sg){
       var html='';
