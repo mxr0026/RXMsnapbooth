@@ -1,4 +1,4 @@
-var CACHE_NAME = 'snapbooth-v10';
+var CACHE_NAME = 'snapbooth-v12';
 var ASSETS = [
   'index.html',
   'dl.html',
@@ -37,8 +37,10 @@ self.addEventListener('activate', function(event){
 
 self.addEventListener('fetch', function(event){
   var req = event.request;
-  /* Network-first for navigation + the app's own HTML/JS so updates land immediately */
-  if(req.mode === 'navigate' || /\.(html|js)(\?|$)/.test(req.url)){
+  /* Never intercept uploads (Cloudinary POST) or other non-GET requests */
+  if(req.method !== 'GET'){return;}
+  /* Network-first for navigation + the app's own HTML/JS/JSON (e.g. templates/templates.json) */
+  if(req.mode === 'navigate' || /\.(html|js|json)(\?|$)/.test(req.url)){
     event.respondWith(
       fetch(req).then(function(response){
         if(response && response.status === 200){
