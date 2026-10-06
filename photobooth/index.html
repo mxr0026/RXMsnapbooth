@@ -1,463 +1,7 @@
 <!DOCTYPE html>
-<html lang="en"><head>
-<meta charset="UTF-8"><style id="qw-theme">:root {
-  --color-bg: #121218 !important;
-  --color-text: #e4e4ed !important;
-  --chat-column-max: 720px !important;
-  --flow-size-overview-canvas-min-height: 480px !important;
-  --color-navbar-bg: #1a1a24 !important;
-  --color-navbar-fg: #e4e4ed !important;
-  --color-navbar-fg-muted: color-mix(in srgb, #e4e4ed 65%, #1a1a24) !important;
-  --color-navbar-divider: #ffffff1f !important;
-  --color-leftnav-bg: #1a1a24 !important;
-  --color-bg-chat-view: #121218 !important;
-  --color-bg-secondary: #1a1a24 !important;
-  --color-bg-tertiary: #1e1e2a !important;
-  --color-bg-hover: #2a2a38 !important;
-  --color-surface: #1e1e2a !important;
-  --color-surface-hover: #2a2a38 !important;
-  --color-surface-active: #353546 !important;
-  --color-border: #ffffff1f !important;
-  --color-border-light: #ffffff0f !important;
-  --color-border-strong: #3a3a4e !important;
-  --background-toggle-off-default: #fff0 !important;
-  --color-primary: #8575ff !important;
-  --color-primary-dark: #4200db !important;
-  --color-primary-light: #8575ff !important;
-  --color-primary-bg: color-mix(in srgb, #8575ff 15%, transparent) !important;
-  --color-primary-hover-border: #4200db !important;
-  --color-nav-icon-active: #8575ff !important;
-  --color-nav-hover-border: #8575ff !important;
-  --color-primary-alpha-3: color-mix(in srgb, #8575ff 3%, transparent) !important;
-  --color-primary-alpha-5: color-mix(in srgb, #8575ff 5%, transparent) !important;
-  --color-primary-alpha-8: color-mix(in srgb, #8575ff 8%, transparent) !important;
-  --color-primary-alpha-12: color-mix(in srgb, #8575ff 12%, transparent) !important;
-  --color-primary-alpha-15: color-mix(in srgb, #8575ff 15%, transparent) !important;
-  --color-primary-alpha-20: color-mix(in srgb, #8575ff 20%, transparent) !important;
-  --color-primary-alpha-25: color-mix(in srgb, #8575ff 25%, transparent) !important;
-  --color-primary-alpha-30: color-mix(in srgb, #8575ff 30%, transparent) !important;
-  --color-primary-alpha-40: color-mix(in srgb, #8575ff 40%, transparent) !important;
-  --color-primary-alpha-50: color-mix(in srgb, #8575ff 50%, transparent) !important;
-  --color-primary-alpha-60: color-mix(in srgb, #8575ff 60%, transparent) !important;
-  --color-primary-subtle: color-mix(in srgb, #8575ff 25%, transparent) !important;
-  --color-primary-border: color-mix(in srgb, #8575ff 50%, transparent) !important;
-  --color-focus-ring: #8575ff !important;
-  --color-sidebar-hover: color-mix(in srgb, #8575ff 15%, transparent) !important;
-  --color-sidebar-hover-solid: color-mix(in srgb, #8575ff 12%, #121218) !important;
-  --color-selection-copy: #3b82f64d !important;
-  --color-selection-capture: color-mix(in srgb, #8575ff 25%, transparent) !important;
-  --block-hover-outline: 1px dashed color-mix(in srgb, #8575ff 50%, transparent) !important;
-  --block-selected-outline: 1px solid #8575ff !important;
-  --block-selection-outline-offset: 2px !important;
-  --block-selected-halo: 0 0 8px color-mix(in srgb, #8575ff 40%, transparent) !important;
-  --color-accent: #8575ff !important;
-  --color-accent-foreground: #8575ff !important;
-  --color-accent-dark: #4200db !important;
-  --color-accent-light: color-mix(in srgb, #8575ff 15%, transparent) !important;
-  --color-accent-inverse: #fff !important;
-  --color-link: #8575ff !important;
-  --color-brand-ai-gradient-start: #6842ff !important;
-  --color-brand-ai-gradient-mid: #d600ba !important;
-  --color-brand-ai-gradient-end: #ff4b14 !important;
-  --color-primary-gradient-end: color-mix(in srgb, #8575ff 35%, transparent) !important;
-  --color-primary-bg-solid: #1a1530 !important;
-  --color-user-bubble: #333843 !important;
-  --color-user-bubble-text: #e4e4ed !important;
-  --color-text-secondary: #a0a0b4 !important;
-  --color-text-tertiary: #8a8a9a !important;
-  --color-text-muted: #6e6e82 !important;
-  --color-text-on-primary: #fff !important;
-  --color-success: #4ade80 !important;
-  --color-success-dark: #00802f !important;
-  --color-success-light: #d9ffd6 !important;
-  --color-success-hover: #005c26 !important;
-  --color-success-bg: #1c2c22 !important;
-  --color-success-border: #0e3d1c !important;
-  --color-success-foreground: #4ade80 !important;
-  --color-success-dark-foreground: #00802f !important;
-  --color-success-text: #4ade80 !important;
-  --color-error: #ff6b6b !important;
-  --color-error-dark: #db0000 !important;
-  --color-error-light: #ffe0e0 !important;
-  --color-error-hover: #3b1a24 !important;
-  --color-error-bg: #3b1a24 !important;
-  --color-error-border: #5e1a24 !important;
-  --color-error-active-border: #db0000 !important;
-  --color-error-foreground: #ff6b6b !important;
-  --color-error-dark-foreground: #db0000 !important;
-  --color-error-inverse: #fff !important;
-  --color-error-text: #ff6b6b !important;
-  --color-warning: #fbbf24 !important;
-  --color-warning-dark: #573a00 !important;
-  --color-warning-light: #fffbbd !important;
-  --color-warning-hover: #db9200 !important;
-  --color-warning-bg: #3d3520 !important;
-  --color-warning-border: #5e4a1a !important;
-  --color-warning-foreground: #fbbf24 !important;
-  --color-warning-dark-foreground: #573a00 !important;
-  --color-warning-inverse: #573a00 !important;
-  --color-surface-warning: #fffbbd !important;
-  --color-text-warning: #573a00 !important;
-  --color-info: #60a5fa !important;
-  --color-info-dark: #006ce0 !important;
-  --color-info-light: #d1f1ff !important;
-  --color-info-hover: #003b8f !important;
-  --color-info-bg: #1a2a42 !important;
-  --color-info-border: #0f3d6e !important;
-  --color-info-foreground: #60a5fa !important;
-  --color-info-dark-foreground: #002a66 !important;
-  --color-info-inverse: #fff !important;
-  --color-overlay: #000000b3 !important;
-  --color-shadow: #0000004d !important;
-  --color-hover: #ffffff0d !important;
-  --color-tooltip-bg: #1e1e2af2 !important;
-  --color-tooltip-text: #e4e4ed !important;
-  --color-voice-purple: #8575ff !important;
-  --color-voice-purple-dark: #4200db !important;
-  --color-voice-purple-light: #8575ff !important;
-  --color-voice-red: #ff6b6b !important;
-  --color-voice-red-dark: #db0000 !important;
-  --color-voice-amber: #fbbf24 !important;
-  --color-voice-purple-glow: #8575ff66 !important;
-  --color-voice-red-glow: #db000066 !important;
-  --font-sans: "Amazon Ember", "Helvetica Neue", "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
-  --font-mono: "SF Mono", "Monaco", "Menlo", "Consolas", monospace !important;
-  --text-2xs: .5625rem !important;
-  --text-xs: .625rem !important;
-  --text-sm: .6875rem !important;
-  --text-base: .75rem !important;
-  --text-md: .8125rem !important;
-  --text-lg: .875rem !important;
-  --text-xl: 1rem !important;
-  --text-2xl: 1.125rem !important;
-  --text-3xl: 1.25rem !important;
-  --text-4xl: 1.5rem !important;
-  --text-5xl: 2rem !important;
-  --spacing-1: calc(.25rem * 1) !important;
-  --spacing-1-5: calc(.25rem * 1.5) !important;
-  --spacing-2: calc(.25rem * 2) !important;
-  --spacing-3: calc(.25rem * 3) !important;
-  --spacing-4: calc(.25rem * 4) !important;
-  --spacing-5: calc(.25rem * 5) !important;
-  --spacing-6: calc(.25rem * 6) !important;
-  --spacing-7: calc(.25rem * 7) !important;
-  --spacing-8: calc(.25rem * 8) !important;
-  --spacing-9: calc(.25rem * 9) !important;
-  --spacing-10: calc(.25rem * 10) !important;
-  --border-radius-rounded-lg: 8px !important;
-  --radius-sm: 6px !important;
-  --radius-md: 10px !important;
-  --radius-card: 12px !important;
-  --radius-lg: 16px !important;
-  --radius-pill: 8px !important;
-  --shadow-sm: 0 1px 2px #0003 !important;
-  --shadow-md: 0 4px 12px #0000004d !important;
-  --shadow-lg: 0 4px 16px 4px #0006, 0 2px 6px 1px #0006 !important;
-  --color-success-bg-solid: #1a3d28 !important;
-  --color-error-bg-solid: #4a2028 !important;
-  --color-error-border-solid: #5e1a24 !important;
-  --color-warning-bg-solid: #4a3a1e !important;
-  --color-warning-text: #fbbf24 !important;
-  --color-info-bg-solid: #1a3050 !important;
-  --color-info-bg-solid-alt: #222240 !important;
-  --color-info-text: #60a5fa !important;
-  --color-info-text-alt: #818cf8 !important;
-  --color-emerald: #34d399 !important;
-  --color-teal: #5eead4 !important;
-  --color-code-bg: #1e1e2a !important;
-  --color-code-header-bg: #252535 !important;
-  --color-code-text: #e4e4ed !important;
-  --color-code-border: #2e2e3e !important;
-  --color-code-muted: #6e6e82 !important;
-  --color-inline-code-bg: #1e1e2a !important;
-  --color-inline-code-text: #e4e4ed !important;
-  --color-inline-code-border: #2e2e3e !important;
-  --color-scrollbar-thumb: #3a3a4e !important;
-  --color-scrollbar-track: transparent !important;
-  --color-graph-node-text: #e4e4ed !important;
-  --color-graph-node-text-dim: #6e6e82 !important;
-  --color-graph-edge-default: #6e6e82 !important;
-  --color-graph-edge-cross: #f39c12 !important;
-  --color-graph-edge-text: #a0a0b4 !important;
-  --color-graph-edge-stroke: #1a1a24 !important;
-  --color-graph-highlight-bg: #ff6b6b !important;
-  --color-graph-highlight-border: #e74c3c !important;
-  --color-graph-search-bg: gold !important;
-  --color-graph-search-border: orange !important;
-  --color-graph-focus-border: #f44 !important;
-  --color-graph-external-border: #6e6e82 !important;
-  --color-graph-selected-border: #8575ff !important;
-  --qs-data-cat-01: #6366f1 !important;
-  --qs-data-cat-02: #f59e0b !important;
-  --qs-data-cat-03: #06b6d4 !important;
-  --qs-data-cat-04: #a78bfa !important;
-  --qs-data-cat-05: #22c55e !important;
-  --qs-data-cat-06: #0284c7 !important;
-  --qs-data-cat-07: #e879f9 !important;
-  --qs-data-cat-08: #a3e635 !important;
-  --qs-data-cat-09: #60a5fa !important;
-  --qs-data-cat-10: #f9a8d4 !important;
-  --qs-data-cat-11: #f97316 !important;
-  --qs-data-cat-12: #5eead4 !important;
-  --qs-data-cat-other: #a3a3a3 !important;
-  --color-graph-cat-person: #6366f1 !important;
-  --color-graph-cat-module: #6366f1 !important;
-  --color-graph-cat-organization: #f59e0b !important;
-  --color-graph-cat-org: #f59e0b !important;
-  --color-graph-cat-variable: #f59e0b !important;
-  --color-graph-cat-column: #f59e0b !important;
-  --color-graph-cat-project: #06b6d4 !important;
-  --color-graph-cat-sheet: #06b6d4 !important;
-  --color-graph-cat-url: #06b6d4 !important;
-  --color-graph-cat-product: #a78bfa !important;
-  --color-graph-cat-class: #a78bfa !important;
-  --color-graph-cat-dashboard: #a78bfa !important;
-  --color-graph-cat-place: #22c55e !important;
-  --color-graph-cat-location: #22c55e !important;
-  --color-graph-cat-function: #22c55e !important;
-  --color-graph-cat-event: #0284c7 !important;
-  --color-graph-cat-date: #0284c7 !important;
-  --color-graph-cat-service: #0284c7 !important;
-  --color-graph-cat-creativework: #e879f9 !important;
-  --color-graph-cat-doc: #e879f9 !important;
-  --color-graph-cat-message: #a3e635 !important;
-  --color-graph-cat-channel: #a3e635 !important;
-  --color-graph-cat-email: #a3e635 !important;
-  --color-graph-cat-visual: #a3e635 !important;
-  --color-graph-cat-file: #60a5fa !important;
-  --color-graph-cat-file-aggregate: #60a5fa !important;
-  --color-graph-cat-code: #60a5fa !important;
-  --color-graph-cat-decision: #f9a8d4 !important;
-  --color-graph-cat-action: #f9a8d4 !important;
-  --color-graph-cat-observation: #f9a8d4 !important;
-  --color-graph-cat-metric: #f9a8d4 !important;
-  --color-graph-cat-topic: #f97316 !important;
-  --color-graph-cat-concept: #f97316 !important;
-  --color-graph-cat-definedterm: #f97316 !important;
-  --color-graph-cat-instruction: #f97316 !important;
-  --color-graph-cat-import: #f97316 !important;
-  --color-graph-cat-dataset: #5eead4 !important;
-  --color-graph-cat-occupation: #5eead4 !important;
-  --color-graph-cat-method: #5eead4 !important;
-  --color-graph-cat-folder: #a3a3a3 !important;
-  --color-graph-cat-unknown: #a3a3a3 !important;
-  --color-graph-rel-contains: #d5dbdb !important;
-  --color-graph-rel-extends: #bb8fce !important;
-  --color-graph-rel-implements: #5dade2 !important;
-  --color-graph-rel-imports: #eb984e !important;
-  --color-graph-rel-uses: #58d68d !important;
-  --color-graph-rel-calls: #52be80 !important;
-  --color-graph-rel-references: #f5b041 !important;
-  --color-graph-rel-related-to: #aab7b8 !important;
-  --color-graph-rel-works-on: #ec7063 !important;
-  --color-graph-rel-owns: #48c9b0 !important;
-  --color-graph-rel-depends-on: #eb984e !important;
-  --color-graph-rel-parent-of: #d5dbdb !important;
-  --qs-content: #06080b !important;
-  --qs-main: #06080b !important;
-  --qs-primary-foreground: #f9f9fb !important;
-  --qs-secondary-foreground: #b4b4bb !important;
-  --qs-tertiary-foreground: #6e6e82 !important;
-  --qs-placeholder-foreground: #b4b4bb !important;
-  --qs-divider: #333843 !important;
-  --qs-default-border: #8c8c94 !important;
-  --qs-neutral-soft: #656871 !important;
-  --qs-neutral-gray-50: #1e1e2a !important;
-  --qs-tertiary-background: #1e1e2a !important;
-  --qs-action-hover: #1b232d !important;
-  --qs-primary-default: #8575ff !important;
-  --qs-primary-dark: #d2ccff !important;
-  --qs-primary-light: #1b0051 !important;
-  --qs-success-default: #2bb534 !important;
-  --qs-error-default: #ff7a7a !important;
-  --qs-font-sans: "Amazon Ember", "Helvetica Neue", "Segoe UI", Helvetica, Arial, sans-serif !important;
-  --mc-status-needs-input-bg: #fffbbd !important;
-  --mc-status-needs-input-fg: #573a00 !important;
-  --mc-status-error-bg: #ffe0e0 !important;
-  --mc-status-error-fg: #700000 !important;
-  --mc-status-running-bg: #d1f1ff !important;
-  --mc-status-running-fg: #002a66 !important;
-  --mc-badge-success-bg: #aeffa8 !important;
-  --mc-badge-success-fg: #00471e !important;
-  --mc-badge-warning-bg: #ffed4d !important;
-  --mc-badge-warning-fg: #573a00 !important;
-  --mc-schedule-tile-border: #1a0015 !important;
-  --mc-schedule-tile-bg: color-mix(in srgb, #1a0015 28%, #1a1a24) !important;
-  --safe-top: 0px !important;
-  --safe-bottom: 0px !important;
-  --safe-left: 0px !important;
-  --safe-right: 0px !important;
-  --qs-action-active: #1b0051 !important;
-  --qs-action-disabled: #1b232d !important;
-  --qs-active-border: #8575ff !important;
-  --qs-application-navbar: #8575ff !important;
-  --qs-application-navbar-dark: #d2ccff !important;
-  --qs-application-navbar-foreground: #06080b !important;
-  --qs-application-navbar-light: #1b0051 !important;
-  --qs-automation-dark: #ffccf8 !important;
-  --qs-automation-default: #ff57e9 !important;
-  --qs-automation-light: #1a0015 !important;
-  --qs-automation-medium: #d600ba !important;
-  --qs-automation-soft: #660052 !important;
-  --qs-avatar-blue-bg: #000e23 !important;
-  --qs-avatar-blue-fg: #b8e7ff !important;
-  --qs-avatar-fuchsia-bg: #19001d !important;
-  --qs-avatar-fuchsia-fg: #f8c7ff !important;
-  --qs-avatar-green-bg: #001708 !important;
-  --qs-avatar-green-fg: #aeffa8 !important;
-  --qs-avatar-neutral-bg: #333843 !important;
-  --qs-avatar-neutral-fg: #f9f9fb !important;
-  --qs-avatar-orange-bg: #2b0a00 !important;
-  --qs-avatar-orange-fg: #ffc0ad !important;
-  --qs-avatar-pink-bg: #1a0015 !important;
-  --qs-avatar-pink-fg: #ffccf8 !important;
-  --qs-avatar-primary-bg: #1b0051 !important;
-  --qs-avatar-primary-fg: #d2ccff !important;
-  --qs-avatar-red-bg: #370000 !important;
-  --qs-avatar-red-fg: #ffe0e0 !important;
-  --qs-avatar-violet-bg: #180030 !important;
-  --qs-avatar-violet-fg: #e8d1ff !important;
-  --qs-avatar-yellow-bg: #271a00 !important;
-  --qs-avatar-yellow-fg: #fffbbd !important;
-  --qs-brand: #06080b !important;
-  --qs-brand-foreground: #f9f9fb !important;
-  --qs-brand-navbar: #f9f9fb !important;
-  --qs-brand-navbar-dark: #fff !important;
-  --qs-brand-navbar-foreground: #06080b !important;
-  --qs-brand-navbar-light: #333843 !important;
-  --qs-coachmark: #42b4ff !important;
-  --qs-connection-dark: #ffc0ad !important;
-  --qs-connection-default: #ff6a3d !important;
-  --qs-connection-light: #2b0a00 !important;
-  --qs-connection-soft: #661800 !important;
-  --qs-content-inverse: #dedee3 !important;
-  --qs-content-inverse-active: #f9f9fb !important;
-  --qs-contrast-foreground: #f9f9fb !important;
-  --qs-data-categorical-01: #6366f1 !important;
-  --qs-data-categorical-02: #f59e0b !important;
-  --qs-data-categorical-03: #06b6d4 !important;
-  --qs-data-categorical-04: #a78bfa !important;
-  --qs-data-categorical-05: #22c55e !important;
-  --qs-data-categorical-06: #0284c7 !important;
-  --qs-data-categorical-07: #e879f9 !important;
-  --qs-data-categorical-08: #a3e635 !important;
-  --qs-data-categorical-09: #60a5fa !important;
-  --qs-data-categorical-10: #f9a8d4 !important;
-  --qs-data-categorical-11: #f97316 !important;
-  --qs-data-categorical-12: #5eead4 !important;
-  --qs-data-categorical-other: #a3a3a3 !important;
-  --qs-data-divergent-negative: #fb923c !important;
-  --qs-data-divergent-positive: #818cf8 !important;
-  --qs-data-divergent-red-green-negative: #f87171 !important;
-  --qs-data-divergent-red-green-positive: #4ade80 !important;
-  --qs-data-missing: #404040 !important;
-  --qs-data-sentiment-neutral: #a3a3a3 !important;
-  --qs-data-sentiment-warning: #ffe347 !important;
-  --qs-data-sequential-duochromatic-high: #6366f1 !important;
-  --qs-data-sequential-duochromatic-low: #ddd6fe !important;
-  --qs-data-sequential-monochromatic-high: #818cf8 !important;
-  --qs-default-badge: #656871 !important;
-  --qs-default-badge-dot: #b4b4bb !important;
-  --qs-dimension: #8575ff !important;
-  --qs-dimension-experimental: #8575ff !important;
-  --qs-dimension-experimental-foreground: #8575ff !important;
-  --qs-dimension-foreground: #06080b !important;
-  --qs-disabled: #8c8c94 !important;
-  --qs-disabled-border: #333843 !important;
-  --qs-disabled-foreground: #656871 !important;
-  --qs-divider-light: #1b232d !important;
-  --qs-error-active-border: #ff7a7a !important;
-  --qs-error-border: #370000 !important;
-  --qs-error-dark: #ffe0e0 !important;
-  --qs-error-foreground: #ff7a7a !important;
-  --qs-error-inverse: #06080b !important;
-  --qs-error-light: #370000 !important;
-  --qs-error-medium: #ff9e9e !important;
-  --qs-error-soft: #700000 !important;
-  --qs-focus-offset: 1px !important;
-  --qs-font-base-letter-spacing: .15px !important;
-  --qs-font-family: "Amazon Ember", "Helvetica Neue", "Segoe UI", Helvetica, Arial, sans-serif !important;
-  --qs-grid-gap: 16px !important;
-  --qs-grid-gap-xl: 24px !important;
-  --qs-hero-banner-button-hover: color-mix(in srgb, #06080b, transparent 60%) !important;
-  --qs-hover-border: #dedee3 !important;
-  --qs-info-dark: #b8e7ff !important;
-  --qs-info-default: #42b4ff !important;
-  --qs-info-inverse: #06080b !important;
-  --qs-info-light: #000e23 !important;
-  --qs-info-medium: #75cfff !important;
-  --qs-info-soft: #002a66 !important;
-  --qs-insight-dark: #f8c7ff !important;
-  --qs-insight-default: #ec70ff !important;
-  --qs-insight-light: #19001d !important;
-  --qs-insight-soft: #590066 !important;
-  --qs-main-foreground: #f9f9fb !important;
-  --qs-main-secondary-foreground: #b4b4bb !important;
-  --qs-measure: #2bb534 !important;
-  --qs-measure-experimental: #ffe347 !important;
-  --qs-measure-experimental-foreground: #ffe347 !important;
-  --qs-measure-foreground: #06080b !important;
-  --qs-neutral-black: #fff !important;
-  --qs-neutral-dark: #dedee3 !important;
-  --qs-neutral-deep: #b4b4bb !important;
-  --qs-neutral-default: #333843 !important;
-  --qs-neutral-light: #1b232d !important;
-  --qs-neutral-lightest: #131920 !important;
-  --qs-neutral-medium: #8c8c94 !important;
-  --qs-neutral-strong: #f9f9fb !important;
-  --qs-neutral-white: #06080b !important;
-  --qs-overlay: color-mix(in srgb, #f9f9fb, transparent 50%) !important;
-  --qs-primary-inverse: #06080b !important;
-  --qs-primary-inverse-foreground: #06080b !important;
-  --qs-primary-medium: #b2a8ff !important;
-  --qs-primary-soft: #35009e !important;
-  --qs-secondary: #333843 !important;
-  --qs-secondary-dark: #656871 !important;
-  --qs-secondary-light: #1b232d !important;
-  --qs-spice: #ff9800 !important;
-  --qs-success-dark: #aeffa8 !important;
-  --qs-success-inverse: #06080b !important;
-  --qs-success-light: #001708 !important;
-  --qs-success-medium: #62ff57 !important;
-  --qs-success-soft: #00471e !important;
-  --qs-tag-default: #333843 !important;
-  --qs-tag-soft-border: #656871 !important;
-  --qs-toggle-tile-lg: calc(.25rem * 15) !important;
-  --qs-toggle-tile-md: calc(.25rem * 12) !important;
-  --qs-toggle-tile-sm: calc(.25rem * 8) !important;
-  --qs-transparent: transparent !important;
-  --qs-visualization-dark: #e8d1ff !important;
-  --qs-visualization-default: #bf80ff !important;
-  --qs-visualization-light: #180030 !important;
-  --qs-visualization-soft: #45008a !important;
-  --qs-warning-dark: #fffbbd !important;
-  --qs-warning-default: #ffe347 !important;
-  --qs-warning-experimental: #ffe347 !important;
-  --qs-warning-experimental-light: #271a00 !important;
-  --qs-warning-experimental-light-foreground: #271a00 !important;
-  --qs-warning-inverse: #fffbbd !important;
-  --qs-warning-light: #271a00 !important;
-  --qs-warning-medium: #fef571 !important;
-  --qs-warning-soft: #855900 !important;
-  --qs-width-modal-lg: 1136px !important;
-  --qs-width-modal-md: 600px !important;
-  --qs-width-modal-sm: 384px !important;
-  --qs-duration-reorder: .125s !important;
-  --qs-ease-reorder: ease-in-out !important;
-  --z-subtask-modal: 10000 !important;
-  --z-above-subtask-modal: 10001 !important;
-  --react-pdf-text-layer: 1 !important;
-  --highlight-bg-color: #b400aa !important;
-  --highlight-selected-bg-color: #006400 !important;
-  --react-pdf-annotation-layer: 1 !important;
-  --annotation-unfocused-field-background: url("data:image/svg+xml;charset=UTF-8,<svg width='1px' height='1px' xmlns='http://www.w3.org/2000/svg'><rect width='100%' height='100%' style='fill:rgba(0, 54, 255, 0.13);'/></svg>") !important;
-  --input-focus-border-color: Highlight !important;
-  --input-focus-outline: 1px solid Canvas !important;
-  --input-unfocused-border-color: transparent !important;
-  --input-disabled-border-color: transparent !important;
-  --input-hover-border-color: black !important;
-  --link-outline: none !important;
-}</style>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -648,26 +192,26 @@ html,body{height:100%;width:100%;overflow:hidden;font-family:'Segoe UI',system-u
 
 <!-- ===== HOME SCREEN ===== -->
 <div id="home" class="scr active">
-  <div class="gal-btn" onclick="showScreen('gallery');loadGallery()">🖼️</div>
-  <div class="gear" onclick="showScreen('settings')">⚙️</div>
+  <div class="gal-btn" onclick="showScreen('gallery');loadGallery()">&#x1f5bc;&#xfe0f;</div>
+  <div class="gear" onclick="showScreen('settings')">&#x2699;&#xfe0f;</div>
   <div class="logo-wrap">
     <img id="homeLogo" src="" alt="Logo">
-    <span class="logo-icon">📸</span>
+    <span class="logo-icon">&#x1f4f8;</span>
     <div class="logo" id="boothTitle">SnapBooth</div>
   </div>
   <div class="sub">Tap a mode to start</div>
   <div class="modes">
     <div class="mcard" onclick="startMode('classic')">
-      <div class="ic">📷</div><h3>Classic</h3><p>Single photo with filters</p>
+      <div class="ic">&#x1f4f7;</div><h3>Classic</h3><p>Single photo with filters</p>
     </div>
     <div class="mcard" onclick="startMode('strip')">
-      <div class="ic">🎞️</div><h3>Photo Strip</h3><p>Multi-shot strip layout</p>
+      <div class="ic">&#x1f39e;&#xfe0f;</div><h3>Photo Strip</h3><p>Multi-shot strip layout</p>
     </div>
     <div class="mcard" onclick="startMode('receipt')">
-      <div class="ic">🧾</div><h3>Receipt</h3><p>Vintage receipt style</p>
+      <div class="ic">&#x1f9fe;</div><h3>Receipt</h3><p>Vintage receipt style</p>
     </div>
     <div class="mcard" onclick="showScreen('gallery');loadGallery()">
-      <div class="ic">🗂️</div><h3>Gallery</h3><p>View saved photos</p>
+      <div class="ic">&#x1f5c2;&#xfe0f;</div><h3>Gallery</h3><p>View saved photos</p>
     </div>
   </div>
 </div>
@@ -675,15 +219,15 @@ html,body{height:100%;width:100%;overflow:hidden;font-family:'Segoe UI',system-u
 <!-- ===== CAPTURE SCREEN ===== -->
 <div id="capture" class="scr">
   <div class="cap-hdr">
-    <button class="ibtn" onclick="stopCam();showScreen('home')">✕</button>
+    <button class="ibtn" onclick="stopCam();showScreen('home')">&#x2715;</button>
     <div class="cap-info" id="capInfo">Classic</div>
     <div style="display:flex;gap:8px">
-      <button class="ibtn" id="mirrorBtn" onclick="toggleMirror()">↔️</button>
-      <button class="ibtn" id="flipBtn" onclick="flipCam()">🔄</button>
+      <button class="ibtn" id="mirrorBtn" onclick="toggleMirror()">&#x2194;&#xfe0f;</button>
+      <button class="ibtn" id="flipBtn" onclick="flipCam()">&#x1f504;</button>
     </div>
   </div>
   <div id="vidBox">
-    <video id="vid" autoplay="" playsinline="" muted=""></video>
+    <video id="vid" autoplay playsinline muted></video>
     <canvas id="tmpCanvas"></canvas>
     <div id="cntOvl"><div id="cntNum">3</div></div>
     <div id="flashOvl"></div>
@@ -708,30 +252,30 @@ html,body{height:100%;width:100%;overflow:hidden;font-family:'Segoe UI',system-u
 <!-- ===== PREVIEW SCREEN ===== -->
 <div id="preview" class="scr">
   <canvas id="prevCanvas"></canvas>
-  <button class="send-btn" onclick="sharePhoto()">📤 Send to Guest</button>
+  <button class="send-btn" onclick="sharePhoto()">&#x1f4e4; Send to Guest</button>
   <div class="acts">
-    <button class="btn bp" onclick="savePhoto()">💾 Save</button>
-    <button class="btn bo" onclick="retake()">🔄 Retake</button>
-    <button class="btn bo" onclick="openMarkup()">✏️ Markup</button>
-    <button class="btn bo" onclick="printPhoto()">🖨️ Print</button>
-    <button class="btn bo" onclick="openQR()">📱 QR</button>
-    <button class="btn bo" onclick="stopCam();showScreen('home')">🏠 Home</button>
+    <button class="btn bp" onclick="savePhoto()">&#x1f4be; Save</button>
+    <button class="btn bo" onclick="retake()">&#x1f504; Retake</button>
+    <button class="btn bo" onclick="openMarkup()">&#x270f;&#xfe0f; Markup</button>
+    <button class="btn bo" onclick="printPhoto()">&#x1f5a8;&#xfe0f; Print</button>
+    <button class="btn bo" onclick="openQR()">&#x1f4f1; QR</button>
+    <button class="btn bo" onclick="stopCam();showScreen('home')">&#x1f3e0; Home</button>
   </div>
 </div>
 
 <!-- ===== SETTINGS SCREEN ===== -->
 <div id="settings" class="scr">
   <div class="s-hdr">
-    <button class="ibtn" onclick="saveSettings();showScreen('home')" style="background:var(--bg3)">←</button>
-    <h2>⚙️ Settings</h2>
+    <button class="ibtn" onclick="saveSettings();showScreen('home')" style="background:var(--bg3)">&#x2190;</button>
+    <h2>&#x2699;&#xfe0f; Settings</h2>
   </div>
 
   <!-- Branding -->
   <div class="s-sec">
-    <h3>🎨 Branding</h3>
+    <h3>&#x1f3a8; Branding</h3>
     <div class="s-row"><label>Booth Name</label><input type="text" id="sName" value="SnapBooth" onchange="saveSettings()"></div>
     <div class="s-row"><label>Logo</label><input type="file" id="sLogo" accept="image/*" onchange="handleLogo(this)" style="font-size:12px"></div>
-    <div id="logoPreview" class="tpl-prv" style="display:none"><img id="logoPrvImg" src=""><button class="rm-btn" onclick="removeLogo()">✕</button></div>
+    <div id="logoPreview" class="tpl-prv" style="display:none"><img id="logoPrvImg" src=""><button class="rm-btn" onclick="removeLogo()">&#x2715;</button></div>
     <div class="s-row"><label>Primary</label><input type="color" id="cPri" value="#6c5ce7" onchange="saveSettings()"></div>
     <div class="s-row"><label>Accent</label><input type="color" id="cAcc" value="#fd79a8" onchange="saveSettings()"></div>
     <div class="s-row"><label>Background</label><input type="color" id="cBg" value="#1a1a2e" onchange="saveSettings()"></div>
@@ -750,17 +294,17 @@ html,body{height:100%;width:100%;overflow:hidden;font-family:'Segoe UI',system-u
 
   <!-- Camera -->
   <div class="s-sec">
-    <h3>📷 Camera</h3>
+    <h3>&#x1f4f7; Camera</h3>
     <div class="s-row"><label>Camera Source</label>
       <select id="sCamSrc"><option value="user">Front</option><option value="environment">Rear</option></select>
     </div>
     <div class="s-row"><label>Countdown (sec)</label><input type="number" id="sCntDown" value="3" min="0" max="10"></div>
-    <div class="s-row"><label>Mirror Camera</label><label class="tgl"><input type="checkbox" id="sMirror" checked=""><span class="tgl-s"></span></label></div>
+    <div class="s-row"><label>Mirror Camera</label><label class="tgl"><input type="checkbox" id="sMirror" checked><span class="tgl-s"></span></label></div>
   </div>
 
   <!-- Photo Strip -->
   <div class="s-sec">
-    <h3>🎞️ Photo Strip</h3>
+    <h3>&#x1f39e;&#xfe0f; Photo Strip</h3>
     <div class="s-row"><label>Number of Tiles</label><input type="number" id="sTiles" value="4" min="1" max="4"></div>
     <div class="s-row"><label>Layout</label>
       <select id="sLayout"><option value="vertical">Vertical</option><option value="horizontal">Horizontal</option><option value="grid">Grid</option></select>
@@ -769,19 +313,19 @@ html,body{height:100%;width:100%;overflow:hidden;font-family:'Segoe UI',system-u
 
   <!-- Template -->
   <div class="s-sec">
-    <h3>🎨 Template</h3>
+    <h3>&#x1f3a8; Template</h3>
     <div class="s-row"><label>Background Color</label><input type="color" id="sTplBg" value="#1a1a2e"></div>
     <div class="tpl-up" onclick="document.getElementById('sTplFile').click()">
-      <div style="font-size:28px">📁</div>
+      <div style="font-size:28px">&#x1f4c1;</div>
       <p>Upload overlay PNG</p>
       <input type="file" id="sTplFile" accept="image/png" style="display:none" onchange="handleOverlay(this)">
     </div>
-    <div id="tplPreview" class="tpl-prv" style="display:none"><img id="tplPrvImg" src=""><button class="rm-btn" onclick="removeOverlay()">✕</button></div>
+    <div id="tplPreview" class="tpl-prv" style="display:none"><img id="tplPrvImg" src=""><button class="rm-btn" onclick="removeOverlay()">&#x2715;</button></div>
   </div>
 
   <!-- Receipt Mode -->
   <div class="s-sec">
-    <h3>🧾 Receipt Mode</h3>
+    <h3>&#x1f9fe; Receipt Mode</h3>
     <div class="s-row"><label>Business Name</label><input type="text" id="rBizName" value="SnapBooth Studio"></div>
     <div class="s-row"><label>Tagline</label><input type="text" id="rTagline" value="Memories Made Instantly"></div>
     <div class="s-row"><label>Line 1 Left</label><input type="text" id="rL1L" value="EVENT"></div>
@@ -790,13 +334,13 @@ html,body{height:100%;width:100%;overflow:hidden;font-family:'Segoe UI',system-u
     <div class="s-row"><label>Line 2 Right</label><input type="text" id="rL2R" value=""></div>
     <div class="s-row"><label>Custom Message</label><textarea id="rMsg" rows="2">Thank you for visiting our booth!</textarea></div>
     <div class="s-row"><label>Footer</label><input type="text" id="rFooter" value="www.snapbooth.app"></div>
-    <div class="s-row"><label>Show Order #</label><label class="tgl"><input type="checkbox" id="rOrder" checked=""><span class="tgl-s"></span></label></div>
-    <div class="s-row"><label>Show Date/Time</label><label class="tgl"><input type="checkbox" id="rDate" checked=""><span class="tgl-s"></span></label></div>
+    <div class="s-row"><label>Show Order #</label><label class="tgl"><input type="checkbox" id="rOrder" checked><span class="tgl-s"></span></label></div>
+    <div class="s-row"><label>Show Date/Time</label><label class="tgl"><input type="checkbox" id="rDate" checked><span class="tgl-s"></span></label></div>
   </div>
 
   <!-- Guest & Event -->
   <div class="s-sec">
-    <h3>👤 Guest &amp; Event</h3>
+    <h3>&#x1f464; Guest &amp; Event</h3>
     <div class="s-row"><label>Ask Guest Name</label><label class="tgl"><input type="checkbox" id="sAskName"><span class="tgl-s"></span></label></div>
     <div class="s-row"><label>Print Guest Name</label><label class="tgl"><input type="checkbox" id="sPrintName"><span class="tgl-s"></span></label></div>
     <div class="s-row"><label>Kiosk Mode</label><label class="tgl"><input type="checkbox" id="sKiosk"><span class="tgl-s"></span></label></div>
@@ -805,7 +349,7 @@ html,body{height:100%;width:100%;overflow:hidden;font-family:'Segoe UI',system-u
 
   <!-- Output -->
   <div class="s-sec">
-    <h3>💾 Output</h3>
+    <h3>&#x1f4be; Output</h3>
     <div class="s-row"><label>Cloudinary Cloud Name</label><input type="text" id="sCloudName" placeholder="e.g. dxyz123ab"></div>
     <div class="s-row"><label>Upload Preset</label><input type="text" id="sCloudPreset" placeholder="e.g. snapbooth_unsigned"></div>
     <div class="s-note">Free CDN hosting \u2014 loads on any device. Get both at <a href="https://cloudinary.com/users/register_free" target="_blank">cloudinary.com</a> (see setup steps in chat).</div>
@@ -820,24 +364,24 @@ html,body{height:100%;width:100%;overflow:hidden;font-family:'Segoe UI',system-u
     <div class="s-row"><label>Format</label>
       <select id="sFormat"><option value="jpeg">JPEG</option><option value="png">PNG</option><option value="webp">WebP</option></select>
     </div>
-    <div class="s-row"><label>Auto-Save to Gallery</label><label class="tgl"><input type="checkbox" id="sAutoGal" checked=""><span class="tgl-s"></span></label></div>
+    <div class="s-row"><label>Auto-Save to Gallery</label><label class="tgl"><input type="checkbox" id="sAutoGal" checked><span class="tgl-s"></span></label></div>
   </div>
 
   <!-- Storage -->
   <div class="s-sec">
-    <h3>🗄️ Storage</h3>
+    <h3>&#x1f5c4;&#xfe0f; Storage</h3>
     <div class="s-row"><label>Gallery Items</label><span id="storCount">0</span></div>
     <div class="s-row"><label>Approx Size</label><span id="storSize">0 KB</span></div>
-    <div class="s-row"><button class="btn bd" onclick="clearStorage()">🗑️ Clear All Data</button></div>
+    <div class="s-row"><button class="btn bd" onclick="clearStorage()">&#x1f5d1;&#xfe0f; Clear All Data</button></div>
   </div>
 </div>
 
 <!-- ===== GALLERY SCREEN ===== -->
 <div id="gallery" class="scr">
   <div class="g-hdr">
-    <button class="ibtn" onclick="showScreen('home')" style="background:var(--bg3)">←</button>
-    <h2>🖼️ Gallery</h2>
-    <button class="btn bp" id="ssStartBtn" onclick="startSlideshow()" style="display:none">▶ Slideshow</button>
+    <button class="ibtn" onclick="showScreen('home')" style="background:var(--bg3)">&#x2190;</button>
+    <h2>&#x1f5bc;&#xfe0f; Gallery</h2>
+    <button class="btn bp" id="ssStartBtn" onclick="startSlideshow()" style="display:none">&#x25b6; Slideshow</button>
   </div>
   <div id="galGrid" class="g-grid"></div>
 </div>
@@ -845,16 +389,16 @@ html,body{height:100%;width:100%;overflow:hidden;font-family:'Segoe UI',system-u
 <!-- ===== MARKUP SCREEN ===== -->
 <div id="markup" class="scr">
   <div style="display:flex;gap:8px;width:100%;justify-content:space-between;padding:0 4px">
-    <button class="mk-btn" onclick="finishMarkup()">✓ Done</button>
-    <button class="mk-btn" onclick="cancelMarkup()">✕ Cancel</button>
+    <button class="mk-btn" onclick="finishMarkup()">&#x2713; Done</button>
+    <button class="mk-btn" onclick="cancelMarkup()">&#x2715; Cancel</button>
   </div>
   <canvas id="mkCanvas"></canvas>
   <div class="mk-bar" id="mkToolbar">
-    <button class="mk-btn active" data-tool="draw" onclick="setMkTool(this)">✏️ Draw</button>
-    <button class="mk-btn" data-tool="text" onclick="setMkTool(this)">🔤 Text</button>
-    <button class="mk-btn" data-tool="sticker" onclick="setMkTool(this)">😀 Sticker</button>
-    <button class="mk-btn" onclick="mkUndo()">↩️ Undo</button>
-    <button class="mk-btn" onclick="mkClear()">🗑️ Clear</button>
+    <button class="mk-btn active" data-tool="draw" onclick="setMkTool(this)">&#x270f;&#xfe0f; Draw</button>
+    <button class="mk-btn" data-tool="text" onclick="setMkTool(this)">&#x1f524; Text</button>
+    <button class="mk-btn" data-tool="sticker" onclick="setMkTool(this)">&#x1f600; Sticker</button>
+    <button class="mk-btn" onclick="mkUndo()">&#x21a9;&#xfe0f; Undo</button>
+    <button class="mk-btn" onclick="mkClear()">&#x1f5d1;&#xfe0f; Clear</button>
     <div class="mk-color"><input type="color" id="mkColor" value="#ff0000"></div>
     <input type="range" class="mk-size" id="mkSize" min="2" max="20" value="4">
   </div>
@@ -870,10 +414,10 @@ html,body{height:100%;width:100%;overflow:hidden;font-family:'Segoe UI',system-u
 <!-- ===== GUEST NAME MODAL ===== -->
 <div id="guestMod" class="modal">
   <div class="m-box">
-    <h3>👤 What's your name?</h3>
+    <h3>&#x1f464; What's your name?</h3>
     <input type="text" id="guestInput" placeholder="Enter your name">
     <div style="display:flex;gap:10px;justify-content:center">
-      <button class="btn bp" onclick="confirmGuest()">Let's Go! 📸</button>
+      <button class="btn bp" onclick="confirmGuest()">Let's Go! &#x1f4f8;</button>
       <button class="btn bo" onclick="skipGuest()">Skip</button>
     </div>
   </div>
@@ -882,10 +426,10 @@ html,body{height:100%;width:100%;overflow:hidden;font-family:'Segoe UI',system-u
 <!-- ===== QR MODAL ===== -->
 <div id="qrMod" class="modal">
   <div class="m-box">
-    <h3>📱 Share Photo</h3>
+    <h3>&#x1f4f1; Share Photo</h3>
     <div class="qr-actions">
-      <button class="btn bp" onclick="sharePhoto()">📤 Share</button>
-      <button class="btn bg" onclick="qrSavePhoto()">💾 Save</button>
+      <button class="btn bp" onclick="sharePhoto()">&#x1f4e4; Share</button>
+      <button class="btn bg" onclick="qrSavePhoto()">&#x1f4be; Save</button>
     </div>
     <div id="qrContent"></div>
     <div id="qrMsg" class="qr-msg"></div>
@@ -895,12 +439,12 @@ html,body{height:100%;width:100%;overflow:hidden;font-family:'Segoe UI',system-u
 
 <!-- ===== SLIDESHOW ===== -->
 <div id="slideshow">
-  <button class="ss-btn ss-close" onclick="stopSlideshow()">✕</button>
+  <button class="ss-btn ss-close" onclick="stopSlideshow()">&#x2715;</button>
   <img id="ssImg" src="" alt="Slideshow">
   <div class="ss-ctrl">
-    <button class="ss-btn" onclick="ssPrev()">⏮</button>
-    <button class="ss-btn" id="ssPlayBtn" onclick="ssToggle()">⏸</button>
-    <button class="ss-btn" onclick="ssNext()">⏭</button>
+    <button class="ss-btn" onclick="ssPrev()">&#x23ee;</button>
+    <button class="ss-btn" id="ssPlayBtn" onclick="ssToggle()">&#x23f8;</button>
+    <button class="ss-btn" onclick="ssNext()">&#x23ed;</button>
     <span class="ss-counter" id="ssCounter">1 / 1</span>
   </div>
 </div>
@@ -1554,7 +1098,7 @@ function openQR(){
   if(msg)msg.textContent='';
 
   if(CFG.cloudName&&CFG.cloudName.trim()&&CFG.cloudPreset&&CFG.cloudPreset.trim()){
-    uploadCloudinary(function(imgUrl){
+    uploadCloudinary(function(imgUrl,errMsg){
       if(imgUrl){
         /* Point QR at our lightweight dl.html with the DIRECT image url */
         var base=window.location.href.split('?')[0].split('#')[0];
@@ -1563,8 +1107,8 @@ function openQR(){
         renderQR(dlUrl);
         if(msg)msg.textContent='Guest scans QR \u2192 opens photo \u2192 taps Save!';
       }else{
-        if(cont)cont.innerHTML='<p style="color:var(--err)">Upload failed. Try the Share button instead.</p>';
-        if(msg)msg.textContent='Check your Cloudinary settings, or try again.';
+        if(cont)cont.innerHTML='<p style="color:var(--err);font-size:13px;word-break:break-word">'+(errMsg||'Upload failed.')+'</p>';
+        if(msg)msg.textContent='Tell this exact message to your helper to diagnose.';
       }
     });
   }else{
@@ -1614,21 +1158,23 @@ function uploadCloudinary(cb){
       try{
         var res=JSON.parse(xhr.responseText);
         if(res&&res.secure_url){
-          /* Cloudinary CDN URL \u2014 loads on any device, no hotlink blocking */
           cb(res.secure_url)
         }
-        else{cb(null)}
-      }catch(e){cb(null)}
+        else if(res&&res.error&&res.error.message){
+          /* Surface Cloudinary's real error so we can see what's wrong */
+          cb(null,'Cloudinary: '+res.error.message+' (HTTP '+xhr.status+')')
+        }
+        else{cb(null,'Cloudinary returned HTTP '+xhr.status+' with no URL')}
+      }catch(e){cb(null,'Could not read Cloudinary response (HTTP '+xhr.status+')')}
     };
-    xhr.onerror=function(){cb(null)};
+    xhr.onerror=function(){cb(null,'Network error reaching Cloudinary (check cloud name)')};
     xhr.timeout=20000;
-    xhr.ontimeout=function(){cb(null)};
+    xhr.ontimeout=function(){cb(null,'Upload timed out')};
     var fd=new FormData();
-    /* currentDataUrl is a full data: URL \u2014 Cloudinary accepts it directly as the file */
     fd.append('file',S.currentDataUrl);
     fd.append('upload_preset',CFG.cloudPreset.trim());
     xhr.send(fd);
-  }catch(e){cb(null)}
+  }catch(e){cb(null,'Upload error: '+(e&&e.message?e.message:'unknown'))}
 }
 
 /* === GALLERY === */
@@ -2117,5 +1663,5 @@ if(document.readyState==='loading'){
   init();
 }
 </script>
-
-</body></html>
+</body>
+</html>
