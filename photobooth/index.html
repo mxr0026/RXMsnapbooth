@@ -352,7 +352,7 @@ body.guest #adminHot{display:block}
     <button class="btn bp" onclick="savePhoto()">&#x1f4be; Save</button>
     <button class="btn bo" onclick="retake()">&#x1f504; Retake</button>
     <button class="btn bo" onclick="openMarkup()">&#x270f;&#xfe0f; Markup</button>
-    <button class="btn bo" onclick="printPhoto()">&#x1f5a8;&#xfe0f; Print</button>
+    <button class="btn bo" onclick="gPrint()">&#x1f5a8;&#xfe0f; Print</button>
     <button class="btn bo" onclick="openQR()">&#x1f4f1; QR</button>
     <button class="btn bo" onclick="stopCam();showScreen('home')">&#x1f3e0; Home</button>
   </div>
@@ -471,6 +471,9 @@ body.guest #adminHot{display:block}
     </div>
     <div class="s-row"><label>Paper Width</label>
       <select id="sPaper"><option value="58mm">58mm receipt</option><option value="80mm">80mm receipt</option><option value="a4">A4 / Photo paper</option></select>
+    </div>
+    <div class="s-row"><label>Print Method</label>
+      <select id="sPrintMode"><option value="share">Choose printer app (RawBT etc.)</option><option value="system">Android system print</option></select>
     </div>
     <div class="s-note">Guest Mode opens on the &ldquo;Tap to start&rdquo; screen and hides admin buttons. To exit: long-press the top-left corner for 2 seconds, or tap the logo 5 times on the start screen, then enter the PIN.</div>
   </div>
@@ -621,7 +624,7 @@ var CFG = {
   askName:false,printName:false,kiosk:false,restart:15,
   cloudName:'',cloudPreset:'',prefix:'snapbooth',naming:'prefix_seq',autoDL:false,
   quality:'0.85',format:'jpeg',autoGal:true,
-  guestMode:true,adminPin:'1234',hashtag:'#RXMPHOTOBOOTH',footDate:true,bw:'receipt',paper:'58mm',
+  guestMode:true,adminPin:'1234',hashtag:'#RXMPHOTOBOOTH',footDate:true,bw:'receipt',paper:'58mm',printMode:'share',
   logoData:null
 };
 
@@ -1622,6 +1625,7 @@ function saveSettings(){
     CFG.footDate=($('sFootDate')||{}).checked!==false;
     CFG.bw=($('sBW')||{}).value||'receipt';
     CFG.paper=($('sPaper')||{}).value||'58mm';
+    CFG.printMode=($('sPrintMode')||{}).value||'share';
     applyBranding();
     localStorage.setItem('snapbooth_cfg',JSON.stringify(CFG));
   }catch(e){}
@@ -1649,7 +1653,7 @@ function populateSettingsUI(){
       'rMsg':'rMsg','rFooter':'rFooter',
       'sCloudName':'cloudName','sCloudPreset':'cloudPreset','sPrefix':'prefix','sNaming':'naming',
       'sQuality':'quality','sFormat':'format',
-      'sAdminPin':'adminPin','sHashtag':'hashtag','sBW':'bw','sPaper':'paper'
+      'sAdminPin':'adminPin','sHashtag':'hashtag','sBW':'bw','sPaper':'paper','sPrintMode':'printMode'
     };
     for(var id in map){
       var el=$(id);if(el)el.value=CFG[map[id]]||el.value;
@@ -2247,17 +2251,64 @@ function gRetake(){
 function gPrintCSS(){
   var p=CFG.paper||'58mm';
   if(p==='a4'){
-    return '@page{size:A4;margin:10mm}html,body{margin:0;padding:0;background:#fff}'+
-      '.pg{page-break-after:always;break-after:page;display:flex;align-items:center;justify-content:center;height:270mm}'+
+    return '@page{size:A4;margin:8mm}html,body{margin:0;padding:0;background:#fff}'+
+      '.pg{page-break-after:always;break-after:page;display:flex;align-items:center;justify-content:center;height:275mm}'+
       '.pg:last-child{page-break-after:auto;break-after:auto}'+
-      '.pg img{max-width:100%;max-height:270mm;display:block}';
+      '.pg img{max-width:100%;max-height:275mm;display:block}';
   }
-  return '@page{size:'+p+' auto;margin:0}html,body{margin:0;padding:0;background:#fff}'+
-    '.pg{width:'+p+';page-break-after:always;break-after:page}'+
+  /* Receipt: fill the full printable width (Android ignores custom @page sizes,
+     so a fixed 58mm box printed tiny on A4). */
+  return '@page{size:'+p+' auto;margin:0}html,body{margin:0;padding:0;background:#fff;width:100%}'+
+    '.pg{width:100%;page-break-after:always;break-after:page}'+
     '.pg:last-child{page-break-after:auto;break-after:auto}'+
-    '.pg img{width:100%;display:block}';
+    '.pg img{width:100%;height:auto;display:block}';
+}
+/* Print via Android share sheet so the user can pick RawBT (or any printer app) */
+function gDataUrlToBlob(du){
+  var parts=du.split(',');var mime=(parts[0].match(/:(.*?);/)||[])[1]||'image/png';
+  var b=atob(parts[1]);var a=new Uint8Array(b.length);
+  for(var i=0;i<b.length;i++){a[i]=b.charCodeAt(i)}
+  return new Blob([a],{type:mime});
+}
+function gBuildCopies(n,cb){
+  try{
+    if(n<=1){cb(S.currentDataUrl);return}
+    var img=new Image();
+    img.onload=function(){
+      try{
+        var gap=Math.round(img.width*0.08);
+        var c=document.createElement('canvas');c.width=img.width;c.height=img.height*n+gap*(n-1);
+        var x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);
+        for(var i=0;i<n;i++){x.drawImage(img,0,i*(img.height+gap))}
+        cb(c.toDataURL('image/png'));
+      }catch(e){cb(S.currentDataUrl)}
+    };
+    img.onerror=function(){cb(S.currentDataUrl)};
+    img.src=S.currentDataUrl;
+  }catch(e){cb(S.currentDataUrl)}
+}
+function gPrintShare(){
+  try{
+    var n=Math.max(1,Math.min(10,S.gCopies||1));
+    gBuildCopies(n,function(du){
+      try{
+        var blob=gDataUrlToBlob(du);
+        var f=new File([blob],'snapbooth_print.png',{type:'image/png'});
+        if(navigator.canShare&&navigator.canShare({files:[f]})){
+          navigator.share({files:[f],title:'Print photo'}).catch(function(){});
+        }else{
+          gPrintSystem();
+        }
+      }catch(e){gPrintSystem()}
+    });
+    gArmIdle();
+  }catch(e){gPrintSystem()}
 }
 function gPrint(){
+  if((CFG.printMode||'share')==='share'&&navigator.share){gPrintShare();return}
+  gPrintSystem();
+}
+function gPrintSystem(){
   try{
     if(!S.currentDataUrl)return;
     var n=Math.max(1,Math.min(10,S.gCopies||1));
