@@ -279,6 +279,9 @@ body.guest.on-idle #adminHot{display:block}
 #capture.gflow #gTakeBtn:active{transform:scale(.93)}
 #capture.gflow .g-takelbl{color:var(--tx);font-size:clamp(15px,2vw,20px);font-weight:700;letter-spacing:.5px}
 #capture.gflow #tplLive{z-index:4}
+#capture.gflow.tplmode #vid{opacity:0}
+#capture.gflow.tplmode #vidBox{background:transparent;border:none;box-shadow:none}
+#capture.gflow.tplmode #tplLive{filter:drop-shadow(0 10px 30px rgba(0,0,0,.45))}
 #capture.gflow #gShotInfo{top:12px}
 .g-takelbl{display:none}
 #capture.gflow .g-takelbl{display:block}
@@ -288,8 +291,6 @@ body.guest.on-idle #adminHot{display:block}
   #capture.gflow #vidBox{width:min(92vw,calc((100vh - 330px)*1.333));max-height:calc(100vh - 330px)}
 }
 /* template preview: use a taller box that fits the template */
-#capture.gflow.tplmode #vidBox{aspect-ratio:auto;height:calc(100vh - 140px);width:min(70vw,calc(100vh - 140px));border:none;box-shadow:none;background:transparent}
-@media (orientation:portrait){#capture.gflow.tplmode #vidBox{height:calc(100vh - 330px);width:92vw}}
 </style>
 </head>
 <body>
@@ -647,7 +648,7 @@ body.guest.on-idle #adminHot{display:block}
   </div>
 </div>
 <div id="adminHot"></div>
-<div id="appVer" style="position:fixed;right:8px;bottom:6px;z-index:600;font:11px system-ui,sans-serif;color:rgba(255,255,255,.45);pointer-events:none">SnapBooth v25</div>
+<div id="appVer" style="position:fixed;right:8px;bottom:6px;z-index:600;font:11px system-ui,sans-serif;color:rgba(255,255,255,.45);pointer-events:none">SnapBooth v26</div>
 
 <!-- ===== SLIDESHOW ===== -->
 <div id="slideshow">
@@ -2114,6 +2115,15 @@ function gLiveStart(){
     if(!def||def.type!=='tpl'||!def.tpl||!def.tpl.img){gLiveStop();return}
     S.gLiveOn=true;S.gLiveShots=[];S.gCurSlot=0;
     try{var cpz=$('capture');if(cpz)cpz.classList.add('tplmode')}catch(e){}
+    try{
+      var tt=def.tpl,tw=tt.w||tt.img.naturalWidth,th=tt.h||tt.img.naturalHeight,vb=$('vidBox');
+      if(vb&&tw&&th){
+        var land=window.innerWidth>window.innerHeight;
+        var maxH=window.innerHeight-(land?140:330),maxW=window.innerWidth*(land?0.68:0.92);
+        var sc=Math.min(maxW/tw,maxH/th);
+        vb.style.width=Math.round(tw*sc)+'px';vb.style.height=Math.round(th*sc)+'px';vb.style.aspectRatio='auto';vb.style.maxHeight='none';
+      }
+    }catch(e){}
     var c=$('tplLive');if(c)c.classList.add('on');
     if(S.gLiveRaf)cancelAnimationFrame(S.gLiveRaf);
     var loop=function(){
@@ -2128,6 +2138,7 @@ function gLiveStop(){
   try{
     S.gLiveOn=false;
     try{var cpy=$('capture');if(cpy)cpy.classList.remove('tplmode')}catch(e){}
+    try{var vb2=$('vidBox');if(vb2){vb2.style.width='';vb2.style.height='';vb2.style.aspectRatio='';vb2.style.maxHeight=''}}catch(e){}
     if(S.gLiveRaf){cancelAnimationFrame(S.gLiveRaf);S.gLiveRaf=null}
     var c=$('tplLive');if(c)c.classList.remove('on');
   }catch(e){}
