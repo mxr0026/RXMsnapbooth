@@ -490,7 +490,7 @@ body.guest.on-idle #adminHot{display:block}
       <select id="sBW"><option value="receipt">Receipt layout only</option><option value="always">All layouts</option><option value="off">Off</option></select>
     </div>
     <div class="s-row"><label>Printer / Paper</label>
-      <select id="sPaper"><option value="58mm">Receipt 58mm (2 in)</option><option value="80mm">Receipt 80mm (3 in)</option><option value="wb4x6">Waybill / Shipping label 4x6 in (100x150mm)</option><option value="wb100x100">Waybill label 100x100mm</option><option value="a4">A4 / Photo paper</option><option value="custom">Custom size…</option></select></div>
+      <select id="sPaper"><optgroup label="Receipt rolls (continuous)"><option value="48mm">Receipt 48mm</option><option value="57mm">Receipt 57mm</option><option value="58mm">Receipt 58mm (2 in)</option><option value="76mm">Receipt 76mm</option><option value="80mm">Receipt 80mm (3 in)</option><option value="110mm">Receipt 110mm (4 in)</option></optgroup><optgroup label="Waybill / shipping labels"><option value="wb4x6">Waybill 4×6 in (100×150mm)</option><option value="wb100x100">Waybill 100×100mm</option><option value="wb4x4">Label 4×4 in (102×102mm)</option><option value="wb4x3">Label 4×3 in (102×76mm)</option><option value="wb4x2">Label 4×2 in (102×51mm)</option><option value="wb76x130">Label 76×130mm</option><option value="wb3x2">Label 3×2 in (76×51mm)</option><option value="wb60x40">Label 60×40mm</option><option value="wb50x30">Label 50×30mm</option><option value="wb2x1">Label 2×1 in (51×25mm)</option></optgroup><optgroup label="Photo paper"><option value="ph2x6">Photo strip 2×6 in (51×152mm)</option><option value="ph3r">3R 3.5×5 in (89×127mm)</option><option value="ph4r">4R 4×6 in (102×152mm)</option><option value="ph5r">5R 5×7 in (127×178mm)</option><option value="ph6r">6R 6×8 in (152×203mm)</option><option value="ph8r">8R 8×10 in (203×254mm)</option><option value="phsq">Square 4×4 in (102×102mm)</option><option value="phwallet">Wallet 2.5×3.5 in (64×89mm)</option><option value="phinstaxm">Instax Mini (54×86mm)</option><option value="phinstaxs">Instax Square (72×86mm)</option><option value="phinstaxw">Instax Wide (108×86mm)</option><option value="phpost">Postcard (100×148mm)</option></optgroup><optgroup label="Office paper"><option value="a4">A4 (210×297mm)</option><option value="a5">A5 (148×210mm)</option><option value="a6">A6 (105×148mm)</option><option value="letter">Letter (8.5×11 in)</option></optgroup><optgroup label="Other"><option value="custom">Custom size…</option></optgroup></select></div>
     <div class="s-row" id="rowCustom"><label>Custom W × H (mm)</label><span style="display:flex;gap:6px"><input type="number" id="sPW" min="20" max="300" style="width:70px" placeholder="76"><input type="number" id="sPH" min="0" max="500" style="width:70px" placeholder="0 = auto"></span></div>
     <div class="s-row"><label>Printer DPI</label><select id="sDPI"><option value="203">203 dpi (most thermal / waybill)</option><option value="300">300 dpi</option><option value="180">180 dpi</option></select></div>
     <div class="s-row"><label>Fill mode</label><select id="sFit"><option value="auto">Auto (by paper type)</option><option value="width">Fill paper width</option><option value="page">Fit whole label (waybill)</option></select>
@@ -2428,14 +2428,11 @@ function gBuildCopiesFrom(src,n,cb){
   }catch(e){cb(src)}
 }
 /* Printer paper geometry in mm: [width, height(0=continuous)] */
+var G_PAPERS={'48mm':[40,0],'57mm':[48,0],'58mm':[48,0],'76mm':[64,0],'80mm':[72,0],'110mm':[104,0],'wb4x6':[100,150],'wb100x100':[100,100],'wb4x4':[102,102],'wb4x3':[102,76],'wb4x2':[102,51],'wb76x130':[76,130],'wb3x2':[76,51],'wb60x40':[60,40],'wb50x30':[50,30],'wb2x1':[51,25],'ph2x6':[51,152],'ph3r':[89,127],'ph4r':[102,152],'ph5r':[127,178],'ph6r':[152,203],'ph8r':[203,254],'phsq':[102,102],'phwallet':[64,89],'phinstaxm':[54,86],'phinstaxs':[72,86],'phinstaxw':[108,86],'phpost':[100,148],'a4':[190,277],'a5':[138,200],'a6':[97,140],'letter':[196,260]};
 function gPaperMM(){
   var p=CFG.paper||'58mm';
-  if(p==='58mm')return [48,0];      /* 58mm roll, ~48mm printable */
-  if(p==='80mm')return [72,0];      /* 80mm roll, ~72mm printable */
-  if(p==='wb4x6')return [100,150];
-  if(p==='wb100x100')return [100,100];
-  if(p==='a4')return [190,277];
-  return [CFG.pw||76,CFG.ph||0];
+  if(p==='custom')return [CFG.pw||76,CFG.ph||0];
+  return G_PAPERS[p]||[48,0];
 }
 /* Render the photo at the printer's exact dot size so it prints full size */
 function gPrinterImage(src,cb){
