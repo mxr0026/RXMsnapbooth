@@ -722,7 +722,7 @@ body.vmode #gVLeft{display:block}
 <div id="gToast"></div>
 <div id="vTimer">&#x23f1;&#xfe0f; <span id="vTimerT">10:00</span> left</div>
 <div id="adminHot"></div>
-<div id="appVer" style="position:fixed;right:8px;bottom:6px;z-index:600;font:11px system-ui,sans-serif;color:rgba(255,255,255,.45);pointer-events:none">SnapBooth v30</div>
+<div id="appVer" style="position:fixed;right:8px;bottom:6px;z-index:600;font:11px system-ui,sans-serif;color:rgba(255,255,255,.45);pointer-events:none">SnapBooth v31</div>
 
 <!-- ===== SLIDESHOW ===== -->
 <div id="slideshow">
@@ -1428,7 +1428,7 @@ function openQR(){
         base=base.replace(/index\.html$/,'').replace(/\/$/,'');
         var dlUrl=base+'/dl.html?img='+encodeURIComponent(imgUrl);
         renderQR(dlUrl);
-        if(msg)msg.textContent='Guest scans QR \u2192 opens photo \u2192 taps Save!';
+        if(msg)msg.innerHTML='Guest scans QR \u2192 opens photo \u2192 taps Save!<br><b style="color:var(--acc)">\u23f0 Save your photo now \u2014 this link expires in 2 hours.</b>';
       }else{
         if(cont)cont.innerHTML='<p style="color:var(--err);font-size:13px;word-break:break-word">'+(errMsg||'Upload failed.')+'</p>';
         if(msg)msg.textContent='Tell this exact message to your helper to diagnose.';
