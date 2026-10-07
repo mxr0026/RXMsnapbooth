@@ -302,6 +302,7 @@ body.guest.on-idle #adminHot{display:block}
 .vkeys button:active{background:var(--pri)}
 #gVLeft{color:var(--tx2);font-size:14px;text-align:center;display:none}
 body.vmode #gVLeft{display:block}
+body.notext #gTextBtn{display:none}
 #gToast{position:fixed;left:50%;bottom:40px;transform:translateX(-50%);z-index:700;background:rgba(0,0,0,.88);color:#fff;padding:14px 22px;border-radius:14px;font-size:16px;max-width:90vw;text-align:center;display:none}
 #gToast.on{display:block}
 .vlist{max-height:180px;overflow-y:auto;font:14px ui-monospace,Consolas,monospace;background:var(--bg3);border-radius:8px;padding:8px 10px;margin-top:8px;line-height:1.7}
@@ -315,6 +316,16 @@ body.vmode #gVLeft{display:block}
 #vTimer.on{display:flex}
 #vTimer.warn{background:#d63031;animation:vPulse 1s ease-in-out infinite}
 @keyframes vPulse{50%{transform:translateX(-50%) scale(1.06)}}
+
+/* ===== Guest custom text (v32) ===== */
+#gtMod .m-box{max-width:460px}
+#gtInput{width:100%;font-size:22px;padding:12px 14px;border-radius:12px;border:2px solid var(--brd);background:var(--bg3);color:var(--tx);margin-bottom:12px;text-align:center}
+.gt-row{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-bottom:12px}
+.gt-row .l{width:100%;color:var(--tx2);font-size:13px;margin-bottom:2px}
+.gt-row button{padding:10px 14px;border-radius:10px;border:2px solid var(--brd);background:var(--bg3);color:var(--tx);font-size:15px;font-weight:600}
+.gt-row button.on{border-color:var(--pri);background:var(--pri);color:#fff}
+.gt-sw{width:38px;height:38px;padding:0!important;border-radius:50%!important}
+#gtCount{color:var(--txm);font-size:12px;margin:-8px 0 10px}
 </style>
 </head>
 <body>
@@ -437,6 +448,7 @@ body.vmode #gVLeft{display:block}
     <div class="g-row">
       <button class="g-btn" onclick="gRetake()">&#x1f504; Retake</button>
       <button class="g-btn" onclick="gChangeLayout()">&#x1f5bc;&#xfe0f; Change layout</button>
+      <button class="g-btn" id="gTextBtn" onclick="gtOpen()">&#x270f;&#xfe0f; Add text</button>
       <button class="g-btn" id="gMirBtn" onclick="gToggleMirror()">&#x2194;&#xfe0f; Mirror</button>
     </div>
     <div class="g-copies">
@@ -543,6 +555,7 @@ body.vmode #gVLeft{display:block}
     <h3>&#x1f39f;&#xfe0f; Guest Kiosk Flow</h3>
     <div class="s-row"><label>Guest Mode</label><label class="tgl"><input type="checkbox" id="sGuestMode" checked><span class="tgl-s"></span></label></div>
     <div class="s-row"><label>Admin PIN</label><input type="text" id="sAdminPin" inputmode="numeric" placeholder="1234"></div>
+    <div class="s-row"><label>Let guests add text</label><label class="tgl"><input type="checkbox" id="sGuestText" checked><span class="tgl-s"></span></label></div>
     <div class="s-row"><label>Hashtag</label><input type="text" id="sHashtag" placeholder="#RXMPHOTOBOOTH"></div>
     <div class="s-row"><label>Date in Footer</label><label class="tgl"><input type="checkbox" id="sFootDate" checked><span class="tgl-s"></span></label></div>
     <div class="s-row"><label>Black &amp; White Output</label>
@@ -719,10 +732,39 @@ body.vmode #gVLeft{display:block}
     </div>
   </div>
 </div>
+<div id="gtMod" class="modal">
+  <div class="m-box">
+    <h3>&#x270f;&#xfe0f; Add your name or message</h3>
+    <input type="text" id="gtInput" maxlength="30" autocomplete="off" placeholder="e.g. Maria &amp; Jose 2026" oninput="gtCount()">
+    <div id="gtCount">0 / 30</div>
+    <div class="gt-row" id="gtPos"><div class="l">Position</div>
+      <button data-v="top" onclick="gtPick('pos','top')">Top</button>
+      <button data-v="middle" onclick="gtPick('pos','middle')">Middle</button>
+      <button data-v="bottom" onclick="gtPick('pos','bottom')">Bottom</button>
+    </div>
+    <div class="gt-row" id="gtSize"><div class="l">Size</div>
+      <button data-v="s" onclick="gtPick('size','s')">Small</button>
+      <button data-v="m" onclick="gtPick('size','m')">Medium</button>
+      <button data-v="l" onclick="gtPick('size','l')">Large</button>
+    </div>
+    <div class="gt-row" id="gtColor"><div class="l">Color</div>
+      <button class="gt-sw" data-v="#ffffff" style="background:#ffffff" onclick="gtPick('color','#ffffff')"></button>
+      <button class="gt-sw" data-v="#111111" style="background:#111111" onclick="gtPick('color','#111111')"></button>
+      <button class="gt-sw" data-v="#fd79a8" style="background:#fd79a8" onclick="gtPick('color','#fd79a8')"></button>
+      <button class="gt-sw" data-v="#f9ca24" style="background:#f9ca24" onclick="gtPick('color','#f9ca24')"></button>
+      <button class="gt-sw" data-v="#74b9ff" style="background:#74b9ff" onclick="gtPick('color','#74b9ff')"></button>
+    </div>
+    <div style="display:flex;gap:10px;justify-content:center">
+      <button class="btn bp" style="flex:1;padding:14px" onclick="gtApply()">Apply</button>
+      <button class="btn bo" style="flex:1" onclick="gtRemove()">Remove</button>
+      <button class="btn bo" style="flex:1" onclick="gtClose()">Cancel</button>
+    </div>
+  </div>
+</div>
 <div id="gToast"></div>
 <div id="vTimer">&#x23f1;&#xfe0f; <span id="vTimerT">10:00</span> left</div>
 <div id="adminHot"></div>
-<div id="appVer" style="position:fixed;right:8px;bottom:6px;z-index:600;font:11px system-ui,sans-serif;color:rgba(255,255,255,.45);pointer-events:none">SnapBooth v31</div>
+<div id="appVer" style="position:fixed;right:8px;bottom:6px;z-index:600;font:11px system-ui,sans-serif;color:rgba(255,255,255,.45);pointer-events:none">SnapBooth v32</div>
 
 <!-- ===== SLIDESHOW ===== -->
 <div id="slideshow">
@@ -766,7 +808,7 @@ var CFG = {
   askName:false,printName:false,kiosk:false,restart:15,
   cloudName:'',cloudPreset:'',prefix:'snapbooth',naming:'prefix_seq',autoDL:false,
   quality:'0.85',format:'jpeg',autoGal:true,
-  guestMode:true,adminPin:'1234',hashtag:'#RXMPHOTOBOOTH',footDate:true,bw:'receipt',paper:'58mm',printMode:'rawbt',pw:76,ph:0,dpi:203,fit:'auto',voucherOn:false,vPrice:'',vCopies:1,vMin:10,thermal:'atkinson',thBri:5,thCon:15,
+  guestMode:true,adminPin:'1234',hashtag:'#RXMPHOTOBOOTH',footDate:true,bw:'receipt',paper:'58mm',printMode:'rawbt',pw:76,ph:0,dpi:203,fit:'auto',guestText:true,voucherOn:false,vPrice:'',vCopies:1,vMin:10,thermal:'atkinson',thBri:5,thCon:15,
   logoData:null
 };
 
@@ -1804,6 +1846,7 @@ function saveSettings(){
     CFG.ph=parseFloat(($('sPH')||{}).value)||0;
     CFG.dpi=parseInt(($('sDPI')||{}).value)||203;
     CFG.fit=($('sFit')||{}).value||'auto';
+    CFG.guestText=($('sGuestText')||{}).checked!==false;
     CFG.voucherOn=!!($('sVoucherOn')||{}).checked;
     if(!CFG.voucherOn){try{vTimerStop()}catch(e){}}
     CFG.vPrice=(($('sVPrice')||{}).value||'').trim();
@@ -1851,7 +1894,7 @@ function populateSettingsUI(){
     }
     var chkMap={'sMirror':'mirror','rOrder':'rOrder','rDate':'rDate',
       'sAskName':'askName','sPrintName':'printName','sKiosk':'kiosk',
-      'sAutoDL':'autoDL','sAutoGal':'autoGal','sGuestMode':'guestMode','sVoucherOn':'voucherOn','sFootDate':'footDate'};
+      'sAutoDL':'autoDL','sAutoGal':'autoGal','sGuestMode':'guestMode','sVoucherOn':'voucherOn','sGuestText':'guestText','sFootDate':'footDate'};
     for(var cid in chkMap){
       var cel=$(cid);if(cel)cel.checked=!!CFG[chkMap[cid]];
     }
@@ -2045,6 +2088,7 @@ function gArmIdle(ms){
 }
 function gIdleFire(){
   try{
+    try{var gm=$('gtMod');if(gm&&gm.classList.contains('on')){gArmIdle();return}}catch(e){}
     try{var vm=$('vMod');if(vm&&vm.classList.contains('on')){vClose();gToIdle();return}}catch(e){}
     if(S.gReviewing)return;
     var q=$('qrMod');
@@ -2056,6 +2100,7 @@ function gToIdle(){
   try{
     S.gSeq++;S.gBusy=false;S.gReviewing=false;S.gActive=false;S.gQrExt=0;
     try{vClose()}catch(e){}
+    try{gtClose();gtReset()}catch(e){}
     S.gReLayout=null;S.gKeepShots=false;try{var hd1=$('layHdr');if(hd1)hd1.textContent='Choose your layout'}catch(e){}
     try{sessionStorage.removeItem(G_RESUME_KEY)}catch(e){}
     try{gResetFilter()}catch(e){}
@@ -2106,6 +2151,73 @@ function capClose(){
 }
 
 /* --- Idle screen tap (logo x5 = admin) --- */
+
+
+/* ================= GUEST CUSTOM TEXT ================= */
+function gtSel(group,v){
+  try{var bs=document.querySelectorAll('#gt'+group+' button');
+    for(var i=0;i<bs.length;i++){if(bs[i].getAttribute('data-v')===v)bs[i].classList.add('on');else bs[i].classList.remove('on')}}catch(e){}
+}
+function gtCount(){try{var i=$('gtInput'),c=$('gtCount');if(i&&c)c.textContent=i.value.length+' / 30'}catch(e){}}
+function gtOpen(){
+  try{
+    if(CFG.guestText===false)return;
+    var t=S.gText||{text:'',pos:'bottom',size:'m',color:'#ffffff'};
+    S.gtDraft={text:t.text,pos:t.pos,size:t.size,color:t.color};
+    var i=$('gtInput');if(i)i.value=t.text||'';
+    gtCount();
+    gtSel('Pos',t.pos);gtSel('Size',t.size);gtSel('Color',t.color);
+    var m=$('gtMod');if(m)m.classList.add('on');
+    if(i)setTimeout(function(){try{i.focus()}catch(e){}},150);
+  }catch(e){}
+}
+function gtPick(k,v){
+  try{
+    if(!S.gtDraft)S.gtDraft={text:'',pos:'bottom',size:'m',color:'#ffffff'};
+    S.gtDraft[k]=v;
+    gtSel(k==='pos'?'Pos':(k==='size'?'Size':'Color'),v);
+  }catch(e){}
+}
+function gtClose(){try{var m=$('gtMod');if(m)m.classList.remove('on')}catch(e){}}
+function gtApply(){
+  try{
+    var i=$('gtInput');var d=S.gtDraft||{pos:'bottom',size:'m',color:'#ffffff'};
+    var txt=String(i?i.value:'').replace(/\s+/g,' ').trim().slice(0,30);
+    S.gText=txt?{text:txt,pos:d.pos||'bottom',size:d.size||'m',color:d.color||'#ffffff'}:null;
+    gtClose();gtBtnLabel();
+    gCompose(true);
+  }catch(e){}
+}
+function gtRemove(){try{S.gText=null;gtClose();gtBtnLabel();gCompose(true)}catch(e){}}
+function gtBtnLabel(){
+  try{var b=$('gTextBtn');if(b)b.innerHTML=S.gText?'&#x270f;&#xfe0f; Edit text':'&#x270f;&#xfe0f; Add text';
+    if(CFG.guestText===false)document.body.classList.add('notext');else document.body.classList.remove('notext')}catch(e){}
+}
+function gtReset(){S.gText=null;S.gtDraft=null;gtBtnLabel()}
+/* Draw the guest text on the finished photo (all layouts, incl. custom templates) */
+function gtDraw(pc){
+  try{
+    var t=S.gText;if(!t||!t.text||CFG.guestText===false)return;
+    var ctx=pc.getContext('2d'),W=pc.width,H=pc.height;
+    var base=Math.min(W,H*0.75);
+    var f=t.size==='s'?0.055:(t.size==='l'?0.11:0.08);
+    var fs=Math.max(14,Math.round(base*f));
+    ctx.save();
+    ctx.font='800 '+fs+'px "Segoe UI",system-ui,sans-serif';
+    /* shrink to fit width */
+    var maxW=W*0.9,mw=ctx.measureText(t.text).width;
+    if(mw>maxW){fs=Math.max(12,Math.floor(fs*maxW/mw));ctx.font='800 '+fs+'px "Segoe UI",system-ui,sans-serif'}
+    var y=t.pos==='top'?(H*0.07+fs*0.5):(t.pos==='middle'?H/2:(H-H*0.07-fs*0.2));
+    ctx.textAlign='center';ctx.textBaseline='middle';
+    var light=/^#(f|e|d)/i.test(t.color);
+    ctx.lineJoin='round';ctx.lineWidth=Math.max(3,fs*0.14);
+    ctx.strokeStyle=light?'rgba(0,0,0,.75)':'rgba(255,255,255,.85)';
+    ctx.strokeText(t.text,W/2,y);
+    ctx.fillStyle=t.color||'#ffffff';
+    ctx.fillText(t.text,W/2,y);
+    ctx.restore();
+  }catch(e){}
+}
 
 /* ================= BOOTH CODES (pay at counter) ================= */
 var V_KEY='snapbooth_vouchers';
@@ -2683,6 +2795,7 @@ function gRender(imgs,isRe){
     if(def.type==='receipt'){gRenderReceipt(pc,imgs,def)}
     else if(def.type==='tpl'){gRenderTpl(pc,imgs,def)}
     else{gRenderGrid(pc,imgs,def)}
+    try{gtDraw(pc)}catch(e){}
     if(gUseBW()){gGray(pc.getContext('2d'),pc.width,pc.height)}
     gFinish(pc,isRe);
   }catch(e){}
@@ -2796,6 +2909,7 @@ function gFinish(pc,isRe){
     try{pc.toBlob(function(blob){S.currentBlob=blob},'image/'+fmt,q)}catch(e){}
     var pv=$('preview');if(pv)pv.classList.add('gflow');
     gUpdateRevUI();
+    try{gtBtnLabel()}catch(e){}
     try{gPrepPrint()}catch(e){}
     showScreen('preview');
     S.gReviewing=true;S.gQrExt=0;
@@ -3024,7 +3138,7 @@ var G_RESUME_KEY='snapbooth_resume';
 function gSaveResume(){
   try{
     var st={t:Date.now(),layout:S.gLayout,shots:S.gShots,flip:!!S.gFlip,copies:S.gCopies||1,
-      filter:S.gFilter||'none',time:S.gTime?S.gTime.getTime():null,order:S.gOrder||null,guest:S.guestName||'',vOk:!!S.vOk,vLeft:S.vLeft||0,vAt:S.vAt||0};
+      filter:S.gFilter||'none',time:S.gTime?S.gTime.getTime():null,order:S.gOrder||null,guest:S.guestName||'',vOk:!!S.vOk,vLeft:S.vLeft||0,vAt:S.vAt||0,gText:S.gText||null};
     try{sessionStorage.setItem(G_RESUME_KEY,JSON.stringify(st))}
     catch(e){try{localStorage.setItem(G_RESUME_KEY,JSON.stringify(st))}catch(e2){}}
   }catch(e){}
@@ -3043,7 +3157,7 @@ function gTryResume(){
     var st=S.gPendingResume||gReadResume();S.gPendingResume=null;
     if(!st||!st.shots||!st.shots.length||!G_LAYOUTS[st.layout])return false;
     S.gLayout=st.layout;S.gActive=true;S.gShots=st.shots;S.gImgs=null;S.gFiltCache=null;
-    S.gFlip=st.flip;S.gCopies=st.copies;S.gFilter=st.filter;S.gOrder=st.order;S.guestName=st.guest;S.vOk=!!st.vOk;S.vLeft=st.vLeft||0;S.vAt=st.vAt||0;if(S.vOk){try{vTimerStart()}catch(e){}}
+    S.gFlip=st.flip;S.gCopies=st.copies;S.gFilter=st.filter;S.gOrder=st.order;S.guestName=st.guest;S.vOk=!!st.vOk;S.vLeft=st.vLeft||0;S.vAt=st.vAt||0;S.gText=st.gText||null;if(S.vOk){try{vTimerStart()}catch(e){}}
     S.gTime=st.time?new Date(st.time):null;
     S.mode=(st.layout==='receipt4')?'receipt':(st.layout==='single'?'classic':'strip');
     try{
