@@ -326,6 +326,19 @@ body.notext #gTextBtn{display:none}
 .gt-row button.on{border-color:var(--pri);background:var(--pri);color:#fff}
 .gt-sw{width:38px;height:38px;padding:0!important;border-radius:50%!important}
 #gtCount{color:var(--txm);font-size:12px;margin:-8px 0 10px}
+
+/* ===== Licence lock (v33) ===== */
+#licLock{position:fixed;inset:0;z-index:900;background:linear-gradient(135deg,var(--bg),var(--bg2));display:none;align-items:center;justify-content:center;padding:20px}
+#licLock.on{display:flex}
+#licLock .box{background:var(--bg2);border:1px solid var(--brd);border-radius:16px;padding:26px;max-width:440px;width:100%;text-align:center}
+#licLock h2{margin:0 0 6px;font-size:24px}
+#licLock p{color:var(--tx2);font-size:14px;margin:6px 0 14px}
+#licKey{width:100%;font:700 20px ui-monospace,Consolas,monospace;letter-spacing:1px;text-align:center;padding:12px;border-radius:10px;border:2px solid var(--brd);background:var(--bg3);color:var(--tx);text-transform:uppercase}
+#licDevName{width:100%;padding:10px;border-radius:10px;border:1px solid var(--brd);background:var(--bg3);color:var(--tx);margin-top:8px;text-align:center}
+#licMsg{min-height:22px;color:var(--err);font-size:14px;margin:10px 0}
+#licLock button{width:100%;padding:14px;font-size:17px;font-weight:700;border:none;border-radius:10px;background:var(--pri);color:#fff}
+#licBanner{position:fixed;left:50%;bottom:28px;transform:translateX(-50%);z-index:640;background:#e17055;color:#fff;padding:8px 16px;border-radius:999px;font:600 13px system-ui,sans-serif;display:none}
+#licBanner.on{display:block}
 </style>
 </head>
 <body>
@@ -499,7 +512,9 @@ body.notext #gTextBtn{display:none}
   <div class="s-sec">
     <h3>&#x1f4f7; Camera</h3>
     <div class="s-row"><label>Camera Source</label>
-      <select id="sCamSrc"><option value="user">Front</option><option value="environment">Rear</option></select>
+      <select id="sCamSrc" onchange="camSrcChanged()"><option value="user">Front / built-in</option><option value="environment">Rear</option></select>
+    </div>
+    <div class="s-note">Plug in your USB webcam, open the camera once, then pick it here by name. The &#x1f504; button on the camera screen also switches between cameras.
     </div>
     <div class="s-row"><label>Countdown (sec)</label><input type="number" id="sCntDown" value="5" min="0" max="10"></div>
     <div class="s-row"><label>Mirror Camera</label><label class="tgl"><input type="checkbox" id="sMirror" checked><span class="tgl-s"></span></label></div>
@@ -761,10 +776,23 @@ body.notext #gTextBtn{display:none}
     </div>
   </div>
 </div>
+<div id="licLock">
+  <div class="box">
+    <div style="font-size:42px">&#x1f511;</div>
+    <h2>Activate SnapBooth</h2>
+    <p id="licSub">Enter your licence key to use this booth on this device.</p>
+    <input id="licKey" placeholder="SB-XXXX-XXXX-XXXX-XXXX" autocomplete="off" autocapitalize="characters">
+    <input id="licDevName" placeholder="Device name (e.g. Tablet 1)" maxlength="40">
+    <div id="licMsg"></div>
+    <button onclick="licActivate()">Activate</button>
+    <p style="margin-top:14px;font-size:12px">Need a key? Contact the booth provider.</p>
+  </div>
+</div>
+<div id="licBanner"></div>
 <div id="gToast"></div>
 <div id="vTimer">&#x23f1;&#xfe0f; <span id="vTimerT">10:00</span> left</div>
 <div id="adminHot"></div>
-<div id="appVer" style="position:fixed;right:8px;bottom:6px;z-index:600;font:11px system-ui,sans-serif;color:rgba(255,255,255,.45);pointer-events:none">SnapBooth v32</div>
+<div id="appVer" style="position:fixed;right:8px;bottom:6px;z-index:600;font:11px system-ui,sans-serif;color:rgba(255,255,255,.45);pointer-events:none">SnapBooth v34</div>
 
 <!-- ===== SLIDESHOW ===== -->
 <div id="slideshow">
@@ -963,7 +991,10 @@ function dbClear(){
 function startCam(facingMode){
   if(!facingMode)facingMode=CFG.camSrc||'user';
   S.facing=facingMode;
-  var constraints={video:{facingMode:facingMode,width:{ideal:1920},height:{ideal:1080}},audio:false};
+  var isDev=facingMode!=='user'&&facingMode!=='environment';
+  var vc={width:{ideal:1920},height:{ideal:1080}};
+  if(isDev){vc.deviceId={exact:facingMode}}else{vc.facingMode=facingMode}
+  var constraints={video:vc,audio:false};
   if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){camErr(null);return}
   try{
     navigator.mediaDevices.getUserMedia(constraints).then(function(stream){
@@ -1002,16 +1033,39 @@ function populateCamDevices(stream){
   try{
     navigator.mediaDevices.enumerateDevices().then(function(devs){
       var sel=$('sCamSrc');if(!sel)return;
-      var vids=[];
+      var cur=CFG.camSrc||'user';
+      var html='<option value="user">Front / built-in</option><option value="environment">Rear</option>';
+      var n=0;
       for(var i=0;i<devs.length;i++){
-        if(devs[i].kind==='videoinput')vids.push(devs[i]);
+        if(devs[i].kind!=='videoinput'||!devs[i].deviceId)continue;
+        n++;
+        var lb=devs[i].label||('Camera '+n);
+        html+='<option value="'+devs[i].deviceId.replace(/"/g,'')+'">\ud83d\udcf7 '+lb.replace(/</g,'')+'</option>';
       }
-      if(vids.length>2){
-        var hasExt=false;
-        for(var j=0;j<sel.options.length;j++){if(sel.options[j].value==='external')hasExt=true}
-        if(!hasExt){var o=document.createElement('option');o.value='external';o.text='External';sel.add(o)}
-      }
+      sel.innerHTML=html;
+      sel.value=cur;
+      /* names are hidden until camera permission is granted: ask once, then refill */
+      if(!S.camAsked){var named=false;for(var q=0;q<devs.length;q++){if(devs[q].kind==='videoinput'&&devs[q].label)named=true}
+        if(!named){S.camAsked=true;navigator.mediaDevices.getUserMedia({video:true}).then(function(st){try{st.getTracks().forEach(function(t){t.stop()})}catch(e){}populateCamDevices()}).catch(function(){})}}
+      if(sel.value!==cur)sel.value='user';
     }).catch(function(){});
+  }catch(e){}
+}
+/* Switch camera immediately when changed in Settings */
+function camSrcChanged(){
+  try{CFG.camSrc=($('sCamSrc')||{}).value||'user';saveSettings();gToast('Camera set. It will be used on the next photo.')}catch(e){}
+}
+/* Flip button cycles through every camera */
+function flipCam(){
+  try{
+    navigator.mediaDevices.enumerateDevices().then(function(devs){
+      var ids=[];for(var i=0;i<devs.length;i++){if(devs[i].kind==='videoinput'&&devs[i].deviceId)ids.push(devs[i].deviceId)}
+      stopCam();
+      if(ids.length<2){startCam(S.facing==='user'?'environment':'user');return}
+      var k=ids.indexOf(S.facing);var nx=ids[(k+1)%ids.length];
+      CFG.camSrc=nx;try{saveSettings()}catch(e){}
+      startCam(nx);
+    }).catch(function(){stopCam();startCam(S.facing==='user'?'environment':'user')});
   }catch(e){}
 }
 
@@ -1027,10 +1081,6 @@ function stopCam(){
   }catch(e){}
 }
 
-function flipCam(){
-  stopCam();
-  startCam(S.facing==='user'?'environment':'user');
-}
 
 function toggleMirror(){
   CFG.mirror=!CFG.mirror;
@@ -1871,6 +1921,7 @@ function loadSettings(){
   populateSettingsUI();
   applyBranding();
   try{vRenderAdmin()}catch(e){}
+  try{populateCamDevices()}catch(e){}
 }
 
 function populateSettingsUI(){
@@ -2152,6 +2203,88 @@ function capClose(){
 
 /* --- Idle screen tap (logo x5 = admin) --- */
 
+
+
+/* ================= LICENCE (v33) ================= */
+/* Set this to your Cloudflare Worker URL to turn licensing on. Empty = no licence needed. */
+var LIC_SERVER='';
+var LIC_GRACE_DAYS=3;   /* keep working offline this many days after the last successful check */
+var LIC_KEY='snapbooth_licence';
+function licDevId(){
+  try{
+    var id=localStorage.getItem('snapbooth_devid');
+    if(!id){
+      var a=new Uint8Array(12);try{crypto.getRandomValues(a)}catch(e){for(var i=0;i<12;i++)a[i]=Math.floor(Math.random()*256)}
+      id='';for(var j=0;j<a.length;j++){id+=('0'+a[j].toString(16)).slice(-2)}
+      localStorage.setItem('snapbooth_devid',id);
+    }
+    return id;
+  }catch(e){return 'nodev'}
+}
+function licGet(){try{return JSON.parse(localStorage.getItem(LIC_KEY)||'null')}catch(e){return null}}
+function licSet(o){try{localStorage.setItem(LIC_KEY,JSON.stringify(o))}catch(e){}}
+function licLock(msg,sub){
+  try{
+    var l=$('licLock');if(l)l.classList.add('on');
+    var m=$('licMsg');if(m)m.textContent=msg||'';
+    if(sub){var s=$('licSub');if(s)s.textContent=sub}
+    var k=$('licKey'),L=licGet();if(k&&L&&L.key&&!k.value)k.value=L.key;
+  }catch(e){}
+}
+function licUnlock(){try{var l=$('licLock');if(l)l.classList.remove('on')}catch(e){}}
+function licBanner(t){try{var b=$('licBanner');if(!b)return;if(t){b.textContent=t;b.classList.add('on')}else b.classList.remove('on')}catch(e){}}
+function licPost(path,body){
+  return fetch(LIC_SERVER.replace(/\/+$/,'')+path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})
+    .then(function(r){return r.json()});
+}
+function licReason(st,max){
+  if(st==='invalid')return 'That key was not found. Check it and try again.';
+  if(st==='expired')return 'This licence has expired. Please renew with your provider.';
+  if(st==='revoked')return 'This licence has been turned off. Please contact your provider.';
+  if(st==='device_limit')return 'This key is already used on '+(max||1)+' device(s). Ask your provider to free a slot.';
+  if(st==='not_activated')return 'This device is no longer activated. Enter your key again.';
+  return 'Could not activate. Please try again.';
+}
+function licActivate(){
+  try{
+    var k=String(($('licKey')||{}).value||'').toUpperCase().replace(/\s/g,'');
+    var nm=String(($('licDevName')||{}).value||'').trim()||'Device';
+    var m=$('licMsg');
+    if(!k){if(m)m.textContent='Please enter your licence key.';return}
+    if(m){m.style.color='var(--tx2)';m.textContent='Checking\u2026'}
+    licPost('/activate',{key:k,device:licDevId(),name:nm}).then(function(r){
+      if(m)m.style.color='';
+      if(r&&r.ok){licSet({key:k,ok:Date.now(),expires:r.expires||0,customer:r.customer||''});licUnlock();licBanner('');gToast('SnapBooth activated. Welcome'+(r.customer?', '+r.customer:'')+'!');licExpiryNote(r.expires);return}
+      if(m)m.textContent=licReason(r&&r.status,r&&r.max);
+    }).catch(function(){if(m){m.style.color='';m.textContent='No internet connection. Connect to Wi-Fi to activate.'}});
+  }catch(e){}
+}
+function licExpiryNote(exp){
+  try{
+    if(!exp)return;
+    var d=Math.ceil((exp-Date.now())/86400000);
+    if(d<=3&&d>=0)licBanner('Licence ends in '+d+' day'+(d===1?'':'s')+' \u2014 renew with your provider.');
+  }catch(e){}
+}
+function licBoot(){
+  try{
+    if(!LIC_SERVER)return;               /* licensing off */
+    var L=licGet();
+    if(!L||!L.key){licLock('');return}
+    /* offline grace: allow use if last good check is recent */
+    var fresh=L.ok&&(Date.now()-L.ok)<LIC_GRACE_DAYS*86400000;
+    if(L.expires&&Date.now()>L.expires){licLock(licReason('expired'));}
+    else if(!fresh){licLock('Please connect to the internet to verify your licence.')}
+    licExpiryNote(L.expires);
+    licPost('/check',{key:L.key,device:licDevId()}).then(function(r){
+      if(r&&r.ok){L.ok=Date.now();L.expires=r.expires||0;licSet(L);licUnlock();licExpiryNote(L.expires);if(!(L.expires&&L.expires-Date.now()<3*86400000))licBanner('')}
+      else if(r&&r.status){licLock(licReason(r.status,r.max))}
+    }).catch(function(){
+      if(!fresh)licLock('No internet connection. Connect to Wi-Fi to verify your licence.');
+      else licBanner('Offline \u2014 licence check will retry.');
+    });
+  }catch(e){}
+}
 
 /* ================= GUEST CUSTOM TEXT ================= */
 function gtSel(group,v){
@@ -3600,6 +3733,8 @@ function init(){
     openDB().catch(function(){});
     updateStorageInfo();
     regSW();
+    try{licBoot()}catch(e){}
+    try{setInterval(function(){try{licBoot()}catch(e){}},6*3600000)}catch(e){}
     try{gBoot()}catch(e){}
     try{ctplBoot()}catch(e){}
     var sg=$('stkGrid');
