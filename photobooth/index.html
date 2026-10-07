@@ -365,8 +365,8 @@ body.vmode #gVLeft{display:block}
 <!-- ===== LAYOUT PICKER ===== -->
 <div id="layouts" class="scr">
   <div class="lay-hdr">
-    <button class="ibtn" onclick="gToIdle()" style="background:var(--bg3)">&#x2715;</button>
-    <h2>Choose your layout</h2>
+    <button class="ibtn" onclick="gLayoutBack()" style="background:var(--bg3)">&#x2715;</button>
+    <h2 id="layHdr">Choose your layout</h2>
     <div style="width:42px"></div>
   </div>
   <div class="lay-grid">
@@ -436,6 +436,7 @@ body.vmode #gVLeft{display:block}
     <div class="g-filters" id="gFilters"><button data-gf="none" class="on" onclick="gSetFilter('none')">None</button><button data-gf="bw" class="" onclick="gSetFilter('bw')">B&amp;W</button><button data-gf="sepia" class="" onclick="gSetFilter('sepia')">Sepia</button><button data-gf="vintage" class="" onclick="gSetFilter('vintage')">Vintage</button><button data-gf="warm" class="" onclick="gSetFilter('warm')">Warm</button><button data-gf="cool" class="" onclick="gSetFilter('cool')">Cool</button><button data-gf="contrast" class="" onclick="gSetFilter('contrast')">Hi-Contrast</button><button data-gf="bright" class="" onclick="gSetFilter('bright')">Bright</button><button data-gf="vivid" class="" onclick="gSetFilter('vivid')">Vivid</button><button data-gf="dreamy" class="" onclick="gSetFilter('dreamy')">Dreamy</button></div>
     <div class="g-row">
       <button class="g-btn" onclick="gRetake()">&#x1f504; Retake</button>
+      <button class="g-btn" onclick="gChangeLayout()">&#x1f5bc;&#xfe0f; Change layout</button>
       <button class="g-btn" id="gMirBtn" onclick="gToggleMirror()">&#x2194;&#xfe0f; Mirror</button>
     </div>
     <div class="g-copies">
@@ -721,7 +722,7 @@ body.vmode #gVLeft{display:block}
 <div id="gToast"></div>
 <div id="vTimer">&#x23f1;&#xfe0f; <span id="vTimerT">10:00</span> left</div>
 <div id="adminHot"></div>
-<div id="appVer" style="position:fixed;right:8px;bottom:6px;z-index:600;font:11px system-ui,sans-serif;color:rgba(255,255,255,.45);pointer-events:none">SnapBooth v29</div>
+<div id="appVer" style="position:fixed;right:8px;bottom:6px;z-index:600;font:11px system-ui,sans-serif;color:rgba(255,255,255,.45);pointer-events:none">SnapBooth v30</div>
 
 <!-- ===== SLIDESHOW ===== -->
 <div id="slideshow">
@@ -2055,6 +2056,7 @@ function gToIdle(){
   try{
     S.gSeq++;S.gBusy=false;S.gReviewing=false;S.gActive=false;S.gQrExt=0;
     try{vClose()}catch(e){}
+    S.gReLayout=null;S.gKeepShots=false;try{var hd1=$('layHdr');if(hd1)hd1.textContent='Choose your layout'}catch(e){}
     try{sessionStorage.removeItem(G_RESUME_KEY)}catch(e){}
     try{gResetFilter()}catch(e){}
     gClearIdle();
@@ -2068,8 +2070,36 @@ function gToIdle(){
     showScreen('idle');
   }catch(e){}
 }
+
+/* --- Change layout after capture (reuse photos, shoot only the extra ones) --- */
+function gChangeLayout(){
+  try{
+    if(S.gBusy)return;
+    try{closeQR()}catch(e){}
+    S.gReLayout={layout:S.gLayout,shots:(S.gShots||[]).slice(),flip:S.gFlip,filter:S.gFilter};
+    S.gReviewing=false;
+    var hd=$('layHdr');if(hd)hd.textContent='Pick another layout \u2014 your photos are kept';
+    gShowLayouts();
+    gClearIdle();
+  }catch(e){}
+}
+function gLayoutBack(){
+  try{
+    var r=S.gReLayout;
+    if(r&&r.shots&&r.shots.length){
+      S.gReLayout=null;
+      var hd=$('layHdr');if(hd)hd.textContent='Choose your layout';
+      S.gLayout=r.layout;S.gShots=r.shots;S.gImgs=null;S.gFiltCache=null;S.gFlip=r.flip;
+      gCompose(true);
+      return;
+    }
+  }catch(e){}
+  gToIdle();
+}
+
 function capClose(){
   try{
+    if(S.gActive&&S.gKeepShots&&S.gShots&&S.gShots.length&&!S.gBusy){S.gKeepShots=false;stopCam();gShowLayouts();S.gReLayout={layout:S.gLayout,shots:S.gShots.slice(),flip:S.gFlip,filter:S.gFilter};var hd=$('layHdr');if(hd)hd.textContent='Pick another layout \u2014 your photos are kept';return}
     if(S.gActive){gToIdle();return}
     stopCam();showScreen('home');
   }catch(e){}
@@ -2346,6 +2376,18 @@ function gPinOk(){
 /* --- Layout pick & capture --- */
 function gPickLayout(key){
   try{
+    if(S.gReLayout){
+      var rl=S.gReLayout;S.gReLayout=null;
+      var hd0=$('layHdr');if(hd0)hd0.textContent='Choose your layout';
+      if(!G_LAYOUTS[key])key='strip4';
+      S.gLayout=key;S.gActive=true;S.gImgs=null;S.gFiltCache=null;
+      S.gShots=rl.shots.slice();S.gFlip=rl.flip;
+      S.mode=(key==='receipt4')?'receipt':(key==='single'?'classic':'strip');
+      gClearIdle();
+      var need=G_LAYOUTS[key].n||1;
+      if(S.gShots.length>=need){S.gShots=S.gShots.slice(0,need);gCompose(true);return}
+      S.gKeepShots=true;gStartCap();return;
+    }
     if(!G_LAYOUTS[key])key='strip4';
     S.gLayout=key;S.gActive=true;S.gShots=[];S.gImgs=null;S.gFlip=false;S.gCopies=1;
     S.gTime=null;S.gOrder=null;S.guestName='';
@@ -2360,7 +2402,8 @@ function gStartCap(){
     var def=G_LAYOUTS[S.gLayout];
     var cp=$('capture');if(cp)cp.classList.add('gflow');
     try{var vv=$('vid');if(vv)vv.style.filter=''}catch(e){}
-    var info=$('capInfo');if(info)info.textContent=def.label+' \u2022 '+def.n+(def.n>1?' photos':' photo');
+    var have=S.gKeepShots?(S.gShots||[]).length:0;
+    var info=$('capInfo');if(info)info.textContent=def.label+' \u2022 '+(have?((def.n-have)+' more photo'+((def.n-have)>1?'s':'')):(def.n+(def.n>1?' photos':' photo')));
     var b=$('gTakeBtn');if(b){b.disabled=false;b.style.display=''}
     try{var tl=document.querySelector('.g-takelbl');if(tl)tl.style.visibility=''}catch(e){}
     gShotInfo('');
@@ -2388,7 +2431,7 @@ function gLiveStart(){
   try{
     var def=G_LAYOUTS[S.gLayout];
     if(!def||def.type!=='tpl'||!def.tpl||!def.tpl.img){gLiveStop();return}
-    S.gLiveOn=true;S.gLiveShots=[];S.gCurSlot=0;
+    S.gLiveOn=true;S.gLiveShots=[];S.gCurSlot=0;try{for(var ks=0;ks<S.gShots.length;ks++){var kim=new Image();kim.src=S.gShots[ks];S.gLiveShots.push(kim)}S.gCurSlot=S.gShots.length}catch(e){}
     try{var cpz=$('capture');if(cpz)cpz.classList.add('tplmode')}catch(e){}
     try{
       var tt=def.tpl,tw=tt.w||tt.img.naturalWidth,th=tt.h||tt.img.naturalHeight,vb=$('vidBox');
@@ -2466,10 +2509,10 @@ function gStartSeq(){
     if(S.gBusy)return;
     gClearIdle();
     getAudioCtx();
-    S.gBusy=true;S.gShots=[];S.gImgs=null;S.gLiveShots=[];S.gCurSlot=0;
+    S.gBusy=true;if(!S.gKeepShots){S.gShots=[];S.gLiveShots=[];S.gCurSlot=0}S.gKeepShots=false;S.gImgs=null;
     S.gSeq++;var token=S.gSeq;
     var def=G_LAYOUTS[S.gLayout]||G_LAYOUTS.strip4;
-    var n=def.n,i=0;
+    var n=def.n,i=S.gShots.length||0;
     var b=$('gTakeBtn');if(b){b.disabled=true;b.style.display='none'}
     try{var tl=document.querySelector('.g-takelbl');if(tl)tl.style.visibility='hidden'}catch(e){}
     var cd=parseInt(CFG.countdown);if(isNaN(cd)||cd<0)cd=5;
@@ -2791,6 +2834,7 @@ function gToggleMirror(){
 }
 function gRetake(){
   try{
+    S.gReLayout=null;S.gKeepShots=false;
     S.gReviewing=false;gClearIdle();
     S.gShots=[];S.gImgs=null;S.gFlip=false;S.gTime=null;gResetFilter();
     try{closeQR()}catch(e){}
