@@ -308,6 +308,13 @@ body.vmode #gVLeft{display:block}
 .vlist .u{opacity:.4;text-decoration:line-through}
 .vbtns{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
 .vbtns button{flex:1 1 140px}
+
+#vTimer{position:fixed;top:12px;left:50%;transform:translateX(-50%);z-index:650;display:none;align-items:center;gap:8px;
+  background:rgba(0,0,0,.72);color:#fff;font:700 clamp(16px,2.4vw,22px) system-ui,sans-serif;padding:8px 18px;border-radius:999px;
+  box-shadow:0 4px 18px rgba(0,0,0,.35);pointer-events:none;font-variant-numeric:tabular-nums}
+#vTimer.on{display:flex}
+#vTimer.warn{background:#d63031;animation:vPulse 1s ease-in-out infinite}
+@keyframes vPulse{50%{transform:translateX(-50%) scale(1.06)}}
 </style>
 </head>
 <body>
@@ -712,8 +719,9 @@ body.vmode #gVLeft{display:block}
   </div>
 </div>
 <div id="gToast"></div>
+<div id="vTimer">&#x23f1;&#xfe0f; <span id="vTimerT">10:00</span> left</div>
 <div id="adminHot"></div>
-<div id="appVer" style="position:fixed;right:8px;bottom:6px;z-index:600;font:11px system-ui,sans-serif;color:rgba(255,255,255,.45);pointer-events:none">SnapBooth v28</div>
+<div id="appVer" style="position:fixed;right:8px;bottom:6px;z-index:600;font:11px system-ui,sans-serif;color:rgba(255,255,255,.45);pointer-events:none">SnapBooth v29</div>
 
 <!-- ===== SLIDESHOW ===== -->
 <div id="slideshow">
@@ -1796,6 +1804,7 @@ function saveSettings(){
     CFG.dpi=parseInt(($('sDPI')||{}).value)||203;
     CFG.fit=($('sFit')||{}).value||'auto';
     CFG.voucherOn=!!($('sVoucherOn')||{}).checked;
+    if(!CFG.voucherOn){try{vTimerStop()}catch(e){}}
     CFG.vPrice=(($('sVPrice')||{}).value||'').trim();
     CFG.vCopies=Math.max(1,Math.min(10,parseInt(($('sVCopies')||{}).value)||1));
     CFG.vMin=Math.max(2,Math.min(120,parseInt(($('sVMin')||{}).value)||10));
@@ -2116,13 +2125,49 @@ function vSubmit(){
     if(a[hit].used){if(msg)msg.textContent='This code was already used.';if(i)i.value='';return}
     a[hit].used=Date.now();vSave(a);
     S.vOk=true;S.vAt=Date.now();S.vCode=code;S.vLeft=CFG.vCopies||1;
+    vTimerStart();
     vClose();
     try{vRenderAdmin()}catch(e){}
     gShowLayouts();
   }catch(e){}
 }
+
+/* --- Session countdown --- */
+function vTimerStart(){
+  try{
+    vTimerStop(true);
+    S.vWarned=false;
+    S.vTick=setInterval(vTimerTick,1000);
+    vTimerTick();
+  }catch(e){}
+}
+function vTimerStop(keepHidden){
+  try{if(S.vTick){clearInterval(S.vTick);S.vTick=null}
+    var t=$('vTimer');if(t){t.classList.remove('on');t.classList.remove('warn')}}catch(e){}
+}
+function vTimerTick(){
+  try{
+    var t=$('vTimer'),tt=$('vTimerT');
+    if(!vOn()||!S.vOk||!S.vAt){vTimerStop();return}
+    var left=Math.ceil(((CFG.vMin||10)*60000-(Date.now()-S.vAt))/1000);
+    if(left<0)left=0;
+    var m=Math.floor(left/60),s=left%60;
+    if(tt)tt.textContent=m+':'+(s<10?'0':'')+s;
+    if(t){t.classList.add('on');if(left<=60)t.classList.add('warn');else t.classList.remove('warn')}
+    if(left<=60&&!S.vWarned){S.vWarned=true;gToast('1 minute left on this session.')}
+    if(left<=0){
+      /* let a photo sequence in progress finish first */
+      if(S.gBusy)return;
+      vTimerStop();
+      S.vOk=false;S.vLeft=0;S.vCode='';
+      gToast('Time is up. Thank you! Get a new code at the counter for another session.');
+      gToIdle();
+    }
+  }catch(e){}
+}
+
 function gDone(){
-  try{S.vOk=false;S.vLeft=0;S.vCode='';}catch(e){}
+  try{S.vOk=false;S.vLeft=0;S.vCode='';vTimerStop();}catch(e){}
   gToIdle();
 }
 /* print gate: called at the start of gPrint */
@@ -2954,7 +2999,7 @@ function gTryResume(){
     var st=S.gPendingResume||gReadResume();S.gPendingResume=null;
     if(!st||!st.shots||!st.shots.length||!G_LAYOUTS[st.layout])return false;
     S.gLayout=st.layout;S.gActive=true;S.gShots=st.shots;S.gImgs=null;S.gFiltCache=null;
-    S.gFlip=st.flip;S.gCopies=st.copies;S.gFilter=st.filter;S.gOrder=st.order;S.guestName=st.guest;S.vOk=!!st.vOk;S.vLeft=st.vLeft||0;S.vAt=st.vAt||0;
+    S.gFlip=st.flip;S.gCopies=st.copies;S.gFilter=st.filter;S.gOrder=st.order;S.guestName=st.guest;S.vOk=!!st.vOk;S.vLeft=st.vLeft||0;S.vAt=st.vAt||0;if(S.vOk){try{vTimerStart()}catch(e){}}
     S.gTime=st.time?new Date(st.time):null;
     S.mode=(st.layout==='receipt4')?'receipt':(st.layout==='single'?'classic':'strip');
     try{
