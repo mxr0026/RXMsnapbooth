@@ -615,6 +615,7 @@ body.guest.on-idle #adminHot{display:block}
   </div>
 </div>
 <div id="adminHot"></div>
+<div id="appVer" style="position:fixed;right:8px;bottom:6px;z-index:600;font:11px system-ui,sans-serif;color:rgba(255,255,255,.45);pointer-events:none">SnapBooth v23</div>
 
 <!-- ===== SLIDESHOW ===== -->
 <div id="slideshow">
@@ -1894,7 +1895,9 @@ function gBoot(){
     document.addEventListener('pointerdown',function(){
       try{if(S.gReviewing)gClearIdle()}catch(e){}
     },true);
+    var resume=null;try{resume=gReadResume()}catch(e){}
     if(CFG.guestMode){gEnterGuest()}
+    if(resume){S.gPendingResume=resume;if(gTryResume()){try{var cp=$('capture');if(cp)cp.classList.add('gflow')}catch(e){}}}
   }catch(e){}
 }
 function gEnterGuest(){
@@ -1934,6 +1937,7 @@ function gIdleFire(){
 function gToIdle(){
   try{
     S.gSeq++;S.gBusy=false;S.gReviewing=false;S.gActive=false;S.gQrExt=0;
+    try{sessionStorage.removeItem(G_RESUME_KEY)}catch(e){}
     try{gResetFilter()}catch(e){}
     gClearIdle();
     stopCam();
@@ -2533,6 +2537,68 @@ try{
   document.addEventListener('visibilitychange',function(){if(!document.hidden)setTimeout(gRecover,50)});
 }catch(e){}
 
+
+/* --- iPhone: save the review state before handing off to a printer app, reload on return --- */
+var G_RESUME_KEY='snapbooth_resume';
+function gSaveResume(){
+  try{
+    var st={t:Date.now(),layout:S.gLayout,shots:S.gShots,flip:!!S.gFlip,copies:S.gCopies||1,
+      filter:S.gFilter||'none',time:S.gTime?S.gTime.getTime():null,order:S.gOrder||null,guest:S.guestName||''};
+    try{sessionStorage.setItem(G_RESUME_KEY,JSON.stringify(st))}
+    catch(e){try{localStorage.setItem(G_RESUME_KEY,JSON.stringify(st))}catch(e2){}}
+  }catch(e){}
+}
+function gReadResume(){
+  var raw=null;
+  try{raw=sessionStorage.getItem(G_RESUME_KEY)}catch(e){}
+  if(!raw){try{raw=localStorage.getItem(G_RESUME_KEY)}catch(e){}}
+  try{sessionStorage.removeItem(G_RESUME_KEY)}catch(e){}
+  try{localStorage.removeItem(G_RESUME_KEY)}catch(e){}
+  if(!raw)return null;
+  try{var st=JSON.parse(raw);if(!st||Date.now()-st.t>30*60*1000)return null;return st}catch(e){return null}
+}
+function gTryResume(){
+  try{
+    var st=S.gPendingResume||gReadResume();S.gPendingResume=null;
+    if(!st||!st.shots||!st.shots.length||!G_LAYOUTS[st.layout])return false;
+    S.gLayout=st.layout;S.gActive=true;S.gShots=st.shots;S.gImgs=null;S.gFiltCache=null;
+    S.gFlip=st.flip;S.gCopies=st.copies;S.gFilter=st.filter;S.gOrder=st.order;S.guestName=st.guest;
+    S.gTime=st.time?new Date(st.time):null;
+    S.mode=(st.layout==='receipt4')?'receipt':(st.layout==='single'?'classic':'strip');
+    try{
+      var bs=document.querySelectorAll('#gFilters button');
+      for(var i=0;i<bs.length;i++){if(bs[i].getAttribute('data-gf')===S.gFilter)bs[i].classList.add('on');else bs[i].classList.remove('on')}
+    }catch(e){}
+    gCompose(true);
+    return true;
+  }catch(e){return false}
+}
+/* After handing off on iPhone, reload once when the page becomes visible again */
+function gArmReturnReload(){
+  try{
+    S.gAwaitReturn=true;S.gLeftAt=0;
+    var onHide=function(){if(document.hidden&&S.gAwaitReturn)S.gLeftAt=Date.now()};
+    var onBack=function(){
+      try{
+        if(!S.gAwaitReturn||document.hidden)return;
+        if(!S.gLeftAt)return; /* page never actually left */
+        S.gAwaitReturn=false;
+        document.removeEventListener('visibilitychange',onHide);
+        document.removeEventListener('visibilitychange',onBack);
+        window.removeEventListener('pageshow',onBack);
+        window.removeEventListener('focus',onBack);
+        setTimeout(function(){try{window.location.reload()}catch(e){}},150);
+      }catch(e){}
+    };
+    document.addEventListener('visibilitychange',onHide);
+    document.addEventListener('visibilitychange',onBack);
+    window.addEventListener('pageshow',onBack);
+    window.addEventListener('focus',onBack);
+    /* stop waiting if nothing happened (guest cancelled before leaving) */
+    setTimeout(function(){if(!S.gLeftAt)S.gAwaitReturn=false},60000);
+  }catch(e){}
+}
+
 /* Prepare the print file ahead of time so iPhone can open the share sheet instantly
    (iOS blocks share/print if they start after a delay from the tap). */
 function gPrepPrint(){
@@ -2548,6 +2614,9 @@ function gPrepPrint(){
           var blob=gDataUrlToBlob(du);
           S.gPrintFile=new File([blob],'snapbooth_print.'+(/jpeg/.test(blob.type)?'jpg':'png'),{type:blob.type});
           S.gPrintUrl=du;
+          try{
+            var ti=new Image();ti.onload=function(){try{var c=document.createElement('canvas');c.width=ti.width;c.height=ti.height;var x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);x.drawImage(ti,0,0);S.gPrintFileJpg=c.toDataURL('image/jpeg',0.9)}catch(e){}};ti.src=du;
+          }catch(e){}
         }catch(e){}
       });
     });
@@ -2556,19 +2625,20 @@ function gPrepPrint(){
 /* iPhone print: share sheet (has "Print" built in), called directly from the tap */
 function gPrintIOS(){
   try{
-    if(S.gPrinting)return;
-    var f=S.gPrintFile;
-    if(f&&navigator.share&&(!navigator.canShare||navigator.canShare({files:[f]}))){
-      S.gPrinting=true;
-      navigator.share({files:[f]}).then(function(){gRecover()}).catch(function(){gRecover()});
-      setTimeout(function(){S.gPrinting=false},4000);
-      return;
-    }
-    /* Not ready yet: print in this same page (no pop-up window, which iOS handles badly) */
-    var src=S.gPrintUrl||S.currentDataUrl;
+    /* iPhone: use the built-in print screen (AirPrint). No third-party app = no freeze. */
+    var src=S.gPrintUrl||S.currentDataUrl;if(!src)return;
     var n=Math.max(1,Math.min(10,S.gCopies||1)),pages='';
     for(var i=0;i<(gIsInkjet()?n:1);i++){pages+='<div class="pg"><img src="'+src+'"></div>'}
-    gPrintInline(pages);
+    var old=$('gPrintArea');if(old&&old.parentNode)old.parentNode.removeChild(old);
+    var st=$('gPrintStyle');if(st&&st.parentNode)st.parentNode.removeChild(st);
+    var area=document.createElement('div');area.id='gPrintArea';area.innerHTML=pages;area.style.display='none';
+    document.body.appendChild(area);
+    var s=document.createElement('style');s.id='gPrintStyle';
+    s.textContent='@media print{body>*{display:none!important}#gPrintArea{display:block!important}'+gPrintCSS()+'}';
+    document.head.appendChild(s);
+    /* Call print during the tap itself; iOS can ignore it if delayed */
+    try{window.print()}catch(e){}
+    setTimeout(gRecover,1000);
   }catch(e){gRecover()}
 }
 
