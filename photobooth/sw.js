@@ -1,7 +1,8 @@
-var CACHE_NAME = 'snapbooth-v21';
+var CACHE_NAME = 'snapbooth-v22';
 var ASSETS = [
   'index.html',
   'dl.html',
+  'print.html',
   'manifest.json'
 ];
 
