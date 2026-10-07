@@ -53,7 +53,7 @@ html,body{height:100%;width:100%;overflow:hidden;font-family:'Segoe UI',system-u
 #vidBox{flex:1;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center}
 #vid{width:100%;height:100%;object-fit:cover}
 #tmpCanvas{display:none}
-#tplLive{position:absolute;inset:0;width:100%;height:100%;z-index:5;display:none;background:#000}
+#tplLive{position:absolute;inset:0;width:100%;height:100%;z-index:5;display:none;background:transparent}
 #tplLive.on{display:block}
 .cap-ctrl{position:absolute;bottom:0;left:0;right:0;padding:20px;display:flex;justify-content:center;align-items:center;gap:28px;background:linear-gradient(0deg,rgba(0,0,0,.7),transparent)}
 .shutter{width:68px;height:68px;border-radius:50%;background:#fff;border:4px solid rgba(255,255,255,.4);cursor:pointer;position:relative;transition:transform .1s}
@@ -265,6 +265,31 @@ body.guest.on-idle #adminHot{display:block}
 .ctpl-del{background:var(--err);color:#fff;border:none;border-radius:8px;padding:8px 10px;font-size:14px;cursor:pointer}
 #ctplMsg{font-size:13px;min-height:18px;margin-top:6px}
 #ctplMsg.err{color:var(--err)}#ctplMsg.ok{color:var(--ok)}
+
+/* ===== Guest capture: framed booth layout (v25) ===== */
+#capture:not(.gflow) .g-stage{display:contents}
+#capture.gflow{background:linear-gradient(135deg,var(--bg),var(--bg2));display:none;flex-direction:column}
+#capture.gflow.active{display:flex}
+#capture.gflow .cap-hdr{position:relative;background:none;flex:0 0 auto}
+#capture.gflow #capInfo{font-size:clamp(18px,3vw,28px);font-weight:800;background:none;backdrop-filter:none;padding:0}
+#capture.gflow .g-stage{flex:1;display:flex;align-items:center;justify-content:center;gap:clamp(16px,4vw,48px);padding:8px clamp(12px,3vw,40px) 24px;min-height:0}
+#capture.gflow #vidBox{flex:0 1 auto;width:min(68vw,calc((100vh - 140px)*1.333));aspect-ratio:4/3;max-height:calc(100vh - 140px);border:8px solid #fff;border-radius:6px;box-shadow:0 10px 40px rgba(0,0,0,.45);background:#000;position:relative;overflow:hidden}
+#capture.gflow .cap-ctrl{position:static;background:none;padding:0;flex:0 0 auto;display:flex;flex-direction:column;align-items:center;gap:10px}
+#capture.gflow #gTakeBtn{display:flex;align-items:center;justify-content:center;width:clamp(110px,16vw,170px);height:clamp(110px,16vw,170px);min-width:0;padding:0;border-radius:50%;background:#111;border:6px solid #fff;font-size:clamp(46px,7vw,74px);box-shadow:0 8px 30px rgba(0,0,0,.5)}
+#capture.gflow #gTakeBtn:active{transform:scale(.93)}
+#capture.gflow .g-takelbl{color:var(--tx);font-size:clamp(15px,2vw,20px);font-weight:700;letter-spacing:.5px}
+#capture.gflow #tplLive{z-index:4}
+#capture.gflow #gShotInfo{top:12px}
+.g-takelbl{display:none}
+#capture.gflow .g-takelbl{display:block}
+#capture.gflow #gTakeBtn[style*="none"]+.g-takelbl{visibility:hidden}
+@media (orientation:portrait){
+  #capture.gflow .g-stage{flex-direction:column;gap:20px}
+  #capture.gflow #vidBox{width:min(92vw,calc((100vh - 330px)*1.333));max-height:calc(100vh - 330px)}
+}
+/* template preview: use a taller box that fits the template */
+#capture.gflow.tplmode #vidBox{aspect-ratio:auto;height:calc(100vh - 140px);width:min(70vw,calc(100vh - 140px));border:none;box-shadow:none;background:transparent}
+@media (orientation:portrait){#capture.gflow.tplmode #vidBox{height:calc(100vh - 330px);width:92vw}}
 </style>
 </head>
 <body>
@@ -339,6 +364,7 @@ body.guest.on-idle #adminHot{display:block}
       <button class="ibtn" id="flipBtn" onclick="flipCam()">&#x1f504;</button>
     </div>
   </div>
+  <div class="g-stage">
   <div id="vidBox">
     <video id="vid" autoplay playsinline muted></video>
     <canvas id="tplLive"></canvas>
@@ -346,6 +372,12 @@ body.guest.on-idle #adminHot{display:block}
     <div id="cntOvl"><div id="cntNum">3</div></div>
     <div id="flashOvl"></div>
     <div id="gShotInfo"></div>
+  </div>
+  <div class="cap-ctrl">
+    <button class="shutter" id="shutterBtn" onclick="takePhoto()"><div class="shutter-in"></div></button>
+    <button id="gTakeBtn" onclick="gStartSeq()">&#x1f4f7;</button>
+    <div class="g-takelbl">Tap to start</div>
+  </div>
   </div>
   <div class="fbar" id="filterBar">
     <button class="fbtn active" data-f="none" onclick="setFilter(this)">None</button>
@@ -359,10 +391,7 @@ body.guest.on-idle #adminHot{display:block}
     <button class="fbtn" data-f="saturate(1.8) contrast(1.1)" onclick="setFilter(this)">Vivid</button>
     <button class="fbtn" data-f="brightness(1.1) contrast(0.9) saturate(1.2) blur(0.5px)" onclick="setFilter(this)">Dreamy</button>
   </div>
-  <div class="cap-ctrl">
-    <button class="shutter" id="shutterBtn" onclick="takePhoto()"><div class="shutter-in"></div></button>
-    <button id="gTakeBtn" onclick="gStartSeq()">&#x1f4f8; Take Photo</button>
-  </div>
+  
 </div>
 
 <!-- ===== PREVIEW SCREEN ===== -->
@@ -618,7 +647,7 @@ body.guest.on-idle #adminHot{display:block}
   </div>
 </div>
 <div id="adminHot"></div>
-<div id="appVer" style="position:fixed;right:8px;bottom:6px;z-index:600;font:11px system-ui,sans-serif;color:rgba(255,255,255,.45);pointer-events:none">SnapBooth v24</div>
+<div id="appVer" style="position:fixed;right:8px;bottom:6px;z-index:600;font:11px system-ui,sans-serif;color:rgba(255,255,255,.45);pointer-events:none">SnapBooth v25</div>
 
 <!-- ===== SLIDESHOW ===== -->
 <div id="slideshow">
@@ -2057,6 +2086,7 @@ function gStartCap(){
     try{var vv=$('vid');if(vv)vv.style.filter=''}catch(e){}
     var info=$('capInfo');if(info)info.textContent=def.label+' \u2022 '+def.n+(def.n>1?' photos':' photo');
     var b=$('gTakeBtn');if(b){b.disabled=false;b.style.display=''}
+    try{var tl=document.querySelector('.g-takelbl');if(tl)tl.style.visibility=''}catch(e){}
     gShotInfo('');
     showScreen('capture');
     startCam();
@@ -2083,6 +2113,7 @@ function gLiveStart(){
     var def=G_LAYOUTS[S.gLayout];
     if(!def||def.type!=='tpl'||!def.tpl||!def.tpl.img){gLiveStop();return}
     S.gLiveOn=true;S.gLiveShots=[];S.gCurSlot=0;
+    try{var cpz=$('capture');if(cpz)cpz.classList.add('tplmode')}catch(e){}
     var c=$('tplLive');if(c)c.classList.add('on');
     if(S.gLiveRaf)cancelAnimationFrame(S.gLiveRaf);
     var loop=function(){
@@ -2096,6 +2127,7 @@ function gLiveStart(){
 function gLiveStop(){
   try{
     S.gLiveOn=false;
+    try{var cpy=$('capture');if(cpy)cpy.classList.remove('tplmode')}catch(e){}
     if(S.gLiveRaf){cancelAnimationFrame(S.gLiveRaf);S.gLiveRaf=null}
     var c=$('tplLive');if(c)c.classList.remove('on');
   }catch(e){}
@@ -2117,9 +2149,9 @@ function gLiveDraw(){
   var cw=c.clientWidth,ch=c.clientHeight;if(!cw||!ch)return;
   if(c.width!==Math.round(cw*dpr)||c.height!==Math.round(ch*dpr)){c.width=Math.round(cw*dpr);c.height=Math.round(ch*dpr)}
   var x=c.getContext('2d');x.setTransform(dpr,0,0,dpr,0,0);
-  x.fillStyle='#000';x.fillRect(0,0,cw,ch);
+  x.clearRect(0,0,cw,ch);
   /* leave room for the header and the Take Photo button */
-  var top=64,bot=120,aw=cw-24,ah=ch-top-bot;if(ah<100){top=10;bot=10;ah=ch-20}
+  var top=0,bot=0,aw=cw,ah=ch;
   var s=Math.min(aw/TW,ah/TH),dw=TW*s,dh=TH*s,ox=(cw-dw)/2,oy=top+(ah-dh)/2;
   x.fillStyle='#fff';x.fillRect(ox,oy,dw,dh);
   var cur=S.gCurSlot||0,shots=S.gLiveShots||[];
@@ -2153,6 +2185,7 @@ function gStartSeq(){
     var def=G_LAYOUTS[S.gLayout]||G_LAYOUTS.strip4;
     var n=def.n,i=0;
     var b=$('gTakeBtn');if(b){b.disabled=true;b.style.display='none'}
+    try{var tl=document.querySelector('.g-takelbl');if(tl)tl.style.visibility='hidden'}catch(e){}
     var cd=parseInt(CFG.countdown);if(isNaN(cd)||cd<0)cd=5;
     var next=function(){
       if(token!==S.gSeq)return;
