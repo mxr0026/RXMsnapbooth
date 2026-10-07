@@ -219,6 +219,11 @@ html,body{height:100%;width:100%;overflow:hidden;font-family:'Segoe UI',system-u
 #gTakeBtn[disabled]{opacity:.5}
 #capture.gflow #gTakeBtn{display:inline-block}
 #capture.gflow .shutter{display:none}
+#capture.gflow #filterBar{display:none}
+.g-filters{display:flex;gap:8px;overflow-x:auto;max-width:100%;padding:4px 2px 8px;-webkit-overflow-scrolling:touch}
+.g-filters button{flex:0 0 auto;min-width:78px;padding:12px 14px;border-radius:14px;border:2px solid var(--brd);background:var(--bg2);color:var(--tx);font-size:15px;font-weight:600}
+.g-filters button.on{border-color:var(--pri);background:var(--pri);color:#fff}
+.g-flab{color:var(--tx2);font-size:13px;margin-bottom:-4px}
 #gShotInfo{position:absolute;top:70px;left:50%;transform:translateX(-50%);z-index:25;background:rgba(0,0,0,.6);color:#fff;font-size:24px;font-weight:800;padding:10px 26px;border-radius:999px;display:none;white-space:nowrap}
 #gShotInfo.on{display:block}
 #gRev{display:none;flex-direction:column;align-items:center;gap:14px;width:100%;max-width:420px}
@@ -370,6 +375,8 @@ body.guest.on-idle #adminHot{display:block}
     <button class="btn bo" onclick="stopCam();showScreen('home')">&#x1f3e0; Home</button>
   </div>
   <div id="gRev">
+    <div class="g-flab">&#x2728; Choose a filter</div>
+    <div class="g-filters" id="gFilters"><button data-gf="none" class="on" onclick="gSetFilter('none')">None</button><button data-gf="bw" class="" onclick="gSetFilter('bw')">B&amp;W</button><button data-gf="sepia" class="" onclick="gSetFilter('sepia')">Sepia</button><button data-gf="vintage" class="" onclick="gSetFilter('vintage')">Vintage</button><button data-gf="warm" class="" onclick="gSetFilter('warm')">Warm</button><button data-gf="cool" class="" onclick="gSetFilter('cool')">Cool</button><button data-gf="contrast" class="" onclick="gSetFilter('contrast')">Hi-Contrast</button><button data-gf="bright" class="" onclick="gSetFilter('bright')">Bright</button><button data-gf="vivid" class="" onclick="gSetFilter('vivid')">Vivid</button><button data-gf="dreamy" class="" onclick="gSetFilter('dreamy')">Dreamy</button></div>
     <div class="g-row">
       <button class="g-btn" onclick="gRetake()">&#x1f504; Retake</button>
       <button class="g-btn" id="gMirBtn" onclick="gToggleMirror()">&#x2194;&#xfe0f; Mirror</button>
@@ -1927,6 +1934,7 @@ function gIdleFire(){
 function gToIdle(){
   try{
     S.gSeq++;S.gBusy=false;S.gReviewing=false;S.gActive=false;S.gQrExt=0;
+    try{gResetFilter()}catch(e){}
     gClearIdle();
     stopCam();
     try{closeQR()}catch(e){}
@@ -2038,6 +2046,7 @@ function gStartCap(){
   try{
     var def=G_LAYOUTS[S.gLayout];
     var cp=$('capture');if(cp)cp.classList.add('gflow');
+    try{var vv=$('vid');if(vv)vv.style.filter=''}catch(e){}
     var info=$('capInfo');if(info)info.textContent=def.label+' \u2022 '+def.n+(def.n>1?' photos':' photo');
     var b=$('gTakeBtn');if(b){b.disabled=false;b.style.display=''}
     gShotInfo('');
@@ -2107,7 +2116,6 @@ function gGrab(){
     var ctx=c.getContext('2d');
     ctx.save();
     if(CFG.mirror){ctx.translate(w,0);ctx.scale(-1,1)}
-    if(S.filter&&S.filter!=='none'){try{ctx.filter=S.filter}catch(e){}}
     ctx.drawImage(v,0,0,w,hh);
     ctx.restore();
     try{ctx.filter='none'}catch(e){}
@@ -2115,16 +2123,84 @@ function gGrab(){
   }catch(e){return null}
 }
 
+
+/* --- Post-capture filters (pixel based, works on iPhone) --- */
+var G_FILT={
+  none:null,
+  bw:{gray:1,con:1.12},
+  sepia:{sep:1},
+  vintage:{sep:0.5,con:1.1,bri:1.05},
+  warm:{sep:0.3,sat:1.4,bri:1.1},
+  cool:{sat:0.85,tint:[-12,4,22],bri:1.05},
+  contrast:{con:1.5,sat:1.2},
+  bright:{bri:1.25,sat:1.1},
+  vivid:{sat:1.8,con:1.1},
+  dreamy:{bri:1.12,con:0.88,sat:1.2,glow:1}
+};
+function gFilterCanvas(img,key){
+  var f=G_FILT[key];
+  var c=document.createElement('canvas');c.width=img.width;c.height=img.height;
+  var x=c.getContext('2d');x.drawImage(img,0,0);
+  if(!f)return c;
+  try{
+    var d=x.getImageData(0,0,c.width,c.height),p=d.data;
+    var bri=f.bri||1,con=f.con||1,sat=(f.sat==null?1:f.sat),sep=f.sep||0,gray=f.gray||0,t=f.tint||[0,0,0];
+    for(var i=0;i<p.length;i+=4){
+      var r=p[i],g=p[i+1],b=p[i+2];
+      if(sep){
+        var sr=0.393*r+0.769*g+0.189*b,sg=0.349*r+0.686*g+0.168*b,sb=0.272*r+0.534*g+0.131*b;
+        r=r+(sr-r)*sep;g=g+(sg-g)*sep;b=b+(sb-b)*sep;
+      }
+      var l=0.299*r+0.587*g+0.114*b;
+      if(gray){r=g=b=l}
+      else if(sat!==1){r=l+(r-l)*sat;g=l+(g-l)*sat;b=l+(b-l)*sat}
+      r=r*bri+t[0];g=g*bri+t[1];b=b*bri+t[2];
+      if(con!==1){r=(r-128)*con+128;g=(g-128)*con+128;b=(b-128)*con+128}
+      p[i]=r<0?0:r>255?255:r;p[i+1]=g<0?0:g>255?255:g;p[i+2]=b<0?0:b>255?255:b;
+    }
+    x.putImageData(d,0,0);
+    if(f.glow){x.globalAlpha=0.25;x.globalCompositeOperation='screen';x.drawImage(c,-2,-2,c.width+4,c.height+4);x.globalAlpha=1;x.globalCompositeOperation='source-over'}
+  }catch(e){}
+  return c;
+}
+function gFiltered(imgs){
+  try{
+    var k=S.gFilter||'none';
+    if(k==='none'||!G_FILT[k])return imgs;
+    if(!S.gFiltCache)S.gFiltCache={};
+    if(S.gFiltCache[k])return S.gFiltCache[k];
+    var out=[];
+    for(var i=0;i<imgs.length;i++){out[i]=imgs[i]?gFilterCanvas(imgs[i],k):imgs[i]}
+    S.gFiltCache[k]=out;
+    return out;
+  }catch(e){return imgs}
+}
+function gSetFilter(k){
+  try{
+    S.gFilter=k;
+    var bs=document.querySelectorAll('#gFilters button');
+    for(var i=0;i<bs.length;i++){
+      if(bs[i].getAttribute('data-gf')===k)bs[i].classList.add('on');else bs[i].classList.remove('on');
+    }
+    gCompose(true);
+  }catch(e){}
+}
+function gResetFilter(){
+  S.gFilter='none';S.gFiltCache=null;
+  try{var bs=document.querySelectorAll('#gFilters button');
+    for(var i=0;i<bs.length;i++){if(bs[i].getAttribute('data-gf')==='none')bs[i].classList.add('on');else bs[i].classList.remove('on')}}catch(e){}
+}
+
 /* --- Compose --- */
 function gCompose(isRe){
   try{
-    if(S.gImgs&&S.gImgs.length===S.gShots.length){gRender(S.gImgs,isRe);return}
+    if(S.gImgs&&S.gImgs.length===S.gShots.length){gRender(gFiltered(S.gImgs),isRe);return}
     var need=S.gShots.length,loaded=0,imgs=[];
     for(var i=0;i<need;i++){
       (function(idx){
         var im=new Image();
-        im.onload=function(){imgs[idx]=im;loaded++;if(loaded>=need){S.gImgs=imgs;gRender(imgs,isRe)}};
-        im.onerror=function(){loaded++;if(loaded>=need){S.gImgs=imgs;gRender(imgs,isRe)}};
+        im.onload=function(){imgs[idx]=im;loaded++;if(loaded>=need){S.gImgs=imgs;S.gFiltCache=null;gRender(gFiltered(imgs),isRe)}};
+        im.onerror=function(){loaded++;if(loaded>=need){S.gImgs=imgs;S.gFiltCache=null;gRender(gFiltered(imgs),isRe)}};
         im.src=S.gShots[idx];
       })(i);
     }
@@ -2313,7 +2389,7 @@ function gToggleMirror(){
 function gRetake(){
   try{
     S.gReviewing=false;gClearIdle();
-    S.gShots=[];S.gImgs=null;S.gFlip=false;S.gTime=null;
+    S.gShots=[];S.gImgs=null;S.gFlip=false;S.gTime=null;gResetFilter();
     try{closeQR()}catch(e){}
     gStartCap();
   }catch(e){}
