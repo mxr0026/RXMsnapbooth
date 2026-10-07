@@ -291,6 +291,23 @@ body.guest.on-idle #adminHot{display:block}
   #capture.gflow #vidBox{width:min(92vw,calc((100vh - 330px)*1.333));max-height:calc(100vh - 330px)}
 }
 /* template preview: use a taller box that fits the template */
+
+/* ===== Vouchers (pay at counter) ===== */
+#vMod .m-box{max-width:440px}
+#vInput{width:100%;font-size:40px;letter-spacing:12px;text-align:center;padding:14px;border-radius:14px;border:2px solid var(--brd);background:var(--bg3);color:var(--tx);margin:6px 0 8px}
+#vPrice{color:var(--acc);font-size:20px;font-weight:800;margin-bottom:4px}
+#vMsg{min-height:22px;font-size:14px;color:var(--err);margin-bottom:8px}
+.vkeys{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:6px 0 12px}
+.vkeys button{padding:16px 0;font-size:24px;font-weight:700;border-radius:12px;border:none;background:var(--bg3);color:var(--tx)}
+.vkeys button:active{background:var(--pri)}
+#gVLeft{color:var(--tx2);font-size:14px;text-align:center;display:none}
+body.vmode #gVLeft{display:block}
+#gToast{position:fixed;left:50%;bottom:40px;transform:translateX(-50%);z-index:700;background:rgba(0,0,0,.88);color:#fff;padding:14px 22px;border-radius:14px;font-size:16px;max-width:90vw;text-align:center;display:none}
+#gToast.on{display:block}
+.vlist{max-height:180px;overflow-y:auto;font:14px ui-monospace,Consolas,monospace;background:var(--bg3);border-radius:8px;padding:8px 10px;margin-top:8px;line-height:1.7}
+.vlist .u{opacity:.4;text-decoration:line-through}
+.vbtns{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.vbtns button{flex:1 1 140px}
 </style>
 </head>
 <body>
@@ -420,11 +437,12 @@ body.guest.on-idle #adminHot{display:block}
       <span id="gCopyN">1</span>
       <button onclick="gCopies(1)">+</button>
     </div>
+    <div id="gVLeft"></div>
     <button class="g-print" onclick="gPrint()">&#x1f5a8;&#xfe0f; Print</button>
     <div class="g-row">
       <button class="g-btn" onclick="openQR()">&#x1f4f1; QR Code</button>
     </div>
-    <button class="g-done" onclick="gToIdle()">&#x2705; Done &mdash; next guest</button>
+    <button class="g-done" onclick="gDone()">&#x2705; Done &mdash; next guest</button>
   </div>
 </div>
 
@@ -550,6 +568,28 @@ body.guest.on-idle #adminHot{display:block}
     <div id="ctplList"></div>
   </div>
 
+  <!-- Vouchers -->
+  <div class="s-sec">
+    <h3>&#x1f4b3; Pay at Counter (Booth Codes)</h3>
+    <div class="s-row"><label>Require a code to start</label><label class="tgl"><input type="checkbox" id="sVoucherOn"><span class="tgl-s"></span></label></div>
+    <div class="s-row"><label>Price text</label><input type="text" id="sVPrice" placeholder="&#x20b1;100 per session"></div>
+    <div class="s-row"><label>Prints per code</label><input type="number" id="sVCopies" min="1" max="10" value="1"></div>
+    <div class="s-row"><label>Code valid for (minutes)</label><input type="number" id="sVMin" min="2" max="120" value="10"></div>
+    <div class="s-note">Guests pay at the counter, get a one-time code, and enter it on the start screen. Each code works once. Codes are stored on <b>this device only</b>; each booth needs its own list.</div>
+    <div class="s-row"><label>Generate new codes</label><span style="display:flex;gap:6px"><input type="number" id="sVGenN" min="1" max="500" value="50" style="width:80px"><button class="btn bp" onclick="vGenerate()">Generate</button></span></div>
+    <div class="s-row" style="flex-direction:column;align-items:stretch"><label>Or paste your own codes (one per line)</label>
+      <textarea id="sVAdd" rows="3" style="width:100%;margin-top:6px;border-radius:8px;background:var(--bg3);color:var(--tx);border:1px solid var(--brd);padding:8px" placeholder="482913&#10;771045"></textarea>
+      <button class="btn bo" style="margin-top:6px" onclick="vAddPasted()">Add pasted codes</button></div>
+    <div id="vStats" style="color:var(--tx2);font-size:14px;margin-top:6px"></div>
+    <div id="vList" class="vlist"></div>
+    <div class="vbtns">
+      <button class="btn bp" onclick="vPrintSheet()">&#x1f5a8;&#xfe0f; Print code sheet</button>
+      <button class="btn bo" onclick="vExportCSV()">&#x2b07;&#xfe0f; Download list (CSV)</button>
+      <button class="btn bo" onclick="vClearUsed()">Remove used codes</button>
+      <button class="btn bo" onclick="vDeleteAll()">Delete all codes</button>
+    </div>
+  </div>
+
   <!-- Output -->
   <div class="s-sec">
     <h3>&#x1f4be; Output</h3>
@@ -652,8 +692,28 @@ body.guest.on-idle #adminHot{display:block}
     </div>
   </div>
 </div>
+<div id="vMod" class="modal">
+  <div class="m-box">
+    <h3>&#x1f39f;&#xfe0f; Enter your booth code</h3>
+    <div id="vPrice"></div>
+    <div style="color:var(--tx2);font-size:14px">Pay at the counter to get a code.</div>
+    <input type="text" id="vInput" inputmode="numeric" autocomplete="off" maxlength="8" placeholder="&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;">
+    <div class="vkeys">
+      <button onclick="vKey('1')">1</button><button onclick="vKey('2')">2</button><button onclick="vKey('3')">3</button>
+      <button onclick="vKey('4')">4</button><button onclick="vKey('5')">5</button><button onclick="vKey('6')">6</button>
+      <button onclick="vKey('7')">7</button><button onclick="vKey('8')">8</button><button onclick="vKey('9')">9</button>
+      <button onclick="vKey('del')">&#x232b;</button><button onclick="vKey('0')">0</button><button onclick="vKey('clr')">C</button>
+    </div>
+    <div id="vMsg"></div>
+    <div style="display:flex;gap:10px;justify-content:center">
+      <button class="btn bp" style="flex:1;padding:16px;font-size:18px" onclick="vSubmit()">Start</button>
+      <button class="btn bo" style="flex:1" onclick="vClose()">Cancel</button>
+    </div>
+  </div>
+</div>
+<div id="gToast"></div>
 <div id="adminHot"></div>
-<div id="appVer" style="position:fixed;right:8px;bottom:6px;z-index:600;font:11px system-ui,sans-serif;color:rgba(255,255,255,.45);pointer-events:none">SnapBooth v27</div>
+<div id="appVer" style="position:fixed;right:8px;bottom:6px;z-index:600;font:11px system-ui,sans-serif;color:rgba(255,255,255,.45);pointer-events:none">SnapBooth v28</div>
 
 <!-- ===== SLIDESHOW ===== -->
 <div id="slideshow">
@@ -697,7 +757,7 @@ var CFG = {
   askName:false,printName:false,kiosk:false,restart:15,
   cloudName:'',cloudPreset:'',prefix:'snapbooth',naming:'prefix_seq',autoDL:false,
   quality:'0.85',format:'jpeg',autoGal:true,
-  guestMode:true,adminPin:'1234',hashtag:'#RXMPHOTOBOOTH',footDate:true,bw:'receipt',paper:'58mm',printMode:'rawbt',pw:76,ph:0,dpi:203,fit:'auto',thermal:'atkinson',thBri:5,thCon:15,
+  guestMode:true,adminPin:'1234',hashtag:'#RXMPHOTOBOOTH',footDate:true,bw:'receipt',paper:'58mm',printMode:'rawbt',pw:76,ph:0,dpi:203,fit:'auto',voucherOn:false,vPrice:'',vCopies:1,vMin:10,thermal:'atkinson',thBri:5,thCon:15,
   logoData:null
 };
 
@@ -1735,6 +1795,10 @@ function saveSettings(){
     CFG.ph=parseFloat(($('sPH')||{}).value)||0;
     CFG.dpi=parseInt(($('sDPI')||{}).value)||203;
     CFG.fit=($('sFit')||{}).value||'auto';
+    CFG.voucherOn=!!($('sVoucherOn')||{}).checked;
+    CFG.vPrice=(($('sVPrice')||{}).value||'').trim();
+    CFG.vCopies=Math.max(1,Math.min(10,parseInt(($('sVCopies')||{}).value)||1));
+    CFG.vMin=Math.max(2,Math.min(120,parseInt(($('sVMin')||{}).value)||10));
     CFG.thermal=($('sThermal')||{}).value||'atkinson';
     CFG.thBri=parseInt(($('sThBri')||{}).value);if(isNaN(CFG.thBri))CFG.thBri=5;
     CFG.thCon=parseInt(($('sThCon')||{}).value);if(isNaN(CFG.thCon))CFG.thCon=15;
@@ -1753,6 +1817,7 @@ function loadSettings(){
   }catch(e){}
   populateSettingsUI();
   applyBranding();
+  try{vRenderAdmin()}catch(e){}
 }
 
 function populateSettingsUI(){
@@ -1765,18 +1830,18 @@ function populateSettingsUI(){
       'rMsg':'rMsg','rFooter':'rFooter',
       'sCloudName':'cloudName','sCloudPreset':'cloudPreset','sPrefix':'prefix','sNaming':'naming',
       'sQuality':'quality','sFormat':'format',
-      'sAdminPin':'adminPin','sHashtag':'hashtag','sBW':'bw','sPaper':'paper','sPrintMode':'printMode','sDPI':'dpi','sFit':'fit','sThermal':'thermal','sThBri':'thBri','sThCon':'thCon','sPW':'pw','sPH':'ph'
+      'sAdminPin':'adminPin','sHashtag':'hashtag','sBW':'bw','sPaper':'paper','sPrintMode':'printMode','sDPI':'dpi','sFit':'fit','sThermal':'thermal','sVPrice':'vPrice','sThBri':'thBri','sThCon':'thCon','sPW':'pw','sPH':'ph'
     };
     for(var id in map){
       var el=$(id);if(el)el.value=CFG[map[id]]||el.value;
     }
-    var numMap={'sCntDown':'countdown','sTiles':'tiles','sRestart':'restart'};
+    var numMap={'sVCopies':'vCopies','sVMin':'vMin','sCntDown':'countdown','sTiles':'tiles','sRestart':'restart'};
     for(var nid in numMap){
       var nel=$(nid);if(nel)nel.value=CFG[numMap[nid]];
     }
     var chkMap={'sMirror':'mirror','rOrder':'rOrder','rDate':'rDate',
       'sAskName':'askName','sPrintName':'printName','sKiosk':'kiosk',
-      'sAutoDL':'autoDL','sAutoGal':'autoGal','sGuestMode':'guestMode','sFootDate':'footDate'};
+      'sAutoDL':'autoDL','sAutoGal':'autoGal','sGuestMode':'guestMode','sVoucherOn':'voucherOn','sFootDate':'footDate'};
     for(var cid in chkMap){
       var cel=$(cid);if(cel)cel.checked=!!CFG[chkMap[cid]];
     }
@@ -1970,6 +2035,7 @@ function gArmIdle(ms){
 }
 function gIdleFire(){
   try{
+    try{var vm=$('vMod');if(vm&&vm.classList.contains('on')){vClose();gToIdle();return}}catch(e){}
     if(S.gReviewing)return;
     var q=$('qrMod');
     if(q&&q.classList.contains('on')&&S.gQrExt<2){S.gQrExt++;gArmIdle();return}
@@ -1979,6 +2045,7 @@ function gIdleFire(){
 function gToIdle(){
   try{
     S.gSeq++;S.gBusy=false;S.gReviewing=false;S.gActive=false;S.gQrExt=0;
+    try{vClose()}catch(e){}
     try{sessionStorage.removeItem(G_RESUME_KEY)}catch(e){}
     try{gResetFilter()}catch(e){}
     gClearIdle();
@@ -2000,6 +2067,161 @@ function capClose(){
 }
 
 /* --- Idle screen tap (logo x5 = admin) --- */
+
+/* ================= BOOTH CODES (pay at counter) ================= */
+var V_KEY='snapbooth_vouchers';
+function vLoad(){try{var a=JSON.parse(localStorage.getItem(V_KEY)||'[]');return Array.isArray(a)?a:[]}catch(e){return[]}}
+function vSave(a){try{localStorage.setItem(V_KEY,JSON.stringify(a))}catch(e){gToast('Could not save codes on this device.')}}
+function vOn(){return !!CFG.voucherOn}
+function vSessionValid(){
+  if(!S.vOk)return false;
+  var mins=CFG.vMin||10;
+  if(S.vAt&&Date.now()-S.vAt>mins*60000){S.vOk=false;return false}
+  return true;
+}
+function gToast(msg){
+  try{var t=$('gToast');if(!t)return;t.textContent=msg;t.classList.add('on');
+    if(S.gToastT)clearTimeout(S.gToastT);S.gToastT=setTimeout(function(){t.classList.remove('on')},3500)}catch(e){}
+}
+function gStartGate(){
+  try{
+    if(!vOn()||vSessionValid()){gShowLayouts();return}
+    var m=$('vMod');if(!m){gShowLayouts();return}
+    var i=$('vInput');if(i)i.value='';
+    var pr=$('vPrice');if(pr)pr.textContent=CFG.vPrice||'';
+    var msg=$('vMsg');if(msg)msg.textContent='';
+    m.classList.add('on');
+    gArmIdle(90000);
+  }catch(e){gShowLayouts()}
+}
+function vKey(k){
+  try{
+    var i=$('vInput');if(!i)return;
+    if(k==='del')i.value=i.value.slice(0,-1);
+    else if(k==='clr')i.value='';
+    else if(i.value.length<8)i.value+=k;
+    var msg=$('vMsg');if(msg)msg.textContent='';
+    gArmIdle(90000);
+  }catch(e){}
+}
+function vClose(){try{var m=$('vMod');if(m)m.classList.remove('on')}catch(e){}}
+function vSubmit(){
+  try{
+    var i=$('vInput'),msg=$('vMsg');
+    var code=String(i?i.value:'').replace(/\s/g,'');
+    if(!code){if(msg)msg.textContent='Please enter your code.';return}
+    var a=vLoad(),hit=-1;
+    for(var k=0;k<a.length;k++){if(String(a[k].c)===code){hit=k;break}}
+    if(hit<0){if(msg)msg.textContent='Code not found. Please check with the counter.';if(i)i.value='';return}
+    if(a[hit].used){if(msg)msg.textContent='This code was already used.';if(i)i.value='';return}
+    a[hit].used=Date.now();vSave(a);
+    S.vOk=true;S.vAt=Date.now();S.vCode=code;S.vLeft=CFG.vCopies||1;
+    vClose();
+    try{vRenderAdmin()}catch(e){}
+    gShowLayouts();
+  }catch(e){}
+}
+function gDone(){
+  try{S.vOk=false;S.vLeft=0;S.vCode='';}catch(e){}
+  gToIdle();
+}
+/* print gate: called at the start of gPrint */
+function vPrintGate(){
+  if(!vOn())return true;
+  if((S.vLeft||0)<=0){gToast('No prints left on this code. Get a new code at the counter.');return false}
+  var n=S.gCopies||1;
+  if(n>S.vLeft){S.gCopies=S.vLeft;try{gUpdateRevUI()}catch(e){}}
+  S.vLeft-=S.gCopies;
+  try{gUpdateRevUI()}catch(e){}
+  return true;
+}
+/* ---- admin: generate / list / export ---- */
+function vNewCode(existing){
+  var c='';
+  for(var t=0;t<50;t++){
+    var arr=new Uint32Array(1);
+    try{crypto.getRandomValues(arr)}catch(e){arr[0]=Math.floor(Math.random()*4294967295)}
+    c=String(100000+(arr[0]%900000));
+    if(!existing[c])return c;
+  }
+  return c;
+}
+function vGenerate(){
+  try{
+    var n=Math.max(1,Math.min(500,parseInt(($('sVGenN')||{}).value)||50));
+    var a=vLoad(),seen={};
+    for(var i=0;i<a.length;i++)seen[a[i].c]=1;
+    for(var j=0;j<n;j++){var c=vNewCode(seen);seen[c]=1;a.push({c:c,used:0,made:Date.now()})}
+    vSave(a);vRenderAdmin();
+    gToast(n+' new codes created. Print the code sheet for the counter.');
+  }catch(e){}
+}
+function vAddPasted(){
+  try{
+    var t=$('sVAdd');if(!t)return;
+    var lines=String(t.value||'').split(/[\s,;]+/),a=vLoad(),seen={},added=0;
+    for(var i=0;i<a.length;i++)seen[a[i].c]=1;
+    for(var j=0;j<lines.length;j++){
+      var c=lines[j].replace(/[^0-9A-Za-z]/g,'');
+      if(c.length<4||seen[c])continue;
+      seen[c]=1;a.push({c:c,used:0,made:Date.now()});added++;
+    }
+    vSave(a);t.value='';vRenderAdmin();
+    gToast(added+' code(s) added.');
+  }catch(e){}
+}
+function vClearUsed(){
+  try{var a=vLoad(),k=[];for(var i=0;i<a.length;i++){if(!a[i].used)k.push(a[i])}
+    vSave(k);vRenderAdmin();gToast((a.length-k.length)+' used code(s) removed.')}catch(e){}
+}
+function vDeleteAll(){
+  try{if(!confirm('Delete ALL booth codes on this device?'))return;vSave([]);vRenderAdmin()}catch(e){}
+}
+function vRenderAdmin(){
+  try{
+    var a=vLoad(),u=0;for(var i=0;i<a.length;i++){if(a[i].used)u++}
+    var st=$('vStats');if(st)st.textContent=a.length+' codes \u2022 '+(a.length-u)+' unused \u2022 '+u+' used';
+    var l=$('vList');
+    if(l){
+      var html='',show=a.slice(-120).reverse();
+      for(var j=0;j<show.length;j++){
+        var x=show[j];
+        html+='<div class="'+(x.used?'u':'')+'">'+x.c+(x.used?'  (used '+new Date(x.used).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})+')':'')+'</div>';
+      }
+      l.innerHTML=html||'<div style="opacity:.6">No codes yet.</div>';
+    }
+  }catch(e){}
+}
+function vExportCSV(){
+  try{
+    var a=vLoad(),csv='code,status,used_at\n';
+    for(var i=0;i<a.length;i++){csv+=a[i].c+','+(a[i].used?'used':'unused')+','+(a[i].used?new Date(a[i].used).toISOString():'')+'\n'}
+    var b=new Blob([csv],{type:'text/csv'}),u=URL.createObjectURL(b),el=document.createElement('a');
+    el.href=u;el.download='booth_codes.csv';document.body.appendChild(el);el.click();
+    setTimeout(function(){try{document.body.removeChild(el);URL.revokeObjectURL(u)}catch(e){}},800);
+  }catch(e){}
+}
+function vPrintSheet(){
+  try{
+    var a=vLoad(),cells='',n=0;
+    for(var i=0;i<a.length;i++){
+      if(a[i].used)continue;n++;
+      cells+='<div class="t"><div class="b">'+ctplEsc(CFG.name||'SnapBooth')+'</div><div class="c">'+a[i].c+'</div><div class="p">'+ctplEsc(CFG.vPrice||'')+'</div><div class="s">One-time booth code</div></div>';
+    }
+    if(!n){gToast('No unused codes to print. Generate some first.');return}
+    var doc='<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Booth codes</title><style>'+
+      '@page{margin:8mm}body{font-family:system-ui,sans-serif;margin:0}'+
+      '.g{display:grid;grid-template-columns:repeat(4,1fr);gap:0}'+
+      '.t{border:1px dashed #999;padding:10px 6px;text-align:center;break-inside:avoid}'+
+      '.b{font-size:11px;color:#555}.c{font-size:26px;font-weight:800;letter-spacing:4px;margin:4px 0}'+
+      '.p{font-size:12px;font-weight:700}.s{font-size:10px;color:#777}'+
+      '</style></head><body onload="setTimeout(function(){window.print()},400)"><div class="g">'+cells+'</div></body></html>';
+    var w=null;try{w=window.open('','_blank')}catch(e){}
+    if(w&&w.document){w.document.open();w.document.write(doc);w.document.close()}
+    else{gToast('Pop-up blocked. Use Download list (CSV) instead.')}
+  }catch(e){}
+}
+
 function gIdleTap(e){
   try{
     var brand=$('idleBrand');
@@ -2008,9 +2230,9 @@ function gIdleTap(e){
     if(onLogo){
       S.gTapN++;
       if(S.gTapN>=5){S.gTapN=0;gAskPin();return}
-      S.gTapT=setTimeout(function(){S.gTapN=0;gShowLayouts()},700);
+      S.gTapT=setTimeout(function(){S.gTapN=0;gStartGate()},700);
     }else{
-      S.gTapN=0;gShowLayouts();
+      S.gTapN=0;gStartGate();
     }
   }catch(err){}
 }
@@ -2501,12 +2723,17 @@ function gFinish(pc,isRe){
 function gUpdateRevUI(){
   try{
     var n=$('gCopyN');if(n)n.textContent=S.gCopies;
+    try{
+      if(vOn())document.body.classList.add('vmode');else document.body.classList.remove('vmode');
+      var vl=$('gVLeft');if(vl)vl.textContent=vOn()?('Prints left on this code: '+(S.vLeft||0)):'';
+    }catch(e){}
     var m=$('gMirBtn');if(m){if(S.gFlip)m.classList.add('on');else m.classList.remove('on')}
   }catch(e){}
 }
 function gCopies(d){
   try{
-    S.gCopies=Math.max(1,Math.min(10,(S.gCopies||1)+d));
+    var mx=vOn()?Math.max(1,S.vLeft||1):10;
+    S.gCopies=Math.max(1,Math.min(mx,(S.gCopies||1)+d));
     gUpdateRevUI();
     try{gPrepPrint()}catch(e){}
   }catch(e){}
@@ -2708,7 +2935,7 @@ var G_RESUME_KEY='snapbooth_resume';
 function gSaveResume(){
   try{
     var st={t:Date.now(),layout:S.gLayout,shots:S.gShots,flip:!!S.gFlip,copies:S.gCopies||1,
-      filter:S.gFilter||'none',time:S.gTime?S.gTime.getTime():null,order:S.gOrder||null,guest:S.guestName||''};
+      filter:S.gFilter||'none',time:S.gTime?S.gTime.getTime():null,order:S.gOrder||null,guest:S.guestName||'',vOk:!!S.vOk,vLeft:S.vLeft||0,vAt:S.vAt||0};
     try{sessionStorage.setItem(G_RESUME_KEY,JSON.stringify(st))}
     catch(e){try{localStorage.setItem(G_RESUME_KEY,JSON.stringify(st))}catch(e2){}}
   }catch(e){}
@@ -2727,7 +2954,7 @@ function gTryResume(){
     var st=S.gPendingResume||gReadResume();S.gPendingResume=null;
     if(!st||!st.shots||!st.shots.length||!G_LAYOUTS[st.layout])return false;
     S.gLayout=st.layout;S.gActive=true;S.gShots=st.shots;S.gImgs=null;S.gFiltCache=null;
-    S.gFlip=st.flip;S.gCopies=st.copies;S.gFilter=st.filter;S.gOrder=st.order;S.guestName=st.guest;
+    S.gFlip=st.flip;S.gCopies=st.copies;S.gFilter=st.filter;S.gOrder=st.order;S.guestName=st.guest;S.vOk=!!st.vOk;S.vLeft=st.vLeft||0;S.vAt=st.vAt||0;
     S.gTime=st.time?new Date(st.time):null;
     S.mode=(st.layout==='receipt4')?'receipt':(st.layout==='single'?'classic':'strip');
     try{
@@ -2808,6 +3035,7 @@ function gPrintIOS(){
 }
 
 function gPrint(){
+  if(!vPrintGate())return;
   var m=CFG.printMode||'rawbt';
   if(gIsIOS()){gPrintIOS();return}
   if(!gIsAndroid())m='system'; /* PC: always use the print dialog */
