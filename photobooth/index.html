@@ -2357,6 +2357,7 @@ function gFinish(pc,isRe){
     try{pc.toBlob(function(blob){S.currentBlob=blob},'image/'+fmt,q)}catch(e){}
     var pv=$('preview');if(pv)pv.classList.add('gflow');
     gUpdateRevUI();
+    try{gPrepPrint()}catch(e){}
     showScreen('preview');
     S.gReviewing=true;S.gQrExt=0;
     if(!isRe){
@@ -2378,6 +2379,7 @@ function gCopies(d){
   try{
     S.gCopies=Math.max(1,Math.min(10,(S.gCopies||1)+d));
     gUpdateRevUI();
+    try{gPrepPrint()}catch(e){}
   }catch(e){}
 }
 function gToggleMirror(){
@@ -2507,9 +2509,73 @@ function gPrintRawBT(){
     });
   }catch(e){gPrintShare()}
 }
+
+/* --- Recover the page after a print/share pop-up closes (iPhone can leave it stuck) --- */
+function gIsIOS(){try{return /iPhone|iPad|iPod/i.test(navigator.userAgent||'')||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1)}catch(e){return false}}
+function gRecover(){
+  try{
+    S.gPrinting=false;
+    var a=$('gPrintArea');if(a&&a.parentNode)a.parentNode.removeChild(a);
+    var st=$('gPrintStyle');if(st&&st.parentNode)st.parentNode.removeChild(st);
+    var o=$('cntOvl');if(o&&!S.gBusy)o.classList.remove('on');
+    document.body.style.pointerEvents='';document.body.style.overflow='';
+    document.documentElement.style.pointerEvents='';
+    if(S.gReviewing){
+      var pv=$('preview');
+      if(pv&&!pv.classList.contains('active'))showScreen('preview');
+    }
+  }catch(e){}
+}
+try{
+  window.addEventListener('afterprint',function(){setTimeout(gRecover,50)});
+  window.addEventListener('focus',function(){setTimeout(gRecover,50)});
+  window.addEventListener('pageshow',function(){setTimeout(gRecover,50)});
+  document.addEventListener('visibilitychange',function(){if(!document.hidden)setTimeout(gRecover,50)});
+}catch(e){}
+
+/* Prepare the print file ahead of time so iPhone can open the share sheet instantly
+   (iOS blocks share/print if they start after a delay from the tap). */
+function gPrepPrint(){
+  try{
+    S.gPrintFile=null;
+    if(!S.currentDataUrl)return;
+    var n=Math.max(1,Math.min(10,S.gCopies||1));
+    var tok=(S.gPrepTok=(S.gPrepTok||0)+1);
+    gPrinterImage(S.currentDataUrl,function(one){
+      gBuildCopiesFrom(one,gIsInkjet()?1:n,function(du){
+        try{
+          if(tok!==S.gPrepTok)return;
+          var blob=gDataUrlToBlob(du);
+          S.gPrintFile=new File([blob],'snapbooth_print.'+(/jpeg/.test(blob.type)?'jpg':'png'),{type:blob.type});
+          S.gPrintUrl=du;
+        }catch(e){}
+      });
+    });
+  }catch(e){}
+}
+/* iPhone print: share sheet (has "Print" built in), called directly from the tap */
+function gPrintIOS(){
+  try{
+    if(S.gPrinting)return;
+    var f=S.gPrintFile;
+    if(f&&navigator.share&&(!navigator.canShare||navigator.canShare({files:[f]}))){
+      S.gPrinting=true;
+      navigator.share({files:[f]}).then(function(){gRecover()}).catch(function(){gRecover()});
+      setTimeout(function(){S.gPrinting=false},4000);
+      return;
+    }
+    /* Not ready yet: print in this same page (no pop-up window, which iOS handles badly) */
+    var src=S.gPrintUrl||S.currentDataUrl;
+    var n=Math.max(1,Math.min(10,S.gCopies||1)),pages='';
+    for(var i=0;i<(gIsInkjet()?n:1);i++){pages+='<div class="pg"><img src="'+src+'"></div>'}
+    gPrintInline(pages);
+  }catch(e){gRecover()}
+}
+
 function gPrint(){
   var m=CFG.printMode||'rawbt';
-  if(!gIsAndroid()&&!/iPhone|iPad|iPod/i.test(navigator.userAgent||''))m='system'; /* PC: always use the print dialog */
+  if(gIsIOS()){gPrintIOS();return}
+  if(!gIsAndroid())m='system'; /* PC: always use the print dialog */
   if(m==='rawbt'&&gIsInkjet())m='share'; /* RawBT is for thermal printers */
   if(m==='rawbt'&&gIsAndroid()){gPrintRawBT();return}
   if((m==='share'||m==='rawbt')&&navigator.share){gPrintShare();return}
@@ -2546,8 +2612,8 @@ function gPrintInline(pages){
     var s=document.createElement('style');s.id='gPrintStyle';
     s.textContent='@media print{body>*{display:none!important}#gPrintArea{display:block!important}'+gPrintCSS()+'}';
     document.head.appendChild(s);
-    setTimeout(function(){try{window.print()}catch(e){}},400);
-  }catch(e){}
+    setTimeout(function(){try{window.print()}catch(e){}setTimeout(gRecover,800)},400);
+  }catch(e){gRecover()}
 }
 
 
