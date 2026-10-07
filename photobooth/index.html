@@ -490,13 +490,13 @@ body.guest.on-idle #adminHot{display:block}
       <select id="sBW"><option value="receipt">Receipt layout only</option><option value="always">All layouts</option><option value="off">Off</option></select>
     </div>
     <div class="s-row"><label>Printer / Paper</label>
-      <select id="sPaper"><optgroup label="Inkjet photo paper (Epson L320 etc.)"><option value="ij_wallet">Wallet 2.5×3.5 in (64×89mm)</option><option value="ij_2x3">Mini 2×3 in (51×76mm)</option><option value="ij_3r">3R 3.5×5 in (89×127mm)</option><option value="ij_kg">KG / 4R 4×6 in (102×152mm)</option><option value="ij_4x6x2">4×6 in — 2 photo strips side by side (cut in half)</option><option value="ij_4x7">4×7 in (102×178mm)</option><option value="ij_5r">5R 5×7 in (127×178mm)</option><option value="ij_6r">6R 6×8 in (152×203mm)</option><option value="ij_8r">8R 8×10 in (203×254mm)</option><option value="ij_sq4">Square 4×4 in (102×102mm)</option><option value="ij_sq5">Square 5×5 in (127×127mm)</option><option value="ij_sq6">Square 6×6 in (152×152mm)</option><option value="ij_hagaki">Hagaki / Postcard (100×148mm)</option><option value="ij_a6">A6 (105×148mm)</option><option value="ij_a5">A5 (148×210mm)</option><option value="ij_a4">A4 (210×297mm)</option><option value="ij_letter">Letter 8.5×11 in (216×279mm)</option></optgroup><optgroup label="Receipt rolls (continuous)"><option value="48mm">Receipt 48mm</option><option value="57mm">Receipt 57mm</option><option value="58mm">Receipt 58mm (2 in)</option><option value="76mm">Receipt 76mm</option><option value="80mm">Receipt 80mm (3 in)</option><option value="110mm">Receipt 110mm (4 in)</option></optgroup><optgroup label="Waybill / shipping labels"><option value="wb4x6">Waybill 4×6 in (100×150mm)</option><option value="wb100x100">Waybill 100×100mm</option><option value="wb4x4">Label 4×4 in (102×102mm)</option><option value="wb4x3">Label 4×3 in (102×76mm)</option><option value="wb4x2">Label 4×2 in (102×51mm)</option><option value="wb76x130">Label 76×130mm</option><option value="wb3x2">Label 3×2 in (76×51mm)</option><option value="wb60x40">Label 60×40mm</option><option value="wb50x30">Label 50×30mm</option><option value="wb2x1">Label 2×1 in (51×25mm)</option></optgroup><optgroup label="Photo paper"><option value="ph2x6">Photo strip 2×6 in (51×152mm)</option><option value="ph3r">3R 3.5×5 in (89×127mm)</option><option value="ph4r">4R 4×6 in (102×152mm)</option><option value="ph5r">5R 5×7 in (127×178mm)</option><option value="ph6r">6R 6×8 in (152×203mm)</option><option value="ph8r">8R 8×10 in (203×254mm)</option><option value="phsq">Square 4×4 in (102×102mm)</option><option value="phwallet">Wallet 2.5×3.5 in (64×89mm)</option><option value="phinstaxm">Instax Mini (54×86mm)</option><option value="phinstaxs">Instax Square (72×86mm)</option><option value="phinstaxw">Instax Wide (108×86mm)</option><option value="phpost">Postcard (100×148mm)</option></optgroup><optgroup label="Office paper"><option value="a4">A4 (210×297mm)</option><option value="a5">A5 (148×210mm)</option><option value="a6">A6 (105×148mm)</option><option value="letter">Letter (8.5×11 in)</option></optgroup><optgroup label="Other"><option value="custom">Custom size…</option></optgroup></select></div>
+      <select id="sPaper"><option value="58mm">Receipt 58mm (2 in)</option><option value="80mm">Receipt 80mm (3 in)</option><option value="wb4x6">Waybill / Shipping label 4x6 in (100x150mm)</option><option value="wb100x100">Waybill label 100x100mm</option><option value="a4">A4 / Photo paper</option><option value="custom">Custom size…</option></select></div>
     <div class="s-row" id="rowCustom"><label>Custom W × H (mm)</label><span style="display:flex;gap:6px"><input type="number" id="sPW" min="20" max="300" style="width:70px" placeholder="76"><input type="number" id="sPH" min="0" max="500" style="width:70px" placeholder="0 = auto"></span></div>
     <div class="s-row"><label>Printer DPI</label><select id="sDPI"><option value="203">203 dpi (most thermal / waybill)</option><option value="300">300 dpi</option><option value="180">180 dpi</option></select></div>
-    <div class="s-row"><label>Fill mode</label><select id="sFit"><option value="auto">Auto (by paper type)</option><option value="width">Fill paper width</option><option value="page">Fit whole label (waybill)</option><option value="cover">Fill whole sheet, crop edges (borderless)</option></select>
+    <div class="s-row"><label>Fill mode</label><select id="sFit"><option value="auto">Auto (by paper type)</option><option value="width">Fill paper width</option><option value="page">Fit whole label (waybill)</option></select>
     </div>
     <div class="s-row"><label>Print Method</label>
-      <select id="sPrintMode"><option value="rawbt">RawBT direct (no app picker)</option><option value="share">Choose printer app (RawBT etc.)</option><option value="system">System print dialog (Wi-Fi printers, Epson)</option></select>
+      <select id="sPrintMode"><option value="rawbt">RawBT direct (no app picker)</option><option value="share">Choose printer app (RawBT etc.)</option><option value="system">Android system print</option></select>
     </div>
     <div class="s-note">Guest Mode opens on the &ldquo;Tap to start&rdquo; screen and hides admin buttons. To exit: long-press the top-left corner for 2 seconds, or tap the logo 5 times on the start screen, then enter the PIN.</div>
   </div>
@@ -615,7 +615,6 @@ body.guest.on-idle #adminHot{display:block}
   </div>
 </div>
 <div id="adminHot"></div>
-<div id="appVer" style="position:fixed;right:8px;bottom:6px;z-index:600;font:11px system-ui,sans-serif;color:rgba(255,255,255,.45);pointer-events:none">SnapBooth v23</div>
 
 <!-- ===== SLIDESHOW ===== -->
 <div id="slideshow">
@@ -1895,9 +1894,7 @@ function gBoot(){
     document.addEventListener('pointerdown',function(){
       try{if(S.gReviewing)gClearIdle()}catch(e){}
     },true);
-    var resume=null;try{resume=gReadResume()}catch(e){}
     if(CFG.guestMode){gEnterGuest()}
-    if(resume){S.gPendingResume=resume;if(gTryResume()){try{var cp=$('capture');if(cp)cp.classList.add('gflow')}catch(e){}}}
   }catch(e){}
 }
 function gEnterGuest(){
@@ -1937,7 +1934,6 @@ function gIdleFire(){
 function gToIdle(){
   try{
     S.gSeq++;S.gBusy=false;S.gReviewing=false;S.gActive=false;S.gQrExt=0;
-    try{sessionStorage.removeItem(G_RESUME_KEY)}catch(e){}
     try{gResetFilter()}catch(e){}
     gClearIdle();
     stopCam();
@@ -2361,7 +2357,6 @@ function gFinish(pc,isRe){
     try{pc.toBlob(function(blob){S.currentBlob=blob},'image/'+fmt,q)}catch(e){}
     var pv=$('preview');if(pv)pv.classList.add('gflow');
     gUpdateRevUI();
-    try{gPrepPrint()}catch(e){}
     showScreen('preview');
     S.gReviewing=true;S.gQrExt=0;
     if(!isRe){
@@ -2383,7 +2378,6 @@ function gCopies(d){
   try{
     S.gCopies=Math.max(1,Math.min(10,(S.gCopies||1)+d));
     gUpdateRevUI();
-    try{gPrepPrint()}catch(e){}
   }catch(e){}
 }
 function gToggleMirror(){
@@ -2404,9 +2398,9 @@ function gPrintCSS(){
   var mm=gPaperMM(),w=mm[0],ht=mm[1];
   var size=ht?(w+'mm '+ht+'mm'):(w+'mm auto');
   return '@page{size:'+size+';margin:0}html,body{margin:0;padding:0;background:#fff}'+
-    '.pg{width:'+w+'mm;'+(ht?'height:'+ht+'mm;':'')+'page-break-after:always;break-after:page;overflow:hidden}'+
+    '.pg{width:'+w+'mm;'+(ht?'height:'+ht+'mm;display:flex;align-items:center;justify-content:center;':'')+'page-break-after:always;break-after:page;overflow:hidden}'+
     '.pg:last-child{page-break-after:auto;break-after:auto}'+
-    '.pg img{width:100%;'+(ht?'height:100%;object-fit:contain;':'height:auto;')+'display:block}';
+    '.pg img{'+(ht?'max-width:100%;max-height:100%;':'width:100%;height:auto;')+'display:block}';
 }
 /* Print via Android share sheet so the user can pick RawBT (or any printer app) */
 function gDataUrlToBlob(du){
@@ -2434,46 +2428,38 @@ function gBuildCopiesFrom(src,n,cb){
   }catch(e){cb(src)}
 }
 /* Printer paper geometry in mm: [width, height(0=continuous)] */
-var G_PAPERS={'ij_wallet':[64,89,1],'ij_2x3':[51,76,1],'ij_3r':[89,127,1],'ij_kg':[102,152,1],'ij_4x6x2':[102,152,2],'ij_4x7':[102,178,1],'ij_5r':[127,178,1],'ij_6r':[152,203,1],'ij_8r':[203,254,1],'ij_sq4':[102,102,1],'ij_sq5':[127,127,1],'ij_sq6':[152,152,1],'ij_hagaki':[100,148,1],'ij_a6':[105,148,1],'ij_a5':[148,210,1],'ij_a4':[210,297,1],'ij_letter':[216,279,1],'48mm':[40,0],'57mm':[48,0],'58mm':[48,0],'76mm':[64,0],'80mm':[72,0],'110mm':[104,0],'wb4x6':[100,150],'wb100x100':[100,100],'wb4x4':[102,102],'wb4x3':[102,76],'wb4x2':[102,51],'wb76x130':[76,130],'wb3x2':[76,51],'wb60x40':[60,40],'wb50x30':[50,30],'wb2x1':[51,25],'ph2x6':[51,152],'ph3r':[89,127],'ph4r':[102,152],'ph5r':[127,178],'ph6r':[152,203],'ph8r':[203,254],'phsq':[102,102],'phwallet':[64,89],'phinstaxm':[54,86],'phinstaxs':[72,86],'phinstaxw':[108,86],'phpost':[100,148],'a4':[190,277],'a5':[138,200],'a6':[97,140],'letter':[196,260]};
 function gPaperMM(){
   var p=CFG.paper||'58mm';
-  if(p==='custom')return [CFG.pw||76,CFG.ph||0];
-  return G_PAPERS[p]||[48,0];
+  if(p==='58mm')return [48,0];      /* 58mm roll, ~48mm printable */
+  if(p==='80mm')return [72,0];      /* 80mm roll, ~72mm printable */
+  if(p==='wb4x6')return [100,150];
+  if(p==='wb100x100')return [100,100];
+  if(p==='a4')return [190,277];
+  return [CFG.pw||76,CFG.ph||0];
 }
 /* Render the photo at the printer's exact dot size so it prints full size */
-function gIsInkjet(){return /^ij_/.test(CFG.paper||'')}
 function gPrinterImage(src,cb){
   try{
     var mm=gPaperMM(),dpi=CFG.dpi||203;
-    var ink=gIsInkjet();
-    if(ink&&dpi<300)dpi=300;
     var W=Math.round(mm[0]/25.4*dpi),H=mm[1]?Math.round(mm[1]/25.4*dpi):0;
-    var across=(mm[2]&&mm[2]>1)?mm[2]:1;
-    var fit=CFG.fit||'auto';if(fit==='auto')fit=ink?'cover':(H?'page':'width');
+    var fit=CFG.fit||'auto';if(fit==='auto')fit=H?'page':'width';
     var img=new Image();
     img.onload=function(){
       try{
         var c=document.createElement('canvas'),x;
-        if(H&&(fit==='page'||fit==='cover')){
+        if(fit==='page'&&H){
           c.width=W;c.height=H;x=c.getContext('2d');
           x.fillStyle='#fff';x.fillRect(0,0,W,H);
-          var cw=W/across;
-          for(var k=0;k<across;k++){
-            var s=fit==='cover'?Math.max(cw/img.width,H/img.height):Math.min(cw/img.width,H/img.height);
-            var dw=img.width*s,dh=img.height*s,ox=k*cw;
-            x.save();x.beginPath();x.rect(ox,0,cw,H);x.clip();
-            x.drawImage(img,ox+(cw-dw)/2,(H-dh)/2,dw,dh);
-            x.restore();
-          }
-          if(across>1){x.strokeStyle='#bbb';x.lineWidth=1;x.setLineDash([8,8]);
-            for(var q=1;q<across;q++){x.beginPath();x.moveTo(q*cw,0);x.lineTo(q*cw,H);x.stroke()}}
+          var s=Math.min(W/img.width,H/img.height);
+          var dw=img.width*s,dh=img.height*s;
+          x.drawImage(img,(W-dw)/2,(H-dh)/2,dw,dh);
         }else{
           var ch=Math.round(img.height*W/img.width);
           c.width=W;c.height=ch;x=c.getContext('2d');
           x.fillStyle='#fff';x.fillRect(0,0,W,ch);
           x.drawImage(img,0,0,W,ch);
         }
-        cb(c.toDataURL(ink?'image/jpeg':'image/png',0.95));
+        cb(c.toDataURL('image/png'));
       }catch(e){cb(src)}
     };
     img.onerror=function(){cb(src)};
@@ -2484,7 +2470,7 @@ function gPrintShare(){
   try{
     var n=Math.max(1,Math.min(10,S.gCopies||1));
     gPrinterImage(S.currentDataUrl,function(one){
-     gBuildCopiesFrom(one,gIsInkjet()?1:n,function(du){
+     gBuildCopiesFrom(one,n,function(du){
       try{
         var blob=gDataUrlToBlob(du);
         var f=new File([blob],'snapbooth_print.png',{type:'image/png'});
@@ -2513,140 +2499,8 @@ function gPrintRawBT(){
     });
   }catch(e){gPrintShare()}
 }
-
-/* --- Recover the page after a print/share pop-up closes (iPhone can leave it stuck) --- */
-function gIsIOS(){try{return /iPhone|iPad|iPod/i.test(navigator.userAgent||'')||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1)}catch(e){return false}}
-function gRecover(){
-  try{
-    S.gPrinting=false;
-    var a=$('gPrintArea');if(a&&a.parentNode)a.parentNode.removeChild(a);
-    var st=$('gPrintStyle');if(st&&st.parentNode)st.parentNode.removeChild(st);
-    var o=$('cntOvl');if(o&&!S.gBusy)o.classList.remove('on');
-    document.body.style.pointerEvents='';document.body.style.overflow='';
-    document.documentElement.style.pointerEvents='';
-    if(S.gReviewing){
-      var pv=$('preview');
-      if(pv&&!pv.classList.contains('active'))showScreen('preview');
-    }
-  }catch(e){}
-}
-try{
-  window.addEventListener('afterprint',function(){setTimeout(gRecover,50)});
-  window.addEventListener('focus',function(){setTimeout(gRecover,50)});
-  window.addEventListener('pageshow',function(){setTimeout(gRecover,50)});
-  document.addEventListener('visibilitychange',function(){if(!document.hidden)setTimeout(gRecover,50)});
-}catch(e){}
-
-
-/* --- iPhone: save the review state before handing off to a printer app, reload on return --- */
-var G_RESUME_KEY='snapbooth_resume';
-function gSaveResume(){
-  try{
-    var st={t:Date.now(),layout:S.gLayout,shots:S.gShots,flip:!!S.gFlip,copies:S.gCopies||1,
-      filter:S.gFilter||'none',time:S.gTime?S.gTime.getTime():null,order:S.gOrder||null,guest:S.guestName||''};
-    try{sessionStorage.setItem(G_RESUME_KEY,JSON.stringify(st))}
-    catch(e){try{localStorage.setItem(G_RESUME_KEY,JSON.stringify(st))}catch(e2){}}
-  }catch(e){}
-}
-function gReadResume(){
-  var raw=null;
-  try{raw=sessionStorage.getItem(G_RESUME_KEY)}catch(e){}
-  if(!raw){try{raw=localStorage.getItem(G_RESUME_KEY)}catch(e){}}
-  try{sessionStorage.removeItem(G_RESUME_KEY)}catch(e){}
-  try{localStorage.removeItem(G_RESUME_KEY)}catch(e){}
-  if(!raw)return null;
-  try{var st=JSON.parse(raw);if(!st||Date.now()-st.t>30*60*1000)return null;return st}catch(e){return null}
-}
-function gTryResume(){
-  try{
-    var st=S.gPendingResume||gReadResume();S.gPendingResume=null;
-    if(!st||!st.shots||!st.shots.length||!G_LAYOUTS[st.layout])return false;
-    S.gLayout=st.layout;S.gActive=true;S.gShots=st.shots;S.gImgs=null;S.gFiltCache=null;
-    S.gFlip=st.flip;S.gCopies=st.copies;S.gFilter=st.filter;S.gOrder=st.order;S.guestName=st.guest;
-    S.gTime=st.time?new Date(st.time):null;
-    S.mode=(st.layout==='receipt4')?'receipt':(st.layout==='single'?'classic':'strip');
-    try{
-      var bs=document.querySelectorAll('#gFilters button');
-      for(var i=0;i<bs.length;i++){if(bs[i].getAttribute('data-gf')===S.gFilter)bs[i].classList.add('on');else bs[i].classList.remove('on')}
-    }catch(e){}
-    gCompose(true);
-    return true;
-  }catch(e){return false}
-}
-/* After handing off on iPhone, reload once when the page becomes visible again */
-function gArmReturnReload(){
-  try{
-    S.gAwaitReturn=true;S.gLeftAt=0;
-    var onHide=function(){if(document.hidden&&S.gAwaitReturn)S.gLeftAt=Date.now()};
-    var onBack=function(){
-      try{
-        if(!S.gAwaitReturn||document.hidden)return;
-        if(!S.gLeftAt)return; /* page never actually left */
-        S.gAwaitReturn=false;
-        document.removeEventListener('visibilitychange',onHide);
-        document.removeEventListener('visibilitychange',onBack);
-        window.removeEventListener('pageshow',onBack);
-        window.removeEventListener('focus',onBack);
-        setTimeout(function(){try{window.location.reload()}catch(e){}},150);
-      }catch(e){}
-    };
-    document.addEventListener('visibilitychange',onHide);
-    document.addEventListener('visibilitychange',onBack);
-    window.addEventListener('pageshow',onBack);
-    window.addEventListener('focus',onBack);
-    /* stop waiting if nothing happened (guest cancelled before leaving) */
-    setTimeout(function(){if(!S.gLeftAt)S.gAwaitReturn=false},60000);
-  }catch(e){}
-}
-
-/* Prepare the print file ahead of time so iPhone can open the share sheet instantly
-   (iOS blocks share/print if they start after a delay from the tap). */
-function gPrepPrint(){
-  try{
-    S.gPrintFile=null;
-    if(!S.currentDataUrl)return;
-    var n=Math.max(1,Math.min(10,S.gCopies||1));
-    var tok=(S.gPrepTok=(S.gPrepTok||0)+1);
-    gPrinterImage(S.currentDataUrl,function(one){
-      gBuildCopiesFrom(one,gIsInkjet()?1:n,function(du){
-        try{
-          if(tok!==S.gPrepTok)return;
-          var blob=gDataUrlToBlob(du);
-          S.gPrintFile=new File([blob],'snapbooth_print.'+(/jpeg/.test(blob.type)?'jpg':'png'),{type:blob.type});
-          S.gPrintUrl=du;
-          try{
-            var ti=new Image();ti.onload=function(){try{var c=document.createElement('canvas');c.width=ti.width;c.height=ti.height;var x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);x.drawImage(ti,0,0);S.gPrintFileJpg=c.toDataURL('image/jpeg',0.9)}catch(e){}};ti.src=du;
-          }catch(e){}
-        }catch(e){}
-      });
-    });
-  }catch(e){}
-}
-/* iPhone print: share sheet (has "Print" built in), called directly from the tap */
-function gPrintIOS(){
-  try{
-    /* iPhone: use the built-in print screen (AirPrint). No third-party app = no freeze. */
-    var src=S.gPrintUrl||S.currentDataUrl;if(!src)return;
-    var n=Math.max(1,Math.min(10,S.gCopies||1)),pages='';
-    for(var i=0;i<(gIsInkjet()?n:1);i++){pages+='<div class="pg"><img src="'+src+'"></div>'}
-    var old=$('gPrintArea');if(old&&old.parentNode)old.parentNode.removeChild(old);
-    var st=$('gPrintStyle');if(st&&st.parentNode)st.parentNode.removeChild(st);
-    var area=document.createElement('div');area.id='gPrintArea';area.innerHTML=pages;area.style.display='none';
-    document.body.appendChild(area);
-    var s=document.createElement('style');s.id='gPrintStyle';
-    s.textContent='@media print{body>*{display:none!important}#gPrintArea{display:block!important}'+gPrintCSS()+'}';
-    document.head.appendChild(s);
-    /* Call print during the tap itself; iOS can ignore it if delayed */
-    try{window.print()}catch(e){}
-    setTimeout(gRecover,1000);
-  }catch(e){gRecover()}
-}
-
 function gPrint(){
   var m=CFG.printMode||'rawbt';
-  if(gIsIOS()){gPrintIOS();return}
-  if(!gIsAndroid())m='system'; /* PC: always use the print dialog */
-  if(m==='rawbt'&&gIsInkjet())m='share'; /* RawBT is for thermal printers */
   if(m==='rawbt'&&gIsAndroid()){gPrintRawBT();return}
   if((m==='share'||m==='rawbt')&&navigator.share){gPrintShare();return}
   gPrintSystem();
@@ -2654,20 +2508,19 @@ function gPrint(){
 function gPrintSystem(){
   try{
     if(!S.currentDataUrl)return;
+    var n=Math.max(1,Math.min(10,S.gCopies||1));
+    var pages='';
+    for(var i=0;i<n;i++){pages+='<div class="pg"><img src="'+S.currentDataUrl+'"></div>'}
+    var doc='<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Print</title><style>'+gPrintCSS()+'</style></head>'+
+      '<body onload="setTimeout(function(){try{window.print()}catch(e){}},500)">'+pages+
+      '<scr'+'ipt>window.onafterprint=function(){try{window.close()}catch(e){}};</scr'+'ipt></body></html>';
     var w=null;
     try{w=window.open('','_blank')}catch(e){w=null}
-    gPrinterImage(S.currentDataUrl,function(du){
-      try{
-        var n=Math.max(1,Math.min(10,S.gCopies||1));
-        var pages='';
-        for(var i=0;i<n;i++){pages+='<div class="pg"><img src="'+du+'"></div>'}
-        var doc='<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Print</title><style>'+gPrintCSS()+'</style></head>'+
-          '<body onload="setTimeout(function(){try{window.print()}catch(e){}},500)">'+pages+
-          '<scr'+'ipt>window.onafterprint=function(){try{window.close()}catch(e){}};</scr'+'ipt></body></html>';
-        if(w&&w.document){w.document.open();w.document.write(doc);w.document.close()}
-        else{gPrintInline(pages)}
-      }catch(e){try{printPhoto()}catch(e2){}}
-    });
+    if(w&&w.document){
+      w.document.open();w.document.write(doc);w.document.close();
+    }else{
+      gPrintInline(pages);
+    }
   }catch(e){
     try{printPhoto()}catch(e2){}
   }
@@ -2682,8 +2535,8 @@ function gPrintInline(pages){
     var s=document.createElement('style');s.id='gPrintStyle';
     s.textContent='@media print{body>*{display:none!important}#gPrintArea{display:block!important}'+gPrintCSS()+'}';
     document.head.appendChild(s);
-    setTimeout(function(){try{window.print()}catch(e){}setTimeout(gRecover,800)},400);
-  }catch(e){gRecover()}
+    setTimeout(function(){try{window.print()}catch(e){}},400);
+  }catch(e){}
 }
 
 
