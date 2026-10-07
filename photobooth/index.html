@@ -526,7 +526,12 @@ body.guest.on-idle #adminHot{display:block}
       <select id="sPaper"><optgroup label="Inkjet photo paper (Epson L320 etc.)"><option value="ij_wallet">Wallet 2.5×3.5 in (64×89mm)</option><option value="ij_2x3">Mini 2×3 in (51×76mm)</option><option value="ij_3r">3R 3.5×5 in (89×127mm)</option><option value="ij_kg">KG / 4R 4×6 in (102×152mm)</option><option value="ij_4x6x2">4×6 in — 2 photo strips side by side (cut in half)</option><option value="ij_4x7">4×7 in (102×178mm)</option><option value="ij_5r">5R 5×7 in (127×178mm)</option><option value="ij_6r">6R 6×8 in (152×203mm)</option><option value="ij_8r">8R 8×10 in (203×254mm)</option><option value="ij_sq4">Square 4×4 in (102×102mm)</option><option value="ij_sq5">Square 5×5 in (127×127mm)</option><option value="ij_sq6">Square 6×6 in (152×152mm)</option><option value="ij_hagaki">Hagaki / Postcard (100×148mm)</option><option value="ij_a6">A6 (105×148mm)</option><option value="ij_a5">A5 (148×210mm)</option><option value="ij_a4">A4 (210×297mm)</option><option value="ij_letter">Letter 8.5×11 in (216×279mm)</option></optgroup><optgroup label="Receipt rolls (continuous)"><option value="48mm">Receipt 48mm</option><option value="57mm">Receipt 57mm</option><option value="58mm">Receipt 58mm (2 in)</option><option value="76mm">Receipt 76mm</option><option value="80mm">Receipt 80mm (3 in)</option><option value="110mm">Receipt 110mm (4 in)</option></optgroup><optgroup label="Waybill / shipping labels"><option value="wb4x6">Waybill 4×6 in (100×150mm)</option><option value="wb100x100">Waybill 100×100mm</option><option value="wb4x4">Label 4×4 in (102×102mm)</option><option value="wb4x3">Label 4×3 in (102×76mm)</option><option value="wb4x2">Label 4×2 in (102×51mm)</option><option value="wb76x130">Label 76×130mm</option><option value="wb3x2">Label 3×2 in (76×51mm)</option><option value="wb60x40">Label 60×40mm</option><option value="wb50x30">Label 50×30mm</option><option value="wb2x1">Label 2×1 in (51×25mm)</option></optgroup><optgroup label="Photo paper"><option value="ph2x6">Photo strip 2×6 in (51×152mm)</option><option value="ph3r">3R 3.5×5 in (89×127mm)</option><option value="ph4r">4R 4×6 in (102×152mm)</option><option value="ph5r">5R 5×7 in (127×178mm)</option><option value="ph6r">6R 6×8 in (152×203mm)</option><option value="ph8r">8R 8×10 in (203×254mm)</option><option value="phsq">Square 4×4 in (102×102mm)</option><option value="phwallet">Wallet 2.5×3.5 in (64×89mm)</option><option value="phinstaxm">Instax Mini (54×86mm)</option><option value="phinstaxs">Instax Square (72×86mm)</option><option value="phinstaxw">Instax Wide (108×86mm)</option><option value="phpost">Postcard (100×148mm)</option></optgroup><optgroup label="Office paper"><option value="a4">A4 (210×297mm)</option><option value="a5">A5 (148×210mm)</option><option value="a6">A6 (105×148mm)</option><option value="letter">Letter (8.5×11 in)</option></optgroup><optgroup label="Other"><option value="custom">Custom size…</option></optgroup></select></div>
     <div class="s-row" id="rowCustom"><label>Custom W × H (mm)</label><span style="display:flex;gap:6px"><input type="number" id="sPW" min="20" max="300" style="width:70px" placeholder="76"><input type="number" id="sPH" min="0" max="500" style="width:70px" placeholder="0 = auto"></span></div>
     <div class="s-row"><label>Printer DPI</label><select id="sDPI"><option value="203">203 dpi (most thermal / waybill)</option><option value="300">300 dpi</option><option value="180">180 dpi</option></select></div>
-    <div class="s-row"><label>Fill mode</label><select id="sFit"><option value="auto">Auto (by paper type)</option><option value="width">Fill paper width</option><option value="page">Fit whole label (waybill)</option><option value="cover">Fill whole sheet, crop edges (borderless)</option></select>
+    <div class="s-row"><label>Fill mode</label><select id="sFit"><option value="auto">Auto (by paper type)</option><option value="width">Fill paper width</option><option value="page">Fit whole label (waybill)</option><option value="cover">Fill whole sheet, crop edges (borderless)</option></select></div>
+    <div class="s-row"><label>Thermal photo mode</label><select id="sThermal"><option value="atkinson">Dither – Atkinson (light, recommended)</option><option value="floyd">Dither – Floyd-Steinberg (more detail)</option><option value="halftone">Halftone dots (newspaper look)</option><option value="off">Off (send grayscale photo)</option></select></div>
+    <div class="s-row"><label>Thermal brightness</label><input type="range" id="sThBri" min="-40" max="60" step="5" value="5"></div>
+    <div class="s-row"><label>Thermal contrast</label><input type="range" id="sThCon" min="-30" max="60" step="5" value="15"></div>
+    <div class="s-note">Used for receipt and label sizes only. In RawBT, set dithering/image mode to <b>None / Threshold</b> so it doesn't dither twice.</div>
+    <div style="display:none">
     </div>
     <div class="s-row"><label>Print Method</label>
       <select id="sPrintMode"><option value="rawbt">RawBT direct (no app picker)</option><option value="share">Choose printer app (RawBT etc.)</option><option value="system">System print dialog (Wi-Fi printers, Epson)</option></select>
@@ -648,7 +653,7 @@ body.guest.on-idle #adminHot{display:block}
   </div>
 </div>
 <div id="adminHot"></div>
-<div id="appVer" style="position:fixed;right:8px;bottom:6px;z-index:600;font:11px system-ui,sans-serif;color:rgba(255,255,255,.45);pointer-events:none">SnapBooth v26</div>
+<div id="appVer" style="position:fixed;right:8px;bottom:6px;z-index:600;font:11px system-ui,sans-serif;color:rgba(255,255,255,.45);pointer-events:none">SnapBooth v27</div>
 
 <!-- ===== SLIDESHOW ===== -->
 <div id="slideshow">
@@ -692,7 +697,7 @@ var CFG = {
   askName:false,printName:false,kiosk:false,restart:15,
   cloudName:'',cloudPreset:'',prefix:'snapbooth',naming:'prefix_seq',autoDL:false,
   quality:'0.85',format:'jpeg',autoGal:true,
-  guestMode:true,adminPin:'1234',hashtag:'#RXMPHOTOBOOTH',footDate:true,bw:'receipt',paper:'58mm',printMode:'rawbt',pw:76,ph:0,dpi:203,fit:'auto',
+  guestMode:true,adminPin:'1234',hashtag:'#RXMPHOTOBOOTH',footDate:true,bw:'receipt',paper:'58mm',printMode:'rawbt',pw:76,ph:0,dpi:203,fit:'auto',thermal:'atkinson',thBri:5,thCon:15,
   logoData:null
 };
 
@@ -1730,6 +1735,9 @@ function saveSettings(){
     CFG.ph=parseFloat(($('sPH')||{}).value)||0;
     CFG.dpi=parseInt(($('sDPI')||{}).value)||203;
     CFG.fit=($('sFit')||{}).value||'auto';
+    CFG.thermal=($('sThermal')||{}).value||'atkinson';
+    CFG.thBri=parseInt(($('sThBri')||{}).value);if(isNaN(CFG.thBri))CFG.thBri=5;
+    CFG.thCon=parseInt(($('sThCon')||{}).value);if(isNaN(CFG.thCon))CFG.thCon=15;
     applyBranding();
     localStorage.setItem('snapbooth_cfg',JSON.stringify(CFG));
   }catch(e){}
@@ -1757,7 +1765,7 @@ function populateSettingsUI(){
       'rMsg':'rMsg','rFooter':'rFooter',
       'sCloudName':'cloudName','sCloudPreset':'cloudPreset','sPrefix':'prefix','sNaming':'naming',
       'sQuality':'quality','sFormat':'format',
-      'sAdminPin':'adminPin','sHashtag':'hashtag','sBW':'bw','sPaper':'paper','sPrintMode':'printMode','sDPI':'dpi','sFit':'fit','sPW':'pw','sPH':'ph'
+      'sAdminPin':'adminPin','sHashtag':'hashtag','sBW':'bw','sPaper':'paper','sPrintMode':'printMode','sDPI':'dpi','sFit':'fit','sThermal':'thermal','sThBri':'thBri','sThCon':'thCon','sPW':'pw','sPH':'ph'
     };
     for(var id in map){
       var el=$(id);if(el)el.value=CFG[map[id]]||el.value;
@@ -2558,6 +2566,45 @@ function gPaperMM(){
   return G_PAPERS[p]||[48,0];
 }
 /* Render the photo at the printer's exact dot size so it prints full size */
+
+/* --- Thermal photo rendering: grayscale + tone curve + 1-bit dithering --- */
+function gThermalOn(){return !gIsInkjet()&&(CFG.thermal||'atkinson')!=='off'}
+function gThermal(ctx,W,H){
+  try{
+    var mode=CFG.thermal||'atkinson';
+    var bri=(CFG.thBri==null?5:CFG.thBri)/100,con=(CFG.thCon==null?15:CFG.thCon)/100;
+    var d=ctx.getImageData(0,0,W,H),p=d.data,n=W*H,g=new Float32Array(n),i,k;
+    /* thermal heads print dark: lift shadows with a gamma curve, then brightness/contrast */
+    for(i=0,k=0;i<n;i++,k+=4){
+      var a=p[k+3]/255;
+      var l=(0.299*p[k]+0.587*p[k+1]+0.114*p[k+2])*a+255*(1-a);
+      l=255*Math.pow(l/255,0.72);
+      l=(l-128)*(1+con)+128+bri*255;
+      g[i]=l<0?0:l>255?255:l;
+    }
+    var out=new Uint8Array(n),x,y,v,e,idx;
+    if(mode==='halftone'){
+      var cell=4,M=[[0,8,2,10],[12,4,14,6],[3,11,1,9],[15,7,13,5]];
+      for(y=0;y<H;y++)for(x=0;x<W;x++){idx=y*W+x;out[idx]=g[idx]>((M[y%cell][x%cell]+0.5)*16)?255:0}
+    }else if(mode==='floyd'){
+      for(y=0;y<H;y++)for(x=0;x<W;x++){
+        idx=y*W+x;v=g[idx]<128?0:255;e=g[idx]-v;out[idx]=v;
+        if(x+1<W)g[idx+1]+=e*7/16;
+        if(y+1<H){if(x>0)g[idx+W-1]+=e*3/16;g[idx+W]+=e*5/16;if(x+1<W)g[idx+W+1]+=e/16}
+      }
+    }else{ /* Atkinson: spreads only 3/4 of the error, so midtones stay light */
+      for(y=0;y<H;y++)for(x=0;x<W;x++){
+        idx=y*W+x;v=g[idx]<128?0:255;e=(g[idx]-v)/8;out[idx]=v;
+        if(x+1<W)g[idx+1]+=e;if(x+2<W)g[idx+2]+=e;
+        if(y+1<H){if(x>0)g[idx+W-1]+=e;g[idx+W]+=e;if(x+1<W)g[idx+W+1]+=e}
+        if(y+2<H)g[idx+2*W]+=e;
+      }
+    }
+    for(i=0,k=0;i<n;i++,k+=4){p[k]=p[k+1]=p[k+2]=out[i];p[k+3]=255}
+    ctx.putImageData(d,0,0);
+  }catch(e){}
+}
+
 function gIsInkjet(){return /^ij_/.test(CFG.paper||'')}
 function gPrinterImage(src,cb){
   try{
@@ -2590,6 +2637,7 @@ function gPrinterImage(src,cb){
           x.fillStyle='#fff';x.fillRect(0,0,W,ch);
           x.drawImage(img,0,0,W,ch);
         }
+        if(gThermalOn()){try{gThermal(x,c.width,c.height)}catch(e){}}
         cb(c.toDataURL(ink?'image/jpeg':'image/png',0.95));
       }catch(e){cb(src)}
     };
