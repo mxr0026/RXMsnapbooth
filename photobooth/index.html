@@ -1,4 +1,6 @@
 <!DOCTYPE html>
+<!-- Grinzy (c) 2026 Milcah Sarah Araullo. All rights reserved. Unauthorized copying, modification or redistribution is prohibited. -->
+
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -6,7 +8,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#1a1a2e">
-<title>SnapBooth</title>
+<title>Grinzy</title>
 <link rel="manifest" href="manifest.json">
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
 <style>
@@ -338,8 +340,14 @@ body.notext #gTextBtn{display:none}
 #licLock .box{background:var(--bg2);border:1px solid var(--brd);border-radius:16px;padding:26px;max-width:440px;width:100%;text-align:center}
 #licLock h2{margin:0 0 6px;font-size:24px}
 #licLock p{color:var(--tx2);font-size:14px;margin:6px 0 14px}
-#licKey{width:100%;font:700 20px ui-monospace,Consolas,monospace;letter-spacing:1px;text-align:center;padding:12px;border-radius:10px;border:2px solid var(--brd);background:var(--bg3);color:var(--tx);text-transform:uppercase}
-#licDevName{width:100%;padding:10px;border-radius:10px;border:1px solid var(--brd);background:var(--bg3);color:var(--tx);margin-top:8px;text-align:center}
+#licLock input{width:100%;padding:12px;border-radius:10px;border:1px solid var(--brd);background:var(--bg3);color:var(--tx);margin-top:8px;font-size:16px;text-align:center}
+#licKey{font:700 16px ui-monospace,Consolas,monospace!important;letter-spacing:1px;text-transform:uppercase}
+#licLock .acc-up{display:none}
+#licLock.up .acc-up{display:block}
+.acc-tabs{display:flex;gap:6px;margin:4px 0 6px}
+.acc-tabs button{flex:1;padding:10px!important;font-size:15px!important;background:var(--bg3)!important;color:var(--tx2)!important;border:2px solid var(--brd)!important}
+.acc-tabs button.on{background:var(--pri)!important;color:#fff!important;border-color:var(--pri)!important}
+
 #licMsg{min-height:22px;color:var(--err);font-size:14px;margin:10px 0}
 #licLock button{width:100%;padding:14px;font-size:17px;font-weight:700;border:none;border-radius:10px;background:var(--pri);color:#fff}
 #licBanner{position:fixed;left:50%;bottom:28px;transform:translateX(-50%);z-index:640;background:#e17055;color:#fff;padding:8px 16px;border-radius:999px;font:600 13px system-ui,sans-serif;display:none}
@@ -362,6 +370,22 @@ body.notext #gTextBtn{display:none}
 .tg-src{display:inline-block;font-size:11px;padding:2px 8px;border-radius:999px;background:var(--bg3);margin-top:4px}
 .tg-bar{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}
 #tgCount{color:var(--tx2);font-size:14px}
+
+/* ===== Plans / tiers (v40) ===== */
+.plan-lock{display:none;color:var(--txm);font-size:13px;background:var(--bg3);border:1px dashed var(--brd);border-radius:10px;padding:8px 12px;margin:6px 0}
+.plan-lock.on{display:block}
+.plan-off{display:none!important}
+.tg-card.locked{opacity:.45;border-style:dashed;cursor:not-allowed;filter:grayscale(.7)}
+.tg-card.locked .tg-chk{background:var(--bg3);color:var(--txm);font-size:13px}
+.tg-lockbadge{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;background:#2d3436;color:#fff;margin-top:4px}
+
+/* ===== Camera code scan (v43) ===== */
+#vScanBtn{width:100%;padding:14px;font-size:17px;font-weight:700;border-radius:12px;border:2px solid var(--pri);background:transparent;color:var(--tx);margin:4px 0 10px}
+#vScanBox{display:none;position:relative;margin:0 0 10px;border-radius:12px;overflow:hidden;background:#000;aspect-ratio:4/3}
+#vScanBox.on{display:block}
+#vScanVid{width:100%;height:100%;object-fit:cover;display:block}
+#vScanFrame{position:absolute;inset:18%;border:3px solid #fff;border-radius:14px;box-shadow:0 0 0 999px rgba(0,0,0,.35)}
+#vScanTip{position:absolute;left:0;right:0;bottom:8px;text-align:center;color:#fff;font-size:13px;text-shadow:0 1px 3px #000}
 </style>
 </head>
 <body>
@@ -373,7 +397,7 @@ body.notext #gTextBtn{display:none}
   <div class="logo-wrap">
     <img id="homeLogo" src="" alt="Logo">
     <span class="logo-icon">&#x1f4f8;</span>
-    <div class="logo" id="boothTitle">SnapBooth</div>
+    <div class="logo" id="boothTitle">Grinzy</div>
   </div>
   <div class="sub">Choose what to open</div>
   <div class="modes">
@@ -396,7 +420,7 @@ body.notext #gTextBtn{display:none}
     <div id="idleBrand">
       <img id="idleLogo" src="" alt="">
       <div class="idle-emoji" id="idleEmoji">&#x1f4f8;</div>
-      <div class="idle-title" id="idleTitle">SnapBooth</div>
+      <div class="idle-title" id="idleTitle">Grinzy</div>
       <div class="idle-tag" id="idleTag"></div>
     </div>
     <div class="idle-tap">&#x1f446; Tap the screen to start</div>
@@ -469,7 +493,7 @@ body.notext #gTextBtn{display:none}
     <button class="btn bo" onclick="retake()">&#x1f504; Retake</button>
     <button class="btn bo" onclick="openMarkup()">&#x270f;&#xfe0f; Markup</button>
     <button class="btn bo" onclick="gPrint()">&#x1f5a8;&#xfe0f; Print</button>
-    <button class="btn bo" onclick="openQR()">&#x1f4f1; QR</button>
+    <button class="btn bo" data-feat="qr" onclick="openQR()">&#x1f4f1; QR</button>
     <button class="btn bo" onclick="stopCam();showScreen('home')">&#x1f3e0; Home</button>
   </div>
   <div id="gRev">
@@ -490,7 +514,7 @@ body.notext #gTextBtn{display:none}
     <div id="gVLeft"></div>
     <button class="g-print" onclick="gPrint()">&#x1f5a8;&#xfe0f; Print</button>
     <div class="g-row">
-      <button class="g-btn" onclick="openQR()">&#x1f4f1; QR Code</button>
+      <button class="g-btn" data-feat="qr" onclick="openQR()">&#x1f4f1; QR Code</button>
     </div>
     <button class="g-done" id="gDoneBtn"><span class="g-done-fill"></span><span class="g-done-t">&#x2705; Hold to finish &mdash; next guest</span></button>
   </div>
@@ -512,10 +536,11 @@ body.notext #gTextBtn{display:none}
       <button class="btn bo" onclick="ctplBoot();setTimeout(tgRender,1200)">&#x1f504; Reload GitHub templates</button>
     </div>
     <h4>Your GitHub templates</h4><div class="tg-grid" id="tgGit"></div>
-    <h4>Added on this device</h4><div class="tg-grid" id="tgDev"></div>
+    <h4>Your templates</h4><div class="tg-grid" id="tgDev"></div>
     <h4>Built-in layouts</h4><div class="tg-grid" id="tgBuilt"></div>
-    <h4>Add a template on this device</h4>
-    <div class="s-sec" style="margin:0">
+    <h4 data-feat="ownTemplates">Add a template on this device</h4>
+    <div class="plan-lock" data-lock="ownTemplates"></div>
+    <div class="s-sec" style="margin:0" data-feat="ownTemplates">
       <div class="s-row"><label>Template Name</label><input type="text" id="tgName" placeholder="e.g. Wedding 4-Strip"></div>
       <div class="s-row"><label>PNG File</label><input type="file" id="tgFile" accept="image/png" style="font-size:12px"></div>
       <div class="s-row"><label></label><button class="btn bp" onclick="tgAdd()">&#x2795; Add template</button></div>
@@ -531,10 +556,21 @@ body.notext #gTextBtn{display:none}
     <h2>&#x2699;&#xfe0f; Settings</h2>
   </div>
 
+  <!-- Account -->
+  <div class="s-sec" id="accSec" style="display:none">
+    <h3>&#x1f464; Account</h3>
+    <div class="s-row"><label>Signed in as</label><span id="accWho">Not signed in</span></div>
+    <div class="s-row"><label>Plan</label><span id="accPlan">&mdash;</span></div>
+    <div class="s-row"><label>Licence ends</label><span id="accExp">&mdash;</span></div>
+    <div class="s-row"><label>Last synced</label><span id="accSync">&mdash;</span></div>
+    <div class="s-note">Settings, Template Gallery choices, booth codes and your templates follow your account to every device you sign in on. Printer, paper, camera and logo settings stay on each device.</div>
+    <div class="vbtns"><button class="btn bp" onclick="accSyncNow()">&#x1f504; Sync now</button><button class="btn bo" onclick="accSignOut()">Sign out</button></div>
+  </div>
+
   <!-- Branding -->
   <div class="s-sec">
     <h3>&#x1f3a8; Branding</h3>
-    <div class="s-row"><label>Booth Name</label><input type="text" id="sName" value="SnapBooth" onchange="saveSettings()"></div>
+    <div class="s-row"><label>Booth Name</label><input type="text" id="sName" value="Grinzy" onchange="saveSettings()"></div>
     <div class="s-row"><label>Logo</label><input type="file" id="sLogo" accept="image/*" onchange="handleLogo(this)" style="font-size:12px"></div>
     <div id="logoPreview" class="tpl-prv" style="display:none"><img id="logoPrvImg" src=""><button class="rm-btn" onclick="removeLogo()">&#x2715;</button></div>
     <div class="s-row"><label>Primary</label><input type="color" id="cPri" value="#6c5ce7" onchange="saveSettings()"></div>
@@ -589,7 +625,7 @@ body.notext #gTextBtn{display:none}
   <!-- Receipt Mode -->
   <div class="s-sec">
     <h3>&#x1f9fe; Receipt Mode</h3>
-    <div class="s-row"><label>Business Name</label><input type="text" id="rBizName" value="SnapBooth Studio"></div>
+    <div class="s-row"><label>Business Name</label><input type="text" id="rBizName" value="Grinzy Studio"></div>
     <div class="s-row"><label>Tagline</label><input type="text" id="rTagline" value="Memories Made Instantly"></div>
     <div class="s-row"><label>Line 1 Left</label><input type="text" id="rL1L" value="EVENT"></div>
     <div class="s-row"><label>Line 1 Right</label><input type="text" id="rL1R" value="Photo Session"></div>
@@ -642,9 +678,12 @@ body.notext #gTextBtn{display:none}
   <div class="s-sec">
     <h3>&#x1f5bc;&#xfe0f; Custom Templates</h3>
     <div class="s-note">Upload a PNG design with <b>transparent windows</b> where the photos go. Each window becomes one photo. Templates appear on the guest layout picker.</div>
+    <div class="plan-lock" data-lock="ownTemplates"></div>
+    <div data-feat="ownTemplates">
     <div class="s-row"><label>Template Name</label><input type="text" id="ctplName" placeholder="e.g. Wedding 4-Strip"></div>
     <div class="s-row"><label>PNG File</label><input type="file" id="ctplFile" accept="image/png" style="font-size:12px"></div>
     <div class="s-row"><label></label><button class="btn bp" onclick="ctplAdd()">&#x2795; Add template</button></div>
+    </div>
     <div id="ctplMsg"></div>
     <div id="ctplList"></div>
   </div>
@@ -652,8 +691,11 @@ body.notext #gTextBtn{display:none}
   <!-- Vouchers -->
   <div class="s-sec">
     <h3>&#x1f4b3; Pay at Counter (Booth Codes)</h3>
+    <div class="plan-lock" data-lock="vouchers"></div>
+    <div data-feat="vouchers">
     <div class="s-row"><label>Require a code to start</label><label class="tgl"><input type="checkbox" id="sVoucherOn"><span class="tgl-s"></span></label></div>
     <div class="s-row"><label>Price text</label><input type="text" id="sVPrice" placeholder="&#x20b1;100 per session"></div>
+    <div class="s-row"><label>Ticket message</label><input type="text" id="sVTicketMsg" maxlength="48" placeholder="Thank you! Valid today only"></div>
     <div class="s-row"><label>Prints per code</label><input type="number" id="sVCopies" min="1" max="10" value="1"></div>
     <div class="s-row"><label>Code valid for (minutes)</label><input type="number" id="sVMin" min="2" max="120" value="10"></div>
     <div class="s-note">Guests pay at the counter, get a one-time code, and enter it on the start screen. Each code works once. Codes are stored on <b>this device only</b>; each booth needs its own list.</div>
@@ -664,19 +706,26 @@ body.notext #gTextBtn{display:none}
     <div id="vStats" style="color:var(--tx2);font-size:14px;margin-top:6px"></div>
     <div id="vList" class="vlist"></div>
     <div class="vbtns">
-      <button class="btn bp" onclick="vPrintSheet()">&#x1f5a8;&#xfe0f; Print code sheet</button>
+      <button class="btn bp" onclick="vPrintSheet()">&#x1f4c4; Print on A4 (cut-out sheet)</button>
+      <button class="btn bp" onclick="vPrintThermal()">&#x1f9fe; Print on thermal (continuous)</button>
       <button class="btn bo" onclick="vExportCSV()">&#x2b07;&#xfe0f; Download list (CSV)</button>
       <button class="btn bo" onclick="vClearUsed()">Remove used codes</button>
       <button class="btn bo" onclick="vDeleteAll()">Delete all codes</button>
+    </div>
     </div>
   </div>
 
   <!-- Output -->
   <div class="s-sec">
     <h3>&#x1f4be; Output</h3>
+    <div id="cldManaged" class="s-note" style="display:none">&#x2601;&#xfe0f; <b>Cloud uploads: managed by your provider.</b> QR photos and shared templates upload securely through your account. Nothing to set up here.</div>
+    <div id="cldFields">
     <div class="s-row"><label>Cloudinary Cloud Name</label><input type="text" id="sCloudName" placeholder="e.g. dxyz123ab"></div>
     <div class="s-row"><label>Upload Preset</label><input type="text" id="sCloudPreset" placeholder="e.g. snapbooth_unsigned"></div>
+    <div class="s-row"><label>Template upload preset</label><input type="text" id="sTplPreset" placeholder="e.g. RXMTEMPLATES"></div>
+    <div class="s-note">Used to share your own templates with your other devices. Use a <b>separate unsigned preset with no &ldquo;snapbooth&rdquo; tag</b>, so the 2-hour photo cleanup doesn&rsquo;t delete your templates.</div>
     <div class="s-note">Free CDN hosting \u2014 loads on any device. Get both at <a href="https://cloudinary.com/users/register_free" target="_blank">cloudinary.com</a> (see setup steps in chat).</div>
+    </div>
     <div class="s-row"><label>File Prefix</label><input type="text" id="sPrefix" value="snapbooth"></div>
     <div class="s-row"><label>File Naming</label>
       <select id="sNaming"><option value="prefix_seq">Prefix + Sequence</option><option value="date">Date</option><option value="timestamp">Timestamp</option><option value="guest">Guest Name</option></select>
@@ -778,7 +827,9 @@ body.notext #gTextBtn{display:none}
     <h3>&#x1f39f;&#xfe0f; Enter your booth code</h3>
     <div id="vPrice"></div>
     <div style="color:var(--tx2);font-size:14px">Pay at the counter to get a code.</div>
-    <input type="text" id="vInput" inputmode="numeric" autocomplete="off" maxlength="8" placeholder="&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;">
+    <input type="text" id="vInput" inputmode="numeric" autocomplete="off" maxlength="8" onkeydown="if(event.key==='Enter'){event.preventDefault();vSubmit()}" placeholder="&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;">
+    <button id="vScanBtn" onclick="vScanToggle()">&#x1f4f7; Scan code from ticket</button>
+    <div id="vScanBox"><video id="vScanVid" autoplay playsinline muted></video><div id="vScanFrame"></div><div id="vScanTip">Hold the ticket QR inside the box</div></div>
     <div class="vkeys">
       <button onclick="vKey('1')">1</button><button onclick="vKey('2')">2</button><button onclick="vKey('3')">3</button>
       <button onclick="vKey('4')">4</button><button onclick="vKey('5')">5</button><button onclick="vKey('6')">6</button>
@@ -823,21 +874,26 @@ body.notext #gTextBtn{display:none}
 </div>
 <div id="licLock">
   <div class="box">
-    <div style="font-size:42px">&#x1f511;</div>
-    <h2>Activate SnapBooth</h2>
-    <p id="licSub">Enter your licence key to use this booth on this device.</p>
-    <input id="licKey" placeholder="SB-XXXX-XXXX-XXXX-XXXX" autocomplete="off" autocapitalize="characters">
+    <div style="font-size:42px">&#x1f4f8;</div>
+    <h2 id="accTitle">Sign in to Grinzy</h2>
+    <p id="licSub">Sign in with your Grinzy account to use this booth.</p>
+    <div class="acc-tabs"><button id="accTabIn" class="on" onclick="accMode('in')">Sign in</button><button id="accTabUp" onclick="accMode('up')">Create account</button></div>
+    <input id="accEmail" type="email" placeholder="Email" autocomplete="username" autocapitalize="off">
+    <input id="accPass" type="password" placeholder="Password" autocomplete="current-password">
+    <input id="accPass2" class="acc-up" type="password" placeholder="Repeat password" autocomplete="new-password">
+    <input id="licKey" class="acc-up" placeholder="Licence key (SB-XXXX-XXXX-XXXX-XXXX)" autocomplete="off" autocapitalize="characters">
     <input id="licDevName" placeholder="Device name (e.g. Tablet 1)" maxlength="40">
     <div id="licMsg"></div>
-    <button onclick="licActivate()">Activate</button>
-    <p style="margin-top:14px;font-size:12px">Need a key? Contact the booth provider.</p>
+    <button id="accGo" class="acc-go" onclick="accSubmit()">Sign in</button>
+    <p style="margin-top:14px;font-size:12px">Forgot your password? Ask your Grinzy provider to reset it.</p>
   </div>
 </div>
 <div id="licBanner"></div>
 <div id="gToast"></div>
 <div id="vTimer">&#x23f1;&#xfe0f; <span id="vTimerT">10:00</span> left</div>
 <div id="adminHot"></div>
-<div id="appVer" style="position:fixed;right:8px;bottom:6px;z-index:600;font:11px system-ui,sans-serif;color:rgba(255,255,255,.45);pointer-events:none">SnapBooth v36</div>
+<div id="appCopy" style="position:fixed;left:8px;bottom:6px;z-index:600;font:10px system-ui,sans-serif;color:rgba(255,255,255,.35);pointer-events:none">&copy; 2026 Grinzy</div>
+<div id="appVer" style="position:fixed;right:8px;bottom:6px;z-index:600;font:11px system-ui,sans-serif;color:rgba(255,255,255,.45);pointer-events:none">Grinzy Beta 1.0</div>
 
 <!-- ===== SLIDESHOW ===== -->
 <div id="slideshow">
@@ -871,17 +927,17 @@ var S = {
 
 /* === SETTINGS OBJECT === */
 var CFG = {
-  name:'SnapBooth',pri:'#6c5ce7',acc:'#fd79a8',bg:'#1a1a2e',bg2:'#16213e',tx:'#ffffff',
+  name:'Grinzy',pri:'#6c5ce7',acc:'#fd79a8',bg:'#1a1a2e',bg2:'#16213e',tx:'#ffffff',
   camSrc:'user',countdown:5,mirror:true,
   tiles:4,layout:'vertical',tplBg:'#1a1a2e',overlayData:null,
-  rBizName:'SnapBooth Studio',rTagline:'Memories Made Instantly',
+  rBizName:'Grinzy Studio',rTagline:'Memories Made Instantly',
   rL1L:'EVENT',rL1R:'Photo Session',rL2L:'GUEST',rL2R:'',
   rMsg:'Thank you for visiting our booth!',rFooter:'www.snapbooth.app',
   rOrder:true,rDate:true,
   askName:false,printName:false,kiosk:false,restart:15,
-  cloudName:'',cloudPreset:'',prefix:'snapbooth',naming:'prefix_seq',autoDL:false,
+  cloudName:'',cloudPreset:'',tplPreset:'',prefix:'snapbooth',naming:'prefix_seq',autoDL:false,
   quality:'0.85',format:'jpeg',autoGal:true,
-  guestMode:true,adminPin:'1234',hashtag:'#RXMPHOTOBOOTH',footDate:true,bw:'receipt',paper:'58mm',printMode:'rawbt',pw:76,ph:0,dpi:203,fit:'auto',guestText:true,hiddenLayouts:{},voucherOn:false,vPrice:'',vCopies:1,vMin:10,thermal:'atkinson',thBri:5,thCon:15,
+  guestMode:true,adminPin:'1234',hashtag:'#RXMPHOTOBOOTH',footDate:true,bw:'receipt',paper:'58mm',printMode:'rawbt',pw:76,ph:0,dpi:203,fit:'auto',guestText:true,hiddenLayouts:{},voucherOn:false,vMsg:'',vPrice:'',vCopies:1,vMin:10,thermal:'atkinson',thBri:5,thCon:15,
   logoData:null
 };
 
@@ -1333,7 +1389,7 @@ function composeReceipt(imgData){
     var yy=30;
     ctx.textAlign='center';
     ctx.fillStyle='#222';ctx.font='bold 20px Courier New,monospace';
-    ctx.fillText(CFG.rBizName||'SnapBooth',rw/2,yy);yy+=18;
+    ctx.fillText(CFG.rBizName||'Grinzy',rw/2,yy);yy+=18;
     ctx.fillStyle='#666';ctx.font='11px Courier New,monospace';
     ctx.fillText(CFG.rTagline||'',rw/2,yy);yy+=16;
     drawDash(ctx,padding,yy,rw-padding);yy+=12;
@@ -1481,7 +1537,7 @@ function sharePhoto(){
   try{
     if(navigator.share&&navigator.canShare){
       var file=new File([S.currentBlob],fname,{type:S.currentBlob.type});
-      var sd={files:[file],title:'SnapBooth Photo'};
+      var sd={files:[file],title:'Grinzy Photo'};
       if(navigator.canShare(sd)){
         navigator.share(sd).catch(function(){fallbackDownload()});
         return;
@@ -1554,10 +1610,11 @@ function printPhoto(){
 function openQR(){
   var mod=$('qrMod');if(mod)mod.classList.add('on');
   var cont=$('qrContent');var msg=$('qrMsg');
+  if(!planHas('qr')){if(cont)cont.innerHTML='<p style="color:var(--txm)">'+planLockText('qr')+'</p>';if(msg)msg.textContent='You can still print your photo.';return}
   if(cont)cont.innerHTML='<p style="color:var(--txm)">Uploading photo...</p>';
   if(msg)msg.textContent='';
 
-  if(CFG.cloudName&&CFG.cloudName.trim()&&CFG.cloudPreset&&CFG.cloudPreset.trim()){
+  if(cldSignedOn()||(CFG.cloudName&&CFG.cloudName.trim()&&CFG.cloudPreset&&CFG.cloudPreset.trim())){
     uploadCloudinary(function(imgUrl,errMsg){
       if(imgUrl){
         /* Point QR at our lightweight dl.html with the DIRECT image url */
@@ -1568,7 +1625,7 @@ function openQR(){
         if(msg)msg.innerHTML='Guest scans QR \u2192 opens photo \u2192 taps Save!<br><b style="color:var(--acc)">\u23f0 Save your photo now \u2014 this link expires in 2 hours.</b>';
       }else{
         if(cont)cont.innerHTML='<p style="color:var(--err);font-size:13px;word-break:break-word">'+(errMsg||'Upload failed.')+'</p>';
-        if(msg)msg.textContent='Tell this exact message to your helper to diagnose.';
+        if(msg)msg.textContent=cldSignedOn()?'You can still use Print, or share the photo from the Gallery later.':'Tell this exact message to your helper to diagnose.';
       }
     });
   }else{
@@ -1608,9 +1665,58 @@ function qrSavePhoto(){
   }
 }
 
+
+/* === SIGNED CLOUDINARY UPLOAD (v38) ===
+   With accounts on, the licence server signs each upload with the provider's
+   Cloudinary secret. The booth never sees any Cloudinary keys or presets. */
+function cldSignedOn(){return accOn()}
+function cldSignReason(st,max){
+  if(st==='tier_locked')return 'This feature isn\'t included in your plan.';
+  if(st==='not_configured')return 'Cloud uploads are not set up yet. Please contact your provider.';
+  if(st==='rate_limited')return 'Daily upload limit reached ('+(max||300)+'). Try again tomorrow or contact your provider.';
+  if(st==='invalid_session')return 'Please sign in again to upload photos.';
+  if(st==='expired')return 'Your licence has expired. Uploads are paused until it is renewed.';
+  if(st==='revoked')return 'Your licence is turned off. Please contact your provider.';
+  return 'Upload could not be authorised ('+(st||'unknown')+').';
+}
+function cldSignedUpload(dataUrl,kind,cb){
+  try{
+    var A=accGet();
+    if(!A||!A.token){cb(null,'Please sign in to upload photos.');return}
+    if(navigator.onLine===false){cb(null,'No internet connection. QR sharing needs internet \u2014 the photo is saved in the Gallery.');return}
+    licPost('/upload/sign',{token:A.token,device:licDevId(),kind:kind}).then(function(s){
+      try{
+        if(!s||!s.ok){cb(null,cldSignReason(s&&s.status,s&&s.max));return}
+        var xhr=new XMLHttpRequest();
+        xhr.open('POST','https://api.cloudinary.com/v1_1/'+encodeURIComponent(s.cloudName)+'/image/upload');
+        xhr.onload=function(){
+          try{
+            var res=JSON.parse(xhr.responseText);
+            if(res&&res.secure_url){cb(res.secure_url)}
+            else if(res&&res.error&&res.error.message){cb(null,'Cloudinary: '+res.error.message+' (HTTP '+xhr.status+')')}
+            else{cb(null,'Cloudinary returned HTTP '+xhr.status+' with no URL')}
+          }catch(e){cb(null,'Could not read Cloudinary response (HTTP '+xhr.status+')')}
+        };
+        xhr.onerror=function(){cb(null,'No internet connection. QR sharing needs internet \u2014 the photo is saved in the Gallery.')};
+        xhr.timeout=kind==='template'?45000:20000;
+        xhr.ontimeout=function(){cb(null,'Upload timed out')};
+        var fd=new FormData();
+        fd.append('file',dataUrl);
+        fd.append('api_key',s.apiKey);
+        fd.append('timestamp',String(s.timestamp));
+        fd.append('folder',s.folder);
+        if(s.tags)fd.append('tags',s.tags);
+        fd.append('signature',s.signature);
+        xhr.send(fd);
+      }catch(e){cb(null,'Upload error: '+(e&&e.message?e.message:'unknown'))}
+    }).catch(function(){cb(null,'No internet connection. QR sharing needs internet \u2014 the photo is saved in the Gallery.')});
+  }catch(e){cb(null,'Upload error')}
+}
+
 /* === CLOUDINARY UPLOAD === */
 function uploadCloudinary(cb){
   try{
+    if(cldSignedOn()){cldSignedUpload(S.currentDataUrl,'photo',cb);return}
     var xhr=new XMLHttpRequest();
     var url='https://api.cloudinary.com/v1_1/'+encodeURIComponent(CFG.cloudName.trim())+'/image/upload';
     xhr.open('POST',url);
@@ -1896,7 +2002,7 @@ function cancelMarkup(){
 /* === SETTINGS SAVE/LOAD === */
 function saveSettings(){
   try{
-    CFG.name=($('sName')||{}).value||'SnapBooth';
+    CFG.name=($('sName')||{}).value||'Grinzy';
     CFG.pri=($('cPri')||{}).value||'#6c5ce7';
     CFG.acc=($('cAcc')||{}).value||'#fd79a8';
     CFG.bg=($('cBg')||{}).value||'#1a1a2e';
@@ -1924,6 +2030,7 @@ function saveSettings(){
     CFG.restart=parseInt(($('sRestart')||{}).value)||15;
     CFG.cloudName=($('sCloudName')||{}).value||'';
     CFG.cloudPreset=($('sCloudPreset')||{}).value||'';
+    CFG.tplPreset=(($('sTplPreset')||{}).value||'').trim();
     CFG.prefix=($('sPrefix')||{}).value||'snapbooth';
     CFG.naming=($('sNaming')||{}).value||'prefix_seq';
     CFG.autoDL=!!($('sAutoDL')||{}).checked;
@@ -1945,6 +2052,7 @@ function saveSettings(){
     CFG.voucherOn=!!($('sVoucherOn')||{}).checked;
     if(!CFG.voucherOn){try{vTimerStop()}catch(e){}}
     CFG.vPrice=(($('sVPrice')||{}).value||'').trim();
+    CFG.vMsg=(($('sVTicketMsg')||{}).value||'').trim();
     CFG.vCopies=Math.max(1,Math.min(10,parseInt(($('sVCopies')||{}).value)||1));
     CFG.vMin=Math.max(2,Math.min(120,parseInt(($('sVMin')||{}).value)||10));
     CFG.thermal=($('sThermal')||{}).value||'atkinson';
@@ -1952,6 +2060,7 @@ function saveSettings(){
     CFG.thCon=parseInt(($('sThCon')||{}).value);if(isNaN(CFG.thCon))CFG.thCon=15;
     applyBranding();
     localStorage.setItem('snapbooth_cfg',JSON.stringify(CFG));
+    try{syncMark()}catch(e){}
   }catch(e){}
 }
 
@@ -1967,6 +2076,7 @@ function loadSettings(){
   applyBranding();
   try{vRenderAdmin()}catch(e){}
   try{populateCamDevices()}catch(e){}
+  try{accRenderSettings()}catch(e){}
 }
 
 function populateSettingsUI(){
@@ -1977,9 +2087,9 @@ function populateSettingsUI(){
       'rBizName':'rBizName','rTagline':'rTagline',
       'rL1L':'rL1L','rL1R':'rL1R','rL2L':'rL2L','rL2R':'rL2R',
       'rMsg':'rMsg','rFooter':'rFooter',
-      'sCloudName':'cloudName','sCloudPreset':'cloudPreset','sPrefix':'prefix','sNaming':'naming',
+      'sCloudName':'cloudName','sCloudPreset':'cloudPreset','sTplPreset':'tplPreset','sPrefix':'prefix','sNaming':'naming',
       'sQuality':'quality','sFormat':'format',
-      'sAdminPin':'adminPin','sHashtag':'hashtag','sBW':'bw','sPaper':'paper','sPrintMode':'printMode','sDPI':'dpi','sFit':'fit','sThermal':'thermal','sVPrice':'vPrice','sThBri':'thBri','sThCon':'thCon','sPW':'pw','sPH':'ph'
+      'sAdminPin':'adminPin','sHashtag':'hashtag','sBW':'bw','sPaper':'paper','sPrintMode':'printMode','sDPI':'dpi','sFit':'fit','sThermal':'thermal','sVPrice':'vPrice','sVTicketMsg':'vMsg','sThBri':'thBri','sThCon':'thCon','sPW':'pw','sPH':'ph'
     };
     for(var id in map){
       var el=$(id);if(el)el.value=CFG[map[id]]||el.value;
@@ -2025,8 +2135,8 @@ function applyBranding(){
   r.setProperty('--tx2',mixColor(CFG.tx,CFG.bg,0.7));
   r.setProperty('--txm',mixColor(CFG.tx,CFG.bg,0.45));
   r.setProperty('--brd',lighten(CFG.bg,15));
-  var t=$('boothTitle');if(t)t.textContent=CFG.name||'SnapBooth';
-  document.title=CFG.name||'SnapBooth';
+  var t=$('boothTitle');if(t)t.textContent=CFG.name||'Grinzy';
+  document.title=CFG.name||'Grinzy';
   try{gSyncIdle()}catch(e){}
 }
 
@@ -2164,7 +2274,7 @@ function gEnterGuest(){
 }
 function gSyncIdle(){
   try{
-    var t=$('idleTitle');if(t)t.textContent=CFG.name||'SnapBooth';
+    var t=$('idleTitle');if(t)t.textContent=CFG.name||'Grinzy';
     var tg=$('idleTag');if(tg)tg.textContent=CFG.hashtag||'';
     var lg=$('idleLogo'),em=$('idleEmoji');
     var src=CFG.logoData||S.logoData;
@@ -2252,11 +2362,92 @@ function capClose(){
 
 
 
+
+/* ================= PLANS / TIERS (v40) ================= */
+var PLAN_TIERS=['basic','pro','business'];
+var PLAN_NAMES={basic:'Basic',pro:'Pro',business:'Business'};
+var PLAN_FEAT_MIN={qr:'pro',ownTemplates:'pro',vouchers:'business',sync:'basic'};
+function planTier(){
+  try{
+    if(!accOn())return 'business';                 /* no licence server = everything on */
+    var A=accGet();
+    return (A&&A.tier&&PLAN_TIERS.indexOf(A.tier)>=0)?A.tier:'';
+  }catch(e){return ''}
+}
+function planHas(f){
+  try{
+    if(!accOn())return true;
+    var A=accGet();
+    if(!A||!A.features)return true;               /* not known yet: allow; the server still enforces uploads */
+    return A.features[f]===true;
+  }catch(e){return true}
+}
+function planName(t){return PLAN_NAMES[t]||'\u2014'}
+function planLockText(f){return '\ud83d\udd12 Available on '+planName(PLAN_FEAT_MIN[f]||'pro')+'. Ask your provider to upgrade your plan.'}
+/* store tier + features from a login / check response */
+function planStore(r){
+  try{
+    var A=accGet();if(!A||!r)return;
+    if(r.tier)A.tier=r.tier;
+    if(r.features&&typeof r.features==='object')A.features=r.features;
+    accSet(A);
+  }catch(e){}
+}
+/* GitHub template allowed for this tier? (no "tiers" list = all tiers) */
+function planTplAllowed(item){
+  try{
+    if(!accOn())return true;
+    var t=planTier();if(!t)return true;
+    var ts=item&&item.tiers;
+    if(!ts||!ts.length)return true;
+    for(var i=0;i<ts.length;i++){if(String(ts[i]).toLowerCase()===t)return true}
+    return false;
+  }catch(e){return true}
+}
+function planTplMin(item){
+  try{
+    var ts=(item&&item.tiers)||[],best=null;
+    for(var i=0;i<ts.length;i++){var ix=PLAN_TIERS.indexOf(String(ts[i]).toLowerCase());if(ix>=0&&(best===null||ix<best))best=ix}
+    return best===null?'pro':PLAN_TIERS[best];
+  }catch(e){return 'pro'}
+}
+/* show/hide everything that depends on the plan */
+function planApply(){
+  try{
+    var els=document.querySelectorAll('[data-feat]'),i,f;
+    for(i=0;i<els.length;i++){
+      f=els[i].getAttribute('data-feat');
+      if(planHas(f))els[i].classList.remove('plan-off');else els[i].classList.add('plan-off');
+    }
+    var locks=document.querySelectorAll('[data-lock]');
+    for(i=0;i<locks.length;i++){
+      f=locks[i].getAttribute('data-lock');
+      if(planHas(f)){locks[i].classList.remove('on');locks[i].textContent=''}
+      else{locks[i].classList.add('on');locks[i].textContent=planLockText(f)}
+    }
+    var p=$('accPlan');if(p)p.textContent=accOn()?(planTier()?planName(planTier()):'Checking\u2026'):'\u2014';
+    /* plan changed: reload GitHub templates so tier-restricted ones appear / disappear */
+    var t=planTier();
+    if(S.planLast!==undefined&&S.planLast!==t){try{ctplReloadGithub()}catch(e){}}
+    S.planLast=t;
+    if(!planHas('vouchers')){try{vClose()}catch(e){}try{vTimerStop()}catch(e){}}
+    try{if($('tgal')&&$('tgal').classList.contains('active'))tgRender()}catch(e){}
+  }catch(e){}
+}
+function ctplReloadGithub(){
+  try{
+    var cur=(S.ctpls||[]).slice();
+    for(var i=0;i<cur.length;i++){if(cur[i].source==='github')ctplUnregister(cur[i].key)}
+    S.ctplLocked=[];
+    ctplLoadGithub();
+  }catch(e){}
+}
+
 /* ================= TEMPLATE GALLERY (v36) ================= */
 var TG_BUILT=[['single','1 Photo','l1',1],['strip2','2 Strip','ls',2],['strip3','3 Strip','ls',3],['strip4','4 Strip','ls',4],['grid4','2\u00d72 Grid','lg',4],['receipt4','Receipt (4)','lr',4]];
 function tgHidden(){if(!CFG.hiddenLayouts||typeof CFG.hiddenLayouts!=='object')CFG.hiddenLayouts={};return CFG.hiddenLayouts}
 function tgVisible(key){return !tgHidden()[key]}
-function tgSaveCfg(){try{localStorage.setItem('snapbooth_cfg',JSON.stringify(CFG))}catch(e){}}
+function tgSaveCfg(){try{localStorage.setItem('snapbooth_cfg',JSON.stringify(CFG))}catch(e){}try{syncMark()}catch(e){}}
 function tgToggle(key){
   try{
     var hd=tgHidden();
@@ -2294,11 +2485,19 @@ function tgRender(){
       t=S.ctpls[i];n=t.slots.length;
       var img='<img src="'+ctplEsc(t.src)+'" alt="">';
       var sub=n+(n>1?' photos':' photo');
-      if(t.source==='tablet'){
+      if(t.source==='account'){
+        d+=tgCard(t.key,t.name,sub,img,'Your account','<br><button class="btn bo" style="margin-top:6px;padding:4px 10px;font-size:12px" onclick="event.stopPropagation();ctplDeleteAcc(\''+String(t.uid).replace(/[^0-9a-f]/g,'')+'\')">&#x1f5d1;&#xfe0f; Delete</button>');
+      }else if(t.source==='tablet'){
         d+=tgCard(t.key,t.name,sub,img,'This device','<br><button class="btn bo" style="margin-top:6px;padding:4px 10px;font-size:12px" onclick="event.stopPropagation();ctplDelete('+Number(t.id)+');setTimeout(tgRender,400)">&#x1f5d1;&#xfe0f; Delete</button>');
       }else{
         g+=tgCard(t.key,t.name,sub,img,'GitHub');
       }
+    }
+    var lk=(S.ctplLocked||[]).slice().sort(function(a,b2){return (a.ord||0)-(b2.ord||0)});
+    for(i=0;i<lk.length;i++){
+      g+='<div class="tg-card locked" onclick="gToast(\''+planLockText('ownTemplates').replace(/'/g,'').replace('Available on Pro','This template is on '+planName(lk[i].min))+'\')">'+
+        '<div class="tg-chk">\ud83d\udd12</div><img src="'+ctplEsc(lk[i].src)+'" alt=""><b>'+ctplEsc(lk[i].name)+'</b>'+
+        '<small>Not in your plan</small><br><span class="tg-lockbadge">\ud83d\udd12 '+planName(lk[i].min)+'</span></div>';
     }
     for(i=0;i<TG_BUILT.length;i++){
       var x=TG_BUILT[i],cells='';
@@ -2307,7 +2506,7 @@ function tgRender(){
     }
     var eg=$('tgGit'),ed=$('tgDev'),eb=$('tgBuilt');
     if(eg)eg.innerHTML=g||'<div class="s-note">None yet. Upload PNGs to photobooth/templates/ on GitHub and list them in templates.json.</div>';
-    if(ed)ed.innerHTML=d||'<div class="s-note">None on this device.</div>';
+    if(ed)ed.innerHTML=d||'<div class="s-note">None yet. Add one below.</div>';
     if(eb)eb.innerHTML=b;
     var ct=$('tgCount');if(ct)ct.textContent=tgVisibleCount()+' of '+tgAllKeys().length+' shown to guests';
   }catch(e){}
@@ -2324,6 +2523,7 @@ function tgApplyPicker(){
 function tgOpen(){try{showScreen('tgal');tgRender();if(!(S.ctpls||[]).length){ctplBoot();setTimeout(tgRender,1200)}}catch(e){}}
 function tgAdd(){
   try{
+    if(!planHas('ownTemplates')){var mm=$('tgMsg');if(mm)mm.textContent='This feature isn\'t included in your plan.';return}
     /* reuse the existing tablet-template upload */
     var a=$('ctplName'),b=$('ctplFile'),na=$('tgName'),fb=$('tgFile');
     if(!fb||!fb.files||!fb.files[0]){var m=$('tgMsg');if(m)m.textContent='Choose a PNG file first.';return}
@@ -2352,14 +2552,18 @@ function licDevId(){
     return id;
   }catch(e){return 'nodev'}
 }
-function licGet(){try{return JSON.parse(localStorage.getItem(LIC_KEY)||'null')}catch(e){return null}}
-function licSet(o){try{localStorage.setItem(LIC_KEY,JSON.stringify(o))}catch(e){}}
+var ACC_KEY='snapbooth_account';
+function accGet(){try{return JSON.parse(localStorage.getItem(ACC_KEY)||'null')}catch(e){return null}}
+function accSet(o){try{if(o)localStorage.setItem(ACC_KEY,JSON.stringify(o));else localStorage.removeItem(ACC_KEY)}catch(e){}}
+function accOn(){return !!LIC_SERVER}
+function accEmail(){var a=accGet();return (a&&a.token&&a.email)?a.email:''}
 function licLock(msg,sub){
   try{
     var l=$('licLock');if(l)l.classList.add('on');
-    var m=$('licMsg');if(m)m.textContent=msg||'';
-    if(sub){var s=$('licSub');if(s)s.textContent=sub}
-    var k=$('licKey'),L=licGet();if(k&&L&&L.key&&!k.value)k.value=L.key;
+    var m=$('licMsg');if(m){m.style.color='';m.textContent=msg||''}
+    var s=$('licSub');if(s)s.textContent=sub||(S.accMode==='up'?'Create your account with the licence key from your provider.':'Sign in with your Grinzy account to use this booth.');
+    var A=accGet(),e=$('accEmail');if(e&&!e.value&&A&&A.email)e.value=A.email;
+    var dn=$('licDevName');if(dn&&!dn.value){try{dn.value=localStorage.getItem('snapbooth_devname')||''}catch(x){}}
   }catch(e){}
 }
 function licUnlock(){try{var l=$('licLock');if(l)l.classList.remove('on')}catch(e){}}
@@ -2369,25 +2573,124 @@ function licPost(path,body){
     .then(function(r){return r.json()});
 }
 function licReason(st,max){
-  if(st==='invalid')return 'That key was not found. Check it and try again.';
+  if(st==='invalid')return 'That licence key was not found. Check it and try again.';
   if(st==='expired')return 'This licence has expired. Please renew with your provider.';
   if(st==='revoked')return 'This licence has been turned off. Please contact your provider.';
-  if(st==='device_limit')return 'This key is already used on '+(max||1)+' device(s). Ask your provider to free a slot.';
-  if(st==='not_activated')return 'This device is no longer activated. Enter your key again.';
-  return 'Could not activate. Please try again.';
+  if(st==='device_limit')return 'This account is already signed in on '+(max||1)+' device(s). Ask your provider to free a slot.';
+  if(st==='not_activated')return 'This device was removed from your account. Please sign in again.';
+  if(st==='bad_login')return 'Wrong email or password.';
+  if(st==='bad_email')return 'Please enter a valid email address.';
+  if(st==='weak_password')return 'Password must be at least 8 characters.';
+  if(st==='email_taken')return 'An account with this email already exists. Sign in instead.';
+  if(st==='key_taken')return 'This licence key already belongs to another account.';
+  if(st==='invalid_session')return 'Your sign-in has ended. Please sign in again.';
+  return 'Something went wrong. Please try again.';
 }
-function licActivate(){
+function accMsg(t,info){try{var m=$('licMsg');if(m){m.style.color=info?'var(--tx2)':'';m.textContent=t||''}}catch(e){}}
+function accMode(md){
   try{
-    var k=String(($('licKey')||{}).value||'').toUpperCase().replace(/\s/g,'');
+    S.accMode=md;
+    var l=$('licLock');if(l){if(md==='up')l.classList.add('up');else l.classList.remove('up')}
+    var a=$('accTabIn'),b=$('accTabUp');if(a)a.className=md==='up'?'':'on';if(b)b.className=md==='up'?'on':'';
+    var t=$('accTitle');if(t)t.textContent=md==='up'?'Create your Grinzy account':'Sign in to Grinzy';
+    var g=$('accGo');if(g)g.textContent=md==='up'?'Create account':'Sign in';
+    var p=$('accPass');if(p){p.setAttribute('autocomplete',md==='up'?'new-password':'current-password');p.placeholder=md==='up'?'Password (8+ characters)':'Password'}
+    var s=$('licSub');if(s)s.textContent=md==='up'?'Create your account with the licence key from your provider.':'Sign in with your Grinzy account to use this booth.';
+    accMsg('');
+  }catch(e){}
+}
+function accSubmit(){
+  try{
+    var em=String(($('accEmail')||{}).value||'').trim().toLowerCase();
+    var pw=String(($('accPass')||{}).value||'');
     var nm=String(($('licDevName')||{}).value||'').trim()||'Device';
-    var m=$('licMsg');
-    if(!k){if(m)m.textContent='Please enter your licence key.';return}
-    if(m){m.style.color='var(--tx2)';m.textContent='Checking\u2026'}
-    licPost('/activate',{key:k,device:licDevId(),name:nm}).then(function(r){
-      if(m)m.style.color='';
-      if(r&&r.ok){licSet({key:k,ok:Date.now(),expires:r.expires||0,customer:r.customer||''});licUnlock();licBanner('');gToast('SnapBooth activated. Welcome'+(r.customer?', '+r.customer:'')+'!');licExpiryNote(r.expires);return}
-      if(m)m.textContent=licReason(r&&r.status,r&&r.max);
-    }).catch(function(){if(m){m.style.color='';m.textContent='No internet connection. Connect to Wi-Fi to activate.'}});
+    try{localStorage.setItem('snapbooth_devname',nm)}catch(e){}
+    if(!em||!pw){accMsg('Please enter your email and password.');return}
+    if(S.accMode==='up'){
+      var pw2=String(($('accPass2')||{}).value||'');
+      var k=String(($('licKey')||{}).value||'').toUpperCase().replace(/\s/g,'');
+      if(pw.length<8){accMsg(licReason('weak_password'));return}
+      if(pw!==pw2){accMsg('The two passwords don\'t match.');return}
+      if(!k){accMsg('Please enter the licence key from your provider.');return}
+      accMsg('Creating your account\u2026',true);
+      var rb={email:em,licenceKey:k};rb['pass'+'word']=pw;
+      licPost('/auth/register',rb).then(function(r){
+        if(r&&r.ok){accLogin(em,pw,nm);return}
+        accMsg(licReason(r&&r.status));
+      }).catch(function(){accMsg('No internet connection. Connect to Wi-Fi to create your account.')});
+      return;
+    }
+    accLogin(em,pw,nm);
+  }catch(e){}
+}
+function accLogin(em,pw,nm){
+  try{
+    accMsg('Signing in\u2026',true);
+    var lb={email:em,device:licDevId(),name:nm};lb['pass'+'word']=pw;
+    licPost('/auth/login',lb).then(function(r){
+      try{
+        if(!(r&&r.ok)){accMsg(licReason(r&&r.status,r&&r.max));return}
+        var prev='';try{prev=localStorage.getItem('snapbooth_acct_owner')||''}catch(e){}
+        if(prev&&prev!==r.email)accSwitchReset();
+        try{localStorage.setItem('snapbooth_acct_owner',r.email)}catch(e){}
+        accSet({token:r.token,email:r.email,lastOk:Date.now(),expires:r.expires||0,customer:r.customer||'',tier:r.tier||'',features:r.features||null});
+        try{planApply()}catch(e){}
+        var p1=$('accPass'),p2=$('accPass2'),lk=$('licKey');if(p1)p1.value='';if(p2)p2.value='';if(lk)lk.value='';
+        accMode('in');licUnlock();licBanner('');licExpiryNote(r.expires);
+        gToast('Signed in as '+r.email);
+        ctplReloadAccount();
+        accRenderSettings();
+        syncPull();
+      }catch(e){}
+    }).catch(function(){accMsg('No internet connection. Connect to Wi-Fi to sign in.')});
+  }catch(e){}
+}
+/* A different account signs in on this device: drop the previous account's data */
+function accSwitchReset(){
+  try{
+    try{localStorage.removeItem(V_KEY)}catch(e){}
+    syncStateSet({});
+    var keep={};
+    var def=window.CFG_DEF||{};
+    for(var k in def){if(def.hasOwnProperty(k)&&!SYNC_SKIP[k])CFG[k]=JSON.parse(JSON.stringify(def[k]))}
+    CFG.hiddenLayouts={};
+    try{localStorage.setItem('snapbooth_cfg',JSON.stringify(CFG))}catch(e){}
+    try{populateSettingsUI();applyBranding()}catch(e){}
+  }catch(e){}
+}
+function accSignOut(){
+  try{
+    var st=syncState(),msg='Sign out of Grinzy on this device?';
+    if(st.dirty)msg='Some changes have not synced yet and will be lost. Sign out anyway?';
+    var ok=true;try{ok=window.confirm(msg)}catch(e){ok=true}
+    if(!ok)return;
+    var A=accGet();
+    if(A&&A.token){licPost('/auth/logout',{token:A.token}).then(function(){}).catch(function(){})}
+    accSet(A&&A.email?{email:A.email}:null);
+    var s2=syncState();s2.dirty=false;syncStateSet(s2);
+    accRenderSettings();
+    accMode('in');
+    licLock('','Signed out. Sign in to use this booth again.');
+  }catch(e){}
+}
+function accSyncNow(){
+  try{
+    if(!accEmail()){gToast('Sign in first.');return}
+    if(navigator.onLine===false){gToast('Offline \u2014 changes will sync when you reconnect.');return}
+    gToast('Syncing\u2026');syncPull();
+  }catch(e){}
+}
+function accFmt(t){try{return t?new Date(t).toLocaleString():'\u2014'}catch(e){return '\u2014'}}
+function accRenderSettings(){
+  try{
+    try{planApply()}catch(e){}
+    try{var cm=$('cldManaged'),cf=$('cldFields');if(cm)cm.style.display=cldSignedOn()?'':'none';if(cf)cf.style.display=cldSignedOn()?'none':''}catch(e){}
+    var sec=$('accSec');if(sec)sec.style.display=accOn()?'':'none';
+    if(!accOn())return;
+    var A=accGet()||{},st=syncState();
+    var w=$('accWho');if(w)w.textContent=A.token?(A.email+(A.customer?' ('+A.customer+')':'')):'Not signed in';
+    var x=$('accExp');if(x)x.textContent=A.token?(A.expires?accFmt(A.expires):'No expiry'):'\u2014';
+    var y=$('accSync');if(y)y.textContent=(st.dirty?'Waiting to sync \u2022 ':'')+(st.lastSync?accFmt(st.lastSync):'Not yet');
   }catch(e){}
 }
 function licExpiryNote(exp){
@@ -2399,22 +2702,149 @@ function licExpiryNote(exp){
 }
 function licBoot(){
   try{
-    if(!LIC_SERVER)return;               /* licensing off */
-    var L=licGet();
-    if(!L||!L.key){licLock('');return}
-    /* offline grace: allow use if last good check is recent */
-    var fresh=L.ok&&(Date.now()-L.ok)<LIC_GRACE_DAYS*86400000;
-    if(L.expires&&Date.now()>L.expires){licLock(licReason('expired'));}
-    else if(!fresh){licLock('Please connect to the internet to verify your licence.')}
-    licExpiryNote(L.expires);
-    licPost('/check',{key:L.key,device:licDevId()}).then(function(r){
-      if(r&&r.ok){L.ok=Date.now();L.expires=r.expires||0;licSet(L);licUnlock();licExpiryNote(L.expires);if(!(L.expires&&L.expires-Date.now()<3*86400000))licBanner('')}
-      else if(r&&r.status){licLock(licReason(r.status,r.max))}
+    if(!LIC_SERVER)return;               /* accounts off */
+    accInitListeners();
+    var A=accGet();
+    if(!A||!A.token){if(!S.accMode)accMode('in');licLock('');return}
+    /* offline grace: stay signed in if the last good check is recent */
+    var fresh=A.lastOk&&(Date.now()-A.lastOk)<LIC_GRACE_DAYS*86400000;
+    if(A.expires&&Date.now()>A.expires){licLock(licReason('expired'))}
+    else if(!fresh){licLock('Please connect to the internet to confirm your sign-in.')}
+    licExpiryNote(A.expires);
+    licPost('/auth/check',{token:A.token,device:licDevId()}).then(function(r){
+      try{
+        if(r&&r.ok){
+          A.lastOk=Date.now();A.expires=r.expires||0;A.customer=r.customer||A.customer||'';
+          if(r.tier)A.tier=r.tier;if(r.features)A.features=r.features;accSet(A);
+          try{planApply()}catch(e){}
+          licUnlock();licExpiryNote(A.expires);
+          if(!(A.expires&&A.expires-Date.now()<3*86400000))licBanner('');
+          accRenderSettings();syncPull();return;
+        }
+        var st=r&&r.status;
+        if(st==='invalid_session'||st==='not_activated'){accSet({email:A.email});accMode('in')}
+        if(st)licLock(licReason(st,r&&r.max));
+        accRenderSettings();
+      }catch(e){}
     }).catch(function(){
-      if(!fresh)licLock('No internet connection. Connect to Wi-Fi to verify your licence.');
-      else licBanner('Offline \u2014 licence check will retry.');
+      if(!fresh)licLock('No internet connection. Connect to Wi-Fi to confirm your sign-in.');
+      else licBanner('Offline \u2014 sign-in will be checked again when online.');
     });
   }catch(e){}
+}
+function accInitListeners(){
+  try{
+    if(S.accLis)return;S.accLis=true;
+    window.addEventListener('online',function(){
+      try{
+        var l=$('licLock'),A=accGet();
+        if(l&&l.classList.contains('on')&&A&&A.token)licBoot();
+        syncPush();
+      }catch(e){}
+    });
+    setInterval(function(){try{syncPush()}catch(e){}},300000);
+  }catch(e){}
+}
+
+/* ================= SETTINGS SYNC (v37) ================= */
+var SYNC_KEY='snapbooth_sync';
+/* device-specific settings that stay on each device */
+var SYNC_SKIP={cloudName:1,cloudPreset:1,tplPreset:1,camSrc:1,logoData:1,overlayData:1,printMode:1,paper:1,pw:1,ph:1,dpi:1,fit:1,thermal:1,thBri:1,thCon:1};
+function syncState(){try{return JSON.parse(localStorage.getItem(SYNC_KEY)||'{}')||{}}catch(e){return {}}}
+function syncStateSet(o){try{localStorage.setItem(SYNC_KEY,JSON.stringify(o||{}))}catch(e){}}
+function syncCollect(){
+  var cfg={};
+  for(var k in CFG){if(CFG.hasOwnProperty(k)&&!SYNC_SKIP[k])cfg[k]=CFG[k]}
+  return {v:1,cfg:cfg,vouchers:vLoad(),tpls:syncState().tpls||[]};
+}
+/* called whenever a synced setting changes */
+function syncMark(){
+  try{
+    if(!accOn()||S.syncApplying||!accEmail())return;
+    var st=syncState();st.updatedAt=Date.now();st.dirty=true;syncStateSet(st);
+    if(S.syncT)clearTimeout(S.syncT);
+    S.syncT=setTimeout(function(){S.syncT=null;syncPush()},3000);
+    accRenderSettings();
+  }catch(e){}
+}
+/* booth codes merge instead of overwrite: a code used on any device stays used */
+function vMerge(a,b){
+  var map={},out=[],i,x;
+  a=a||[];b=b||[];
+  for(i=0;i<a.length;i++){x=a[i];if(!x||!x.c)continue;if(!map[x.c]){map[x.c]={c:x.c,used:x.used||0,made:x.made||0};out.push(map[x.c])}}
+  for(i=0;i<b.length;i++){x=b[i];if(!x||!x.c)continue;
+    if(map[x.c]){if((x.used||0)&&(!map[x.c].used||x.used<map[x.c].used))map[x.c].used=x.used}
+    else{map[x.c]={c:x.c,used:x.used||0,made:x.made||0};out.push(map[x.c])}}
+  return out;
+}
+function syncApply(data,updatedAt){
+  S.syncApplying=true;
+  try{
+    if(data&&data.cfg){
+      for(var k in data.cfg){if(data.cfg.hasOwnProperty(k)&&!SYNC_SKIP[k])CFG[k]=data.cfg[k]}
+      try{localStorage.setItem('snapbooth_cfg',JSON.stringify(CFG))}catch(e){}
+      try{populateSettingsUI()}catch(e){}
+      try{applyBranding()}catch(e){}
+    }
+    var st=syncState();
+    st.tpls=(data&&data.tpls)||[];st.updatedAt=updatedAt||st.updatedAt||0;st.dirty=false;syncStateSet(st);
+    try{ctplLoadAccount()}catch(e){}
+    try{tgApplyPicker()}catch(e){}
+    try{var tg=$('tgal');if(tg&&tg.classList.contains('active'))tgRender()}catch(e){}
+  }catch(e){}
+  S.syncApplying=false;
+}
+function syncPull(){
+  try{
+    var A=accGet();if(!LIC_SERVER||!A||!A.token)return;
+    licPost('/sync/get',{token:A.token,device:licDevId()}).then(function(r){
+      try{
+        if(!r||!r.ok){if(r&&r.status==='invalid_session')licBoot();return}
+        var st=syncState(),server=r.data,sAt=r.updatedAt||0;
+        var sv=(server&&server.vouchers)||[];
+        var merged=vMerge(vLoad(),sv);
+        var vKeyOf=function(list){var o=[];for(var z=0;z<list.length;z++)o.push(list[z].c+':'+(list[z].used||0));o.sort();return o.join(',')};
+        var vDiff=vKeyOf(merged)!==vKeyOf(vMerge(sv,[]));
+        if(server&&sAt>(st.updatedAt||0))syncApply(server,sAt);
+        S.syncApplying=true;try{vSave(merged);vRenderAdmin()}catch(e){}S.syncApplying=false;
+        st=syncState();
+        if(!server||vDiff){st.updatedAt=Math.max(Date.now(),sAt+1);st.dirty=true}
+        st.lastSync=Date.now();syncStateSet(st);
+        if(st.dirty)syncPush();
+        accRenderSettings();
+      }catch(e){S.syncApplying=false}
+    }).catch(function(){accRenderSettings()});
+  }catch(e){}
+}
+function syncPush(){
+  try{
+    var A=accGet();if(!LIC_SERVER||!A||!A.token)return;
+    if(!planHas('sync'))return;
+    var st=syncState();if(!st.dirty)return;
+    if(navigator.onLine===false){accRenderSettings();return}
+    if(S.syncBusy){S.syncAgain=true;return}
+    S.syncBusy=true;
+    var sentAt=st.updatedAt||Date.now();
+    licPost('/sync/put',{token:A.token,device:licDevId(),data:syncCollect(),updatedAt:sentAt}).then(function(r){
+      S.syncBusy=false;
+      try{
+        var s2=syncState();
+        if(r&&r.ok){
+          if((s2.updatedAt||0)<=sentAt)s2.dirty=false;
+          s2.lastSync=Date.now();syncStateSet(s2);S.syncStale=0;
+        }else if(r&&r.status==='stale'){
+          /* another device saved newer settings: take theirs (booth codes are merged) */
+          S.syncStale=(S.syncStale||0)+1;
+          if(S.syncStale<3){s2.dirty=false;syncStateSet(s2);syncPull()}
+        }else if(r&&r.status==='too_large'){
+          gToast('Too much to sync (200 KB limit). Remove used booth codes or unused templates.');
+        }else if(r&&r.status==='invalid_session'){licBoot()}
+        else if(r&&r.status==='tier_locked'){s2.dirty=false;syncStateSet(s2);gToast('Settings sync isn\'t included in your plan.')}
+        accRenderSettings();
+        if(S.syncAgain){S.syncAgain=false;syncPush()}
+      }catch(e){}
+    }).catch(function(){S.syncBusy=false;accRenderSettings()});
+  }catch(e){S.syncBusy=false}
 }
 
 /* ================= GUEST CUSTOM TEXT ================= */
@@ -2486,8 +2916,8 @@ function gtDraw(pc){
 /* ================= BOOTH CODES (pay at counter) ================= */
 var V_KEY='snapbooth_vouchers';
 function vLoad(){try{var a=JSON.parse(localStorage.getItem(V_KEY)||'[]');return Array.isArray(a)?a:[]}catch(e){return[]}}
-function vSave(a){try{localStorage.setItem(V_KEY,JSON.stringify(a))}catch(e){gToast('Could not save codes on this device.')}}
-function vOn(){return !!CFG.voucherOn}
+function vSave(a){try{localStorage.setItem(V_KEY,JSON.stringify(a))}catch(e){gToast('Could not save codes on this device.')}try{syncMark()}catch(e){}}
+function vOn(){return !!CFG.voucherOn&&planHas('vouchers')}
 function vSessionValid(){
   if(!S.vOk)return false;
   var mins=CFG.vMin||10;
@@ -2506,6 +2936,7 @@ function gStartGate(){
     var pr=$('vPrice');if(pr)pr.textContent=CFG.vPrice||'';
     var msg=$('vMsg');if(msg)msg.textContent='';
     m.classList.add('on');
+    try{if(!/Android|iPhone|iPad/i.test(navigator.userAgent||''))setTimeout(function(){try{i.focus()}catch(e){}},150)}catch(e){}
     gArmIdle(90000);
   }catch(e){gShowLayouts()}
 }
@@ -2519,7 +2950,103 @@ function vKey(k){
     gArmIdle(90000);
   }catch(e){}
 }
-function vClose(){try{var m=$('vMod');if(m)m.classList.remove('on')}catch(e){}}
+
+/* ================= CAMERA CODE SCAN (v43) ================= */
+var JSQR_URL='https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js';
+function vScanLoadLib(cb){
+  try{
+    if(window.jsQR){cb(true);return}
+    var s=document.createElement('script');s.src=JSQR_URL;s.async=true;
+    s.onload=function(){cb(!!window.jsQR)};s.onerror=function(){cb(false)};
+    document.head.appendChild(s);
+  }catch(e){cb(false)}
+}
+function vScanToggle(){if(S.vScanOn)vScanStop();else vScanStart()}
+function vScanStart(){
+  try{
+    var box=$('vScanBox'),v=$('vScanVid'),b=$('vScanBtn'),msg=$('vMsg');
+    if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){if(msg)msg.textContent='Camera not available on this device.';return}
+    S.vScanOn=true;if(box)box.classList.add('on');if(b)b.innerHTML='&#x2715; Stop scanning';
+    if(msg)msg.textContent='';
+    gArmIdle(90000);
+    /* stop the booth camera while scanning so both don't fight over it */
+    try{stopCam()}catch(e){}
+    var vc={width:{ideal:1280},height:{ideal:720}};
+    var src=CFG.camSrc||'user';
+    if(src!=='user'&&src!=='environment')vc.deviceId={exact:src};else vc.facingMode=src;
+    navigator.mediaDevices.getUserMedia({video:vc,audio:false}).catch(function(){
+      return navigator.mediaDevices.getUserMedia({video:true,audio:false});
+    }).then(function(st){
+      if(!S.vScanOn){try{st.getTracks().forEach(function(t){t.stop()})}catch(e){}return}
+      S.vScanStream=st;
+      if(v){v.setAttribute('playsinline','');v.muted=true;v.srcObject=st;v.play().catch(function(){})}
+      vScanBegin();
+    }).catch(function(){
+      vScanStop();if(msg)msg.textContent='Camera permission was denied. Type the code instead.';
+    });
+  }catch(e){vScanStop()}
+}
+function vScanBegin(){
+  try{
+    var v=$('vScanVid');
+    /* Option A: built-in detector - Chrome/Edge on Android and PC */
+    if('BarcodeDetector' in window){
+      try{
+        var det=new window.BarcodeDetector({formats:['qr_code']});
+        var tick=function(){
+          if(!S.vScanOn)return;
+          if(!v||v.readyState<2){S.vScanT=setTimeout(tick,250);return}
+          det.detect(v).then(function(r){
+            if(r&&r.length&&r[0].rawValue){vScanFound(r[0].rawValue);return}
+            S.vScanT=setTimeout(tick,250);
+          }).catch(function(){S.vScanT=setTimeout(tick,400)});
+        };
+        tick();return;
+      }catch(e){}
+    }
+    /* Option B: fallback library - iPhone Safari, Firefox */
+    vScanLoadLib(function(ok){
+      if(!ok){var m=$('vMsg');if(m)m.textContent='Scanner needs internet the first time. Type the code instead.';vScanStop();return}
+      var c=document.createElement('canvas'),x=c.getContext('2d',{willReadFrequently:true});
+      var tick2=function(){
+        if(!S.vScanOn)return;
+        try{
+          if(v&&v.readyState>=2&&v.videoWidth){
+            var w=Math.min(640,v.videoWidth),hh=Math.round(v.videoHeight*w/v.videoWidth);
+            c.width=w;c.height=hh;x.drawImage(v,0,0,w,hh);
+            var d=x.getImageData(0,0,w,hh),q=window.jsQR(d.data,w,hh,{inversionAttempts:'dontInvert'});
+            if(q&&q.data){vScanFound(q.data);return}
+          }
+        }catch(e){}
+        S.vScanT=setTimeout(tick2,250);
+      };
+      tick2();
+    });
+  }catch(e){}
+}
+function vScanFound(txt){
+  try{
+    var code=String(txt||'').replace(/[^0-9A-Za-z]/g,'');
+    var m=String(txt||'').match(/\d{6}/);if(m)code=m[0];
+    vScanStop();
+    try{if(navigator.vibrate)navigator.vibrate(80)}catch(e){}
+    try{playBeep(1200,0.12)}catch(e){}
+    var i=$('vInput');if(i)i.value=code;
+    vSubmit();
+  }catch(e){}
+}
+function vScanStop(){
+  try{
+    S.vScanOn=false;
+    if(S.vScanT){clearTimeout(S.vScanT);S.vScanT=null}
+    if(S.vScanStream){try{S.vScanStream.getTracks().forEach(function(t){t.stop()})}catch(e){}S.vScanStream=null}
+    var v=$('vScanVid');if(v)v.srcObject=null;
+    var box=$('vScanBox');if(box)box.classList.remove('on');
+    var b=$('vScanBtn');if(b)b.innerHTML='&#x1f4f7; Scan code from ticket';
+  }catch(e){}
+}
+
+function vClose(){try{vScanStop()}catch(e){}try{var m=$('vMod');if(m)m.classList.remove('on')}catch(e){}}
 function vSubmit(){
   try{
     var i=$('vInput'),msg=$('vMsg');
@@ -2682,7 +3209,7 @@ function vPrintSheet(){
     var a=vLoad(),cells='',n=0;
     for(var i=0;i<a.length;i++){
       if(a[i].used)continue;n++;
-      cells+='<div class="t"><div class="b">'+ctplEsc(CFG.name||'SnapBooth')+'</div><div class="c">'+a[i].c+'</div><div class="p">'+ctplEsc(CFG.vPrice||'')+'</div><div class="s">One-time booth code</div></div>';
+      cells+='<div class="t"><div class="b">'+ctplEsc(CFG.name||'Grinzy')+'</div><div class="c">'+a[i].c+'</div><div class="p">'+ctplEsc(CFG.vPrice||'')+'</div><div class="s">One-time booth code</div></div>';
     }
     if(!n){gToast('No unused codes to print. Generate some first.');return}
     var doc='<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Booth codes</title><style>'+
@@ -2696,6 +3223,101 @@ function vPrintSheet(){
     if(w&&w.document){w.document.open();w.document.write(doc);w.document.close()}
     else{gToast('Pop-up blocked. Use Download list (CSV) instead.')}
   }catch(e){}
+}
+
+/* --- Booth codes on a thermal printer: one long receipt, a ticket per code with a cut line --- */
+function vQrCanvas(text,size){
+  try{
+    var q=qrcode(0,'M');q.addData(String(text));q.make();
+    var n=q.getModuleCount(),cell=Math.max(1,Math.floor(size/(n+2))),s=cell*(n+2);
+    var c=document.createElement('canvas');c.width=s;c.height=s;var x=c.getContext('2d');
+    x.fillStyle='#fff';x.fillRect(0,0,s,s);x.fillStyle='#000';
+    for(var r=0;r<n;r++)for(var k=0;k<n;k++){if(q.isDark(r,k))x.fillRect((k+1)*cell,(r+1)*cell,cell,cell)}
+    return c;
+  }catch(e){return null}
+}
+function vLogoImg(cb){
+  try{
+    var src=CFG.logoData||S.logoData;if(!src){cb(null);return}
+    var im=new Image();im.onload=function(){cb(im)};im.onerror=function(){cb(null)};im.src=src;
+  }catch(e){cb(null)}
+}
+function vFitText(x,t,maxW,px,weight,family){
+  var f=px;x.font=(weight||'')+' '+f+'px '+family;
+  while(f>10&&x.measureText(t).width>maxW){f--;x.font=(weight||'')+' '+f+'px '+family}
+}
+function vThermalRoll(list,logo){
+  var mm=gPaperMM(),wmm=mm[0];
+  /* receipt rolls only; for label/photo paper sizes fall back to 72mm (80mm roll) */
+  if(mm[1]||gIsInkjet())wmm=72;
+  var W=Math.round(wmm/25.4*(CFG.dpi||203));
+  var tickH=Math.round(W*0.44),pad=Math.round(W*0.05);
+  var head=Math.round(W*0.18),foot=Math.round(W*0.16);
+  var c=document.createElement('canvas');c.width=W;c.height=head+list.length*tickH+foot;
+  var x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);
+  x.fillStyle='#000';x.textBaseline='middle';
+  var SANS='"Segoe UI",system-ui,sans-serif',MONO='ui-monospace,Consolas,"Courier New",monospace';
+  var nm=CFG.name||'Grinzy',pr=CFG.vPrice||'',tag=CFG.hashtag||'',msg=CFG.vMsg||'';
+  /* roll header */
+  x.textAlign='center';
+  vFitText(x,nm.toUpperCase(),W-pad*2,Math.round(W*0.075),'800',SANS);x.fillText(nm.toUpperCase(),W/2,head*0.45);
+  x.font=Math.round(W*0.04)+'px '+SANS;
+  x.fillText(list.length+' booth code'+(list.length>1?'s':'')+' - '+new Date().toLocaleDateString(),W/2,head*0.82);
+  var dash=function(y){x.save();x.strokeStyle='#000';x.lineWidth=Math.max(2,Math.round(W/190));x.setLineDash([Math.round(W/40),Math.round(W/55)]);
+    x.beginPath();x.moveTo(pad,y);x.lineTo(W-pad,y);x.stroke();x.restore()};
+  var qs=Math.round(tickH*0.78);                 /* QR size */
+  var tx=pad+qs+Math.round(W*0.04),tw=W-tx-pad;   /* text column */
+  for(var i=0;i<list.length;i++){
+    var y=head+i*tickH;dash(y);
+    /* QR of the code, left */
+    var qc=vQrCanvas(list[i],qs);
+    if(qc)x.drawImage(qc,pad,y+(tickH-qs)/2,qs,qs);
+    /* logo + name line */
+    x.textAlign='left';
+    var lineY=y+tickH*0.15,lx=tx;
+    if(logo){var lh=Math.round(tickH*0.16),lw=Math.round(lh*logo.width/logo.height);if(lw>tw*0.4){lw=Math.round(tw*0.4);lh=Math.round(lw*logo.height/logo.width)}
+      try{x.drawImage(logo,tx,lineY-lh/2,lw,lh)}catch(e){}lx=tx+lw+Math.round(W*0.015)}
+    vFitText(x,nm,W-pad-lx,Math.round(W*0.042),'700',SANS);x.fillText(nm,lx,lineY);
+    /* code */
+    var code=String(list[i]).split('').join(' ');
+    vFitText(x,code,tw,Math.round(W*0.1),'900',MONO);x.fillText(code,tx,y+tickH*0.38);
+    /* price, hashtag, message, instruction */
+    var ly=y+tickH*0.56,step=tickH*0.12;
+    if(pr){vFitText(x,pr,tw,Math.round(W*0.042),'700',SANS);x.fillText(pr,tx,ly);ly+=step}
+    if(tag){vFitText(x,tag,tw,Math.round(W*0.036),'600',SANS);x.fillText(tag,tx,ly);ly+=step}
+    if(msg){vFitText(x,msg,tw,Math.round(W*0.034),'',SANS);x.fillText(msg,tx,ly);ly+=step}
+    if(ly<y+tickH*0.95){vFitText(x,'Scan or enter this code on the booth',tw,Math.round(W*0.028),'',SANS);x.fillText('Scan or enter this code on the booth',tx,Math.min(ly,y+tickH*0.9))}
+  }
+  dash(head+list.length*tickH);
+  return c;
+}
+function vPrintThermal(){
+  try{
+    var a=vLoad(),list=[];
+    for(var i=0;i<a.length;i++){if(!a[i].used)list.push(a[i].c)}
+    if(!list.length){gToast('No unused codes to print. Generate some first.');return}
+    if(list.length>200&&!confirm('Print '+list.length+' codes in one long receipt? This uses a lot of paper.'))return;
+    vLogoImg(function(logo){
+    try{
+    var du=vThermalRoll(list,logo).toDataURL('image/png');
+    var m=CFG.printMode||'rawbt';
+    if(m==='rawbt'&&gIsAndroid()){
+      try{window.location.href='intent:'+du+'#Intent;scheme=rawbt;package=ru.a402d.rawbtprinter;end;';return}catch(e){}
+    }
+    if(navigator.share){
+      try{
+        var f=new File([gDataUrlToBlob(du)],'booth_codes.png',{type:'image/png'});
+        if(!navigator.canShare||navigator.canShare({files:[f]})){navigator.share({files:[f],title:'Booth codes'}).catch(function(){});return}
+      }catch(e){}
+    }
+    var w=null;try{w=window.open('','_blank')}catch(e){}
+    var doc='<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Booth codes</title><style>@page{margin:0}body{margin:0}img{width:100%;display:block}</style></head>'+
+      '<body onload="setTimeout(function(){window.print()},400)"><img src="'+du+'"></body></html>';
+    if(w&&w.document){w.document.open();w.document.write(doc);w.document.close()}
+    else{gToast('Pop-up blocked. Allow pop-ups to print.')}
+    }catch(e){gToast('Could not print codes.')}
+    });
+  }catch(e){gToast('Could not print codes.')}
 }
 
 function gIdleTap(e){
@@ -3139,7 +3761,7 @@ function gReceiptLayout(ctx,rw,imgs,def){
   if(ctx){
     ctx.fillStyle='#ffffff';ctx.fillRect(0,0,rw,ctx.canvas.height);
     ctx.fillStyle='#111';ctx.textAlign='center';ctx.font='bold 30px Courier New,monospace';
-    ctx.fillText(CFG.rBizName||CFG.name||'SnapBooth',rw/2,yy);
+    ctx.fillText(CFG.rBizName||CFG.name||'Grinzy',rw/2,yy);
   }
   yy+=28;
   if(CFG.rTagline){
@@ -3692,6 +4314,19 @@ function ctplDbAdd(rec){
     });
   }).catch(function(){return null});
 }
+function ctplDbPut(rec){
+  return openDB().then(function(db){
+    if(!db)return null;
+    return new Promise(function(resolve){
+      try{
+        if(!db.objectStoreNames.contains('templates')){resolve(null);return}
+        var req=db.transaction('templates','readwrite').objectStore('templates').put(rec);
+        req.onsuccess=function(){resolve(req.result)};
+        req.onerror=function(){resolve(null)};
+      }catch(e){resolve(null)}
+    });
+  }).catch(function(){return null});
+}
 function ctplDbDel(id){
   return openDB().then(function(db){
     if(!db)return;
@@ -3706,14 +4341,134 @@ function ctplDbDel(id){
   }).catch(function(){});
 }
 
-/* --- Boot: load GitHub + tablet templates --- */
+
+/* ---------- Account templates (synced through your account, v37) ---------- */
+function ctplUid(){var a=new Uint8Array(8),s='';try{crypto.getRandomValues(a)}catch(e){for(var i=0;i<8;i++)a[i]=Math.floor(Math.random()*256)}for(var j=0;j<8;j++){s+=('0'+a[j].toString(16)).slice(-2)}return s}
+function ctplUploadCloud(dataUrl,cb){
+  try{
+    if(cldSignedOn()){cldSignedUpload(dataUrl,'template',cb);return}
+    var pre=String(CFG.tplPreset||'').trim(),cn=String(CFG.cloudName||'').trim();
+    if(!pre||!cn){cb(null,'nopreset');return}
+    var xhr=new XMLHttpRequest();
+    xhr.open('POST','https://api.cloudinary.com/v1_1/'+encodeURIComponent(cn)+'/image/upload');
+    xhr.onload=function(){
+      try{var r=JSON.parse(xhr.responseText);if(r&&r.secure_url)cb(r.secure_url);else cb(null,(r&&r.error&&r.error.message)||('HTTP '+xhr.status))}
+      catch(e){cb(null,'Could not read Cloudinary response')}
+    };
+    xhr.onerror=function(){cb(null,'No internet connection')};
+    xhr.timeout=45000;xhr.ontimeout=function(){cb(null,'Upload timed out')};
+    var fd=new FormData();fd.append('file',dataUrl);fd.append('upload_preset',pre);fd.append('folder','snapbooth_templates');
+    xhr.send(fd);
+  }catch(e){cb(null,'Upload error')}
+}
+/* after a template is saved on this device: share it with the account if possible */
+function ctplShare(rec,id,img){
+  try{
+    if(!accOn()||!accEmail())return;
+    if(!cldSignedOn()&&(!String(CFG.tplPreset||'').trim()||!String(CFG.cloudName||'').trim())){
+      ctplMsgSet('\u2705 Added on this device only. To use it on your other devices, set Cloudinary + a Template upload preset in Settings \u2192 Output.',false);
+      return;
+    }
+    ctplMsgSet('Sharing template with your account\u2026',false);
+    ctplUploadCloud(rec.data,function(url,err){
+      try{
+        if(!url){ctplMsgSet('Saved on this device, but could not share it: '+err+'. It stays on this device only.',true);return}
+        var uid=ctplUid();
+        rec.id=id;rec.uid=uid;rec.url=url;ctplDbPut(rec).then(function(){}).catch(function(){});
+        var st=syncState();st.tpls=st.tpls||[];
+        st.tpls.push({uid:uid,name:rec.name,url:url,w:rec.w,h:rec.h,slots:rec.slots,added:rec.added});
+        syncStateSet(st);
+        ctplUnregister('tpl_t'+id);
+        ctplRegister({key:'tpl_a'+uid,uid:uid,id:id,name:rec.name,src:rec.data,w:rec.w,h:rec.h,slots:rec.slots,source:'account',ord:rec.added,img:img});
+        syncMark();
+        ctplMsgSet('\u2705 "'+rec.name+'" added and shared with your other devices.',false);
+      }catch(e){}
+    });
+  }catch(e){}
+}
+/* load templates listed in the account's synced data */
+function ctplLoadAccount(){
+  try{
+    if(!accOn())return;
+    var me=accEmail(),list=me?(syncState().tpls||[]):[],want={},i;
+    for(i=0;i<list.length;i++)want[list[i].uid]=1;
+    var cur=(S.ctpls||[]).slice();
+    for(i=0;i<cur.length;i++){if(cur[i].source==='account'&&!want[cur[i].uid])ctplUnregister(cur[i].key)}
+    ctplDbAll().then(function(recs){
+      var local={},j;
+      for(j=0;j<recs.length;j++){
+        if(!recs[j].uid)continue;
+        /* removed from the account on another device: drop the offline copy */
+        if(me&&recs[j].owner===me&&!want[recs[j].uid]){ctplDbDel(recs[j].id).then(function(){}).catch(function(){});continue}
+        local[recs[j].uid]=recs[j];
+      }
+      for(j=0;j<list.length;j++){
+        (function(t){
+          try{
+            for(var q=0;q<(S.ctpls||[]).length;q++){if(S.ctpls[q].key==='tpl_a'+t.uid)return}
+            var rec=local[t.uid];
+            var img=new Image();
+            if(!rec)img.crossOrigin='anonymous';
+            img.onload=function(){
+              try{
+                ctplRegister({key:'tpl_a'+t.uid,uid:t.uid,id:rec?rec.id:null,name:t.name||'Template',src:rec?rec.data:t.url,
+                  w:t.w||img.naturalWidth,h:t.h||img.naturalHeight,slots:t.slots||[],source:'account',ord:t.added||0,img:img});
+                if(!rec)ctplCacheLocal(t,img,me);
+              }catch(e){}
+            };
+            img.onerror=function(){};
+            img.src=rec?rec.data:t.url;
+          }catch(e){}
+        })(list[j]);
+      }
+    }).catch(function(){});
+  }catch(e){}
+}
+/* keep an offline copy of a downloaded account template */
+function ctplCacheLocal(t,img,me){
+  try{
+    var c=document.createElement('canvas');c.width=img.naturalWidth;c.height=img.naturalHeight;
+    c.getContext('2d').drawImage(img,0,0);
+    var du=c.toDataURL('image/png');
+    ctplDbAdd({name:t.name,data:du,w:t.w,h:t.h,slots:t.slots,added:t.added||Date.now(),uid:t.uid,url:t.url,owner:me}).then(function(){}).catch(function(){});
+  }catch(e){}
+}
+function ctplDeleteAcc(uid){
+  try{
+    var t=null;for(var i=0;i<(S.ctpls||[]).length;i++){if(S.ctpls[i].uid===uid){t=S.ctpls[i];break}}
+    var ok=true;try{ok=window.confirm('Delete template "'+(t?t.name:'')+'" from your account? It will disappear from all your devices.')}catch(e){ok=true}
+    if(!ok)return;
+    var st=syncState(),keep=[];
+    for(var j=0;j<(st.tpls||[]).length;j++){if(st.tpls[j].uid!==uid)keep.push(st.tpls[j])}
+    st.tpls=keep;syncStateSet(st);
+    ctplUnregister('tpl_a'+uid);
+    ctplDbAll().then(function(recs){
+      for(var k=0;k<recs.length;k++){if(recs[k].uid===uid){ctplDbDel(recs[k].id).then(function(){}).catch(function(){})}}
+    }).catch(function(){});
+    syncMark();
+    ctplMsgSet('Template deleted from your account.',false);
+    try{tgRender()}catch(e){}
+  }catch(e){}
+}
+/* reload this device's and this account's templates (after sign-in / account switch) */
+function ctplReloadAccount(){
+  try{
+    var cur=(S.ctpls||[]).slice();
+    for(var i=0;i<cur.length;i++){if(cur[i].source==='tablet'||cur[i].source==='account')ctplUnregister(cur[i].key)}
+    ctplLoadTablet();ctplLoadAccount();
+  }catch(e){}
+}
+
+/* --- Boot: load GitHub + tablet + account templates --- */
 function ctplBoot(){
   try{ctplLoadGithub()}catch(e){}
   try{ctplLoadTablet()}catch(e){}
+  try{ctplLoadAccount()}catch(e){}
 }
 function ctplLoadGithub(){
   try{
     if(!window.fetch)return;
+    S.ctplLocked=[];
     fetch('templates/templates.json',{cache:'no-cache'}).then(function(r){
       if(!r||!r.ok)return null;
       return r.json();
@@ -3724,6 +4479,13 @@ function ctplLoadGithub(){
           try{
             if(!item||!item.file)return;
             var src='templates/'+encodeURI(String(item.file));
+            if(!planTplAllowed(item)){
+              /* not on this plan: show greyed in Template Gallery only */
+              if(!S.ctplLocked)S.ctplLocked=[];
+              S.ctplLocked.push({name:item.name||String(item.file).replace(/\.[^.]+$/,''),src:src,min:planTplMin(item),ord:idx});
+              try{if($('tgal')&&$('tgal').classList.contains('active'))tgRender()}catch(e){}
+              return;
+            }
             var img=new Image();
             img.onload=function(){
               try{
@@ -3750,6 +4512,12 @@ function ctplLoadTablet(){
       for(var i=0;i<list.length;i++){
         (function(rec){
           try{
+            if(accOn()){
+              var me=accEmail();
+              if(rec.uid)return;                         /* synced template: ctplLoadAccount handles it */
+              if(rec.owner&&rec.owner!==me)return;       /* belongs to another account */
+              if(!rec.owner&&me){rec.owner=me;ctplDbPut(rec).then(function(){}).catch(function(){})}
+            }
             var img=new Image();
             img.onload=function(){
               try{
@@ -3774,6 +4542,7 @@ function ctplLoadTablet(){
 /* --- Settings: add / list / delete --- */
 function ctplAdd(){
   try{
+    if(!planHas('ownTemplates')){ctplMsgSet('This feature isn\'t included in your plan. '+planLockText('ownTemplates'),true);return}
     var f=$('ctplFile'),nm=$('ctplName');
     var file=(S.tgFile)||(f&&f.files&&f.files[0]);S.tgFile=null;
     if(!file){ctplMsgSet('Choose a PNG file first.',true);return}
@@ -3789,7 +4558,7 @@ function ctplAdd(){
           try{
             var r=ctplDetect(img);
             if(!r.slots.length){ctplMsgSet('No transparent photo windows found \u2014 save PNG with transparent areas',true);return}
-            var rec={name:name,data:src,w:r.w,h:r.h,slots:r.slots,added:Date.now()};
+            var rec={name:name,data:src,w:r.w,h:r.h,slots:r.slots,added:Date.now(),owner:(accOn()?accEmail():'')};
             ctplDbAdd(rec).then(function(id){
               try{
                 if(id==null){ctplMsgSet('Could not save on this tablet (browser storage unavailable).',true);return}
@@ -3797,6 +4566,7 @@ function ctplAdd(){
                 ctplMsgSet('\u2705 Added "'+name+'" \u2014 '+r.slots.length+(r.slots.length>1?' photos':' photo')+'.',false);
                 try{f.value=''}catch(e){}
                 try{if(nm)nm.value=''}catch(e){}
+                try{ctplShare(rec,id,img)}catch(e){}
               }catch(e){}
             }).catch(function(){ctplMsgSet('Could not save the template.',true)});
           }catch(e){ctplMsgSet('Could not read that image.',true)}
@@ -3830,6 +4600,8 @@ function ctplRenderList(){
         '<div class="ctpl-meta"><b>'+ctplEsc(t.name)+'</b><small>'+n+(n>1?' photos':' photo')+' \u2022 '+t.w+'\u00d7'+t.h+'px</small></div>';
       if(t.source==='tablet'){
         html+='<span class="ctpl-src">Tablet</span><button class="ctpl-del" onclick="ctplDelete('+Number(t.id)+')">&#x1f5d1;&#xfe0f;</button>';
+      }else if(t.source==='account'){
+        html+='<span class="ctpl-src">Account</span><button class="ctpl-del" onclick="ctplDeleteAcc(\''+String(t.uid).replace(/[^0-9a-f]/g,'')+'\')">&#x1f5d1;&#xfe0f;</button>';
       }else{
         html+='<span class="ctpl-src">GitHub</span>';
       }
@@ -3894,11 +4666,13 @@ function gRenderTpl(pc,imgs,def){
 /* === INIT === */
 function init(){
   try{
+    try{if(!window.CFG_DEF)window.CFG_DEF=JSON.parse(JSON.stringify(CFG))}catch(e){}
     loadSettings();
     openDB().catch(function(){});
     updateStorageInfo();
     regSW();
     try{licBoot()}catch(e){}
+    try{planApply()}catch(e){}
     try{setInterval(function(){try{licBoot()}catch(e){}},6*3600000)}catch(e){}
     try{gBoot()}catch(e){}
     try{gInitDone()}catch(e){}

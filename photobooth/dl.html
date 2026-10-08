@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html><head><meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Your SnapBooth Photo</title>
+<title>Your Grinzy Photo</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;gap:16px;font-family:-apple-system,system-ui,sans-serif;background:linear-gradient(135deg,#1a1a2e,#16213e);color:#fff}
@@ -20,7 +20,7 @@ p{color:#b8c5d6;font-size:14px;text-align:center}
 </head>
 <body>
 <div style="font-size:46px">📸</div>
-<h2>Your SnapBooth Photo</h2>
+<h2>Your Grinzy Photo</h2>
 <div id="loader" class="spin"></div>
 <p id="desc">Loading your photo…</p>
 <img id="photo">
@@ -95,12 +95,12 @@ function sharePhoto(){
         .then(function(blob){
           var f=new File([blob],'snapbooth_photo.jpg',{type:blob.type||'image/jpeg'});
           if(navigator.canShare&&navigator.canShare({files:[f]})){
-            return navigator.share({files:[f],title:'SnapBooth Photo'});
+            return navigator.share({files:[f],title:'Grinzy Photo'});
           }
-          return navigator.share({title:'SnapBooth Photo',url:IMG_URL});
+          return navigator.share({title:'Grinzy Photo',url:IMG_URL});
         })
         .catch(function(){
-          navigator.share({title:'SnapBooth Photo',url:IMG_URL}).catch(function(){});
+          navigator.share({title:'Grinzy Photo',url:IMG_URL}).catch(function(){});
         });
     }
   }catch(e){}

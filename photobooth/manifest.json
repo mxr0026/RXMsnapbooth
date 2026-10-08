@@ -1,6 +1,6 @@
 {
-  "name": "SnapBooth - Photo Booth",
-  "short_name": "SnapBooth",
+  "name": "Grinzy - Photo Booth",
+  "short_name": "Grinzy",
   "description": "A full-featured photo booth app that works offline",
   "start_url": "index.html",
   "display": "standalone",

@@ -1,4 +1,4 @@
-var CACHE_NAME = 'snapbooth-v36';
+var CACHE_NAME = 'grinzy-beta-1.0';
 var ASSETS = [
   'index.html',
   'dl.html',
