@@ -1,72 +1,4831 @@
-var CACHE_NAME = 'grinzy-beta-1.1';
-var ASSETS = [
-  'index.html',
-  'dl.html',
-  'print.html',
-  'manifest.json'
-];
+<!DOCTYPE html>
+<!-- Grinzy (c) 2026 Milcah Sarah Araullo. All rights reserved. Unauthorized copying, modification or redistribution is prohibited. -->
 
-self.addEventListener('install', function(event){
-  /* Activate this new SW immediately, don't wait */
-  self.skipWaiting();
-  event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then(function(cache){return cache.addAll(ASSETS)})
-      .catch(function(){})
-  );
-});
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#1a1a2e">
+<title>Grinzy</title>
+<link rel="manifest" href="manifest.json">
+<script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
+<style>
+:root {
+  --pri:#6c5ce7;--pri-d:#5a4bd1;--pri-l:#a29bfe;
+  --acc:#fd79a8;--acc-d:#e84393;
+  --bg:#1a1a2e;--bg2:#16213e;--bg3:#0f3460;
+  --tx:#ffffff;--tx2:#b8c5d6;--txm:#7f8c9b;
+  --brd:#2a3a5c;--ok:#00b894;--err:#d63031;
+  --rad:12px;--rad2:8px;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;width:100%;overflow:hidden;font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--tx);-webkit-tap-highlight-color:transparent}
+.hidden{display:none!important}
 
-self.addEventListener('activate', function(event){
-  event.waitUntil(
-    caches.keys().then(function(keys){
-      /* Delete ALL old caches */
-      return Promise.all(keys.map(function(k){
-        if(k!==CACHE_NAME){return caches.delete(k)}
-      }));
-    }).then(function(){
-      return self.clients.claim();
-    }).then(function(){
-      /* Tell all open pages to reload with the fresh version */
-      return self.clients.matchAll({type:'window'}).then(function(clients){
-        for(var i=0;i<clients.length;i++){
-          clients[i].postMessage({type:'SW_UPDATED'});
-        }
-      });
-    }).catch(function(){})
-  );
-});
+/* ===== SCREENS ===== */
+.scr{position:absolute;inset:0;display:none;flex-direction:column;overflow:hidden;transition:opacity .25s}
+.scr.active{display:flex}
 
-self.addEventListener('fetch', function(event){
-  var req = event.request;
-  /* Never intercept uploads (Cloudinary POST) or other non-GET requests */
-  if(req.method !== 'GET'){return;}
-  /* Network-first for navigation + the app's own HTML/JS/JSON (e.g. templates/templates.json) */
-  if(req.mode === 'navigate' || /\.(html|js|json)(\?|$)/.test(req.url)){
-    event.respondWith(
-      fetch(req).then(function(response){
-        if(response && response.status === 200){
-          var clone = response.clone();
-          caches.open(CACHE_NAME).then(function(cache){cache.put(req, clone)});
-        }
-        return response;
-      }).catch(function(){
-        return caches.match(req).then(function(cached){
-          return cached || caches.match('index.html');
-        });
-      })
-    );
-    return;
+/* ===== HOME ===== */
+#home{background:linear-gradient(135deg,var(--bg),var(--bg2),var(--bg3));align-items:center;justify-content:center;gap:28px;padding:24px}
+.logo-wrap{text-align:center}
+.logo-icon{font-size:56px;display:block;margin-bottom:8px}
+.logo{font-size:44px;font-weight:800;background:linear-gradient(135deg,var(--pri-l),var(--acc));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.sub{color:var(--tx2);font-size:15px;text-align:center;margin-top:-8px}
+.modes{display:flex;flex-wrap:wrap;gap:14px;justify-content:center;max-width:520px;width:100%}
+.mcard{flex:1 1 180px;max-width:230px;background:var(--bg2);border:2px solid var(--brd);border-radius:var(--rad);padding:20px 14px;text-align:center;cursor:pointer;transition:all .2s}
+.mcard:hover,.mcard:active{border-color:var(--pri);transform:translateY(-2px);box-shadow:0 4px 20px rgba(0,0,0,.3)}
+.mcard .ic{font-size:32px;margin-bottom:10px}
+.mcard h3{font-size:16px;margin-bottom:4px}
+.mcard p{color:var(--txm);font-size:12px}
+.gear{position:absolute;top:14px;right:14px;background:var(--bg2);border:1px solid var(--brd);border-radius:50%;width:44px;height:44px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:18px;transition:all .2s}
+.gear:hover{background:var(--bg3)}
+.gal-btn{position:absolute;top:14px;left:14px;background:var(--bg2);border:1px solid var(--brd);border-radius:50%;width:44px;height:44px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:18px;transition:all .2s}
+.gal-btn:hover{background:var(--bg3)}
+#homeLogo{max-width:100px;max-height:60px;display:none;margin-bottom:4px}
+
+/* ===== CAPTURE ===== */
+#capture{background:#000}
+.cap-hdr{position:absolute;top:0;left:0;right:0;z-index:10;display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:linear-gradient(180deg,rgba(0,0,0,.7),transparent)}
+.ibtn{background:rgba(255,255,255,.15);backdrop-filter:blur(6px);border:none;border-radius:50%;width:42px;height:42px;color:#fff;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.ibtn:hover{background:rgba(255,255,255,.25)}
+.cap-info{background:rgba(255,255,255,.15);backdrop-filter:blur(6px);border-radius:18px;padding:5px 14px;font-size:13px;font-weight:600}
+#vidBox{flex:1;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center}
+#vid{width:100%;height:100%;object-fit:cover}
+#tmpCanvas{display:none}
+#tplLive{position:absolute;inset:0;width:100%;height:100%;z-index:5;display:none;background:transparent}
+#tplLive.on{display:block}
+.cap-ctrl{position:absolute;bottom:0;left:0;right:0;padding:20px;display:flex;justify-content:center;align-items:center;gap:28px;background:linear-gradient(0deg,rgba(0,0,0,.7),transparent)}
+.shutter{width:68px;height:68px;border-radius:50%;background:#fff;border:4px solid rgba(255,255,255,.4);cursor:pointer;position:relative;transition:transform .1s}
+.shutter:active{transform:scale(.9)}
+.shutter-in{width:52px;height:52px;border-radius:50%;background:#fff;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);transition:all .15s}
+.shutter:hover .shutter-in{background:var(--acc)}
+#cntOvl{position:absolute;inset:0;z-index:20;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center}
+#cntOvl.on{display:flex}
+#cntNum{font-size:110px;font-weight:800;color:#fff;text-shadow:0 0 40px rgba(108,92,231,.8);animation:cntPop .4s ease}
+@keyframes cntPop{0%{transform:scale(1.5);opacity:0}100%{transform:scale(1);opacity:1}}
+#flashOvl{position:absolute;inset:0;z-index:25;background:#fff;opacity:0;pointer-events:none;transition:opacity .1s}
+#flashOvl.on{opacity:1}
+.fbar{position:absolute;bottom:100px;left:0;right:0;z-index:8;display:flex;gap:8px;padding:6px 14px;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.fbar::-webkit-scrollbar{display:none}
+.fbtn{padding:6px 14px;border-radius:20px;background:rgba(255,255,255,.12);border:1px solid transparent;color:#fff;font-size:12px;white-space:nowrap;cursor:pointer;transition:all .15s;flex-shrink:0}
+.fbtn.active{border-color:var(--pri);background:rgba(108,92,231,.35)}
+
+/* ===== PREVIEW ===== */
+#preview{background:var(--bg);align-items:center;justify-content:center;padding:14px;gap:14px;overflow-y:auto}
+#prevCanvas{max-width:100%;max-height:55vh;border-radius:var(--rad);box-shadow:0 4px 24px rgba(0,0,0,.3)}
+.acts{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;max-width:460px}
+.btn{display:inline-flex;align-items:center;gap:7px;padding:11px 20px;border-radius:var(--rad2);font-size:14px;font-weight:600;cursor:pointer;border:none;transition:all .2s}
+.bp{background:var(--pri);color:#fff}.bp:hover{background:var(--pri-d)}
+.ba{background:var(--acc);color:#fff}.ba:hover{background:var(--acc-d)}
+.bo{background:transparent;color:var(--tx);border:2px solid var(--brd)}.bo:hover{border-color:var(--pri)}
+.bg{background:var(--ok);color:#fff}
+.bd{background:var(--err);color:#fff}
+.send-btn{padding:14px 32px;font-size:16px;border-radius:var(--rad);background:linear-gradient(135deg,var(--pri),var(--acc));color:#fff;border:none;cursor:pointer;font-weight:700;transition:transform .1s,box-shadow .2s;box-shadow:0 4px 16px rgba(108,92,231,.4)}
+.send-btn:hover{transform:translateY(-1px);box-shadow:0 6px 24px rgba(108,92,231,.5)}
+.send-btn:active{transform:scale(.97)}
+
+/* ===== MODALS ===== */
+.modal{position:fixed;inset:0;z-index:100;background:rgba(0,0,0,.8);backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center}
+.modal.on{display:flex}
+.m-box{background:var(--bg2);border:1px solid var(--brd);border-radius:var(--rad);padding:24px;text-align:center;max-width:380px;width:90%;max-height:90vh;overflow-y:auto}
+.m-box h3{margin-bottom:14px;font-size:18px}
+.m-box input[type=text]{width:100%;padding:10px 14px;border-radius:var(--rad2);border:1px solid var(--brd);background:var(--bg3);color:var(--tx);font-size:15px;margin-bottom:14px}
+#qrImg{margin:12px auto;display:block;border-radius:6px;background:#fff;padding:8px}
+.qr-actions{display:flex;gap:10px;justify-content:center;margin-bottom:16px}
+.qr-msg{color:var(--txm);font-size:12px;margin-top:8px}
+
+/* ===== SETTINGS ===== */
+#settings{background:var(--bg);overflow-y:auto;-webkit-overflow-scrolling:touch}
+.s-hdr{display:flex;align-items:center;gap:12px;padding:14px;border-bottom:1px solid var(--brd);position:sticky;top:0;background:var(--bg);z-index:5}
+.s-hdr h2{flex:1;font-size:18px}
+.s-sec{padding:14px;border-bottom:1px solid var(--brd)}
+.s-sec h3{font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--txm);margin-bottom:10px}
+.s-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0;gap:10px;flex-wrap:wrap}
+.s-row label{font-size:14px;color:var(--tx2);flex:1;min-width:100px}
+.s-row select,.s-row input[type=number],.s-row input[type=text]{background:var(--bg3);border:1px solid var(--brd);border-radius:var(--rad2);color:var(--tx);padding:7px 10px;font-size:13px;min-width:120px}
+.s-row input[type=color]{width:42px;height:32px;border:1px solid var(--brd);border-radius:6px;background:var(--bg3);cursor:pointer;padding:2px}
+.tgl{position:relative;width:48px;height:26px;cursor:pointer;flex-shrink:0}
+.tgl input{display:none}
+.tgl-s{position:absolute;inset:0;background:var(--brd);border-radius:13px;transition:.2s}
+.tgl-s:before{content:'';position:absolute;left:3px;top:3px;width:20px;height:20px;background:#fff;border-radius:50%;transition:.2s}
+.tgl input:checked+.tgl-s{background:var(--pri)}
+.tgl input:checked+.tgl-s:before{transform:translateX(22px)}
+.tpl-up{border:2px dashed var(--brd);border-radius:var(--rad);padding:20px;text-align:center;cursor:pointer;transition:all .2s;margin-top:8px}
+.tpl-up:hover{border-color:var(--pri)}
+.tpl-up p{color:var(--txm);font-size:12px;margin-top:4px}
+.tpl-prv{margin-top:10px;position:relative;display:inline-block}
+.tpl-prv img{max-width:180px;max-height:130px;border-radius:var(--rad2);border:1px solid var(--brd)}
+.rm-btn{position:absolute;top:-8px;right:-8px;background:var(--err);color:#fff;border:none;border-radius:50%;width:22px;height:22px;font-size:11px;cursor:pointer}
+.theme-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+.theme-btn{padding:6px 14px;border-radius:20px;border:2px solid var(--brd);background:var(--bg3);color:var(--tx2);font-size:12px;cursor:pointer;transition:all .15s}
+.theme-btn:hover,.theme-btn.active{border-color:var(--pri);color:var(--tx)}
+.s-note{font-size:11px;color:var(--txm);margin-top:4px}
+.s-note a{color:var(--pri-l)}
+.s-row textarea{background:var(--bg3);border:1px solid var(--brd);border-radius:var(--rad2);color:var(--tx);padding:7px 10px;font-size:13px;min-width:120px;resize:vertical;min-height:50px}
+
+/* ===== GALLERY ===== */
+#gallery{background:var(--bg);overflow-y:auto;-webkit-overflow-scrolling:touch}
+.g-hdr{display:flex;align-items:center;gap:12px;padding:14px;border-bottom:1px solid var(--brd);position:sticky;top:0;background:var(--bg);z-index:5}
+.g-hdr h2{flex:1;font-size:18px}
+.g-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;padding:14px}
+.g-item{position:relative;border-radius:var(--rad2);overflow:hidden;cursor:pointer;aspect-ratio:1;background:var(--bg2)}
+.g-item img{width:100%;height:100%;object-fit:cover;transition:transform .2s}
+.g-item:hover img{transform:scale(1.05)}
+.g-item .g-del{position:absolute;top:6px;right:6px;background:rgba(0,0,0,.6);border:none;color:#fff;border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:12px;display:none;align-items:center;justify-content:center}
+.g-item:hover .g-del{display:flex}
+.g-empty{text-align:center;padding:60px 20px;color:var(--txm)}
+.g-empty span{font-size:48px;display:block;margin-bottom:12px}
+
+/* ===== SLIDESHOW ===== */
+#slideshow{position:fixed;inset:0;z-index:200;background:#000;display:none;align-items:center;justify-content:center}
+#slideshow.on{display:flex}
+#ssImg{max-width:90%;max-height:85vh;border-radius:var(--rad);transition:opacity .6s}
+.ss-ctrl{position:absolute;bottom:30px;display:flex;gap:14px;align-items:center}
+.ss-btn{background:rgba(255,255,255,.15);border:none;color:#fff;border-radius:50%;width:46px;height:46px;font-size:20px;cursor:pointer}
+.ss-btn:hover{background:rgba(255,255,255,.25)}
+.ss-close{position:absolute;top:14px;right:14px}
+.ss-counter{color:var(--tx2);font-size:13px}
+
+/* ===== MARKUP ===== */
+#markup{background:var(--bg);align-items:center;justify-content:center;padding:10px;gap:10px}
+#mkCanvas{max-width:100%;max-height:60vh;border-radius:var(--rad);touch-action:none}
+.mk-bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:center}
+.mk-btn{background:var(--bg2);border:1px solid var(--brd);border-radius:var(--rad2);padding:8px 14px;color:var(--tx);cursor:pointer;font-size:13px;transition:all .15s}
+.mk-btn:hover,.mk-btn.active{border-color:var(--pri);background:var(--bg3)}
+.mk-color{width:34px;height:34px;border-radius:50%;border:2px solid var(--brd);cursor:pointer;padding:0;background:none}
+.mk-color input[type=color]{width:100%;height:100%;border:none;border-radius:50%;cursor:pointer;padding:0;background:none}
+.mk-size{width:80px;accent-color:var(--pri)}
+.stk-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;padding:10px}
+.stk-grid button{font-size:24px;background:var(--bg3);border:1px solid var(--brd);border-radius:var(--rad2);padding:8px;cursor:pointer}
+.stk-grid button:hover{border-color:var(--pri)}
+
+/* ===== RECEIPT ===== */
+.receipt-wrap{background:#f5f0e8;color:#333;font-family:'Courier New',monospace;padding:24px 16px;text-align:center;max-width:320px;position:relative}
+.receipt-wrap::before,.receipt-wrap::after{content:'';position:absolute;left:0;right:0;height:12px;background:linear-gradient(135deg,var(--bg) 33.33%,transparent 33.33%) 0 0/12px 100%,linear-gradient(225deg,var(--bg) 33.33%,transparent 33.33%) 0 0/12px 100%;background-repeat:repeat-x}
+.receipt-wrap::before{top:-12px}
+.receipt-wrap::after{bottom:-12px;transform:rotate(180deg)}
+.receipt-biz{font-size:18px;font-weight:700;margin-bottom:2px}
+.receipt-tag{font-size:11px;margin-bottom:8px;color:#666}
+.receipt-line{border-top:1px dashed #999;margin:8px 0}
+.receipt-row{display:flex;justify-content:space-between;font-size:12px;padding:2px 0}
+.receipt-msg{font-size:11px;font-style:italic;margin:8px 0;color:#555}
+.receipt-photo{width:100%;border-radius:4px;margin:8px 0}
+.receipt-footer{font-size:10px;color:#888;margin-top:8px}
+.receipt-order{font-size:11px;color:#666}
+
+/* ===== SCROLLBAR ===== */
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--brd);border-radius:3px}
+
+/* ===== RESPONSIVE ===== */
+@media(max-width:480px){
+  .mcard{flex:1 1 140px;padding:16px 10px}
+  .logo{font-size:32px}
+  .logo-icon{font-size:42px}
+  .btn{padding:9px 14px;font-size:13px}
+  .send-btn{padding:12px 24px;font-size:15px}
+  #cntNum{font-size:80px}
+}
+
+/* ===== GUEST KIOSK FLOW ===== */
+#idle{align-items:center;justify-content:center;cursor:pointer;overflow:hidden;background:var(--bg);user-select:none;-webkit-user-select:none}
+.idle-bg{position:absolute;inset:-20%;background:radial-gradient(circle at 20% 30%,var(--pri) 0,transparent 40%),radial-gradient(circle at 80% 70%,var(--acc) 0,transparent 42%),radial-gradient(circle at 60% 15%,var(--pri-l) 0,transparent 30%);opacity:.55;filter:blur(30px);animation:idleDrift 14s ease-in-out infinite alternate}
+@keyframes idleDrift{0%{transform:translate(0,0) rotate(0)}100%{transform:translate(4%,-3%) rotate(8deg)}}
+.idle-inner{position:relative;z-index:2;text-align:center;padding:24px;display:flex;flex-direction:column;align-items:center;gap:14px}
+#idleBrand{display:flex;flex-direction:column;align-items:center;gap:10px;padding:10px 20px}
+#idleLogo{display:none;max-width:220px;max-height:160px;object-fit:contain}
+.idle-emoji{font-size:84px;line-height:1}
+.idle-title{font-size:clamp(40px,8vw,84px);font-weight:900;letter-spacing:1px;color:#fff;text-shadow:0 6px 30px rgba(0,0,0,.45)}
+.idle-tag{font-size:clamp(16px,3vw,24px);color:var(--tx2);font-weight:600;letter-spacing:2px}
+.idle-tap{margin-top:26px;font-size:clamp(22px,4vw,36px);font-weight:800;color:#fff;padding:18px 40px;border-radius:999px;background:rgba(255,255,255,.14);border:2px solid rgba(255,255,255,.35);animation:idlePulse 1.6s ease-in-out infinite}
+@keyframes idlePulse{0%,100%{transform:scale(1);box-shadow:0 0 0 0 rgba(255,255,255,.35)}50%{transform:scale(1.07);box-shadow:0 0 0 22px rgba(255,255,255,0)}}
+#layouts{background:linear-gradient(135deg,var(--bg),var(--bg2));align-items:center;padding:20px;gap:18px;overflow-y:auto}
+.lay-hdr{width:100%;max-width:1000px;display:flex;align-items:center;gap:14px}
+.lay-hdr h2{flex:1;text-align:center;font-size:clamp(22px,4vw,34px)}
+.lay-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:18px;width:100%;max-width:1000px}
+.ltile{background:var(--bg2);border:3px solid var(--brd);border-radius:18px;padding:18px 12px;display:flex;flex-direction:column;align-items:center;gap:12px;cursor:pointer;transition:transform .12s,border-color .2s;min-height:200px;justify-content:center}
+.ltile:active{transform:scale(.96);border-color:var(--acc)}
+.ltile h4{font-size:18px}
+.lp{background:#fff;border-radius:6px;padding:6px;display:grid;gap:4px;box-shadow:0 4px 14px rgba(0,0,0,.35)}
+.lp i{display:block;background:linear-gradient(135deg,var(--pri-l),var(--acc));border-radius:2px}
+.lp b{display:block;height:6px;background:#bbb;border-radius:2px;margin-top:2px}
+.lp.l1{grid-template-columns:96px}.lp.l1 i{height:72px}
+.lp.ls{grid-template-columns:48px}.lp.ls i{height:30px}
+.lp.lg{grid-template-columns:44px 44px}.lp.lg i{height:33px}
+.lp.lr{grid-template-columns:52px;border-radius:2px}.lp.lr i{height:24px;filter:grayscale(1)}
+.lp.lr b.hd{height:5px;background:#555;width:70%;margin:0 auto 2px}
+#gTakeBtn{display:none;padding:22px 48px;font-size:26px;font-weight:800;border:none;border-radius:999px;color:#fff;background:linear-gradient(135deg,var(--pri),var(--acc));box-shadow:0 6px 28px rgba(0,0,0,.45);cursor:pointer;min-width:260px}
+#gTakeBtn:active{transform:scale(.96)}
+#gTakeBtn[disabled]{opacity:.5}
+#capture.gflow #gTakeBtn{display:inline-block}
+#capture.gflow .shutter{display:none}
+#capture.gflow #filterBar{display:none}
+.g-filters{display:flex;gap:8px;overflow-x:auto;max-width:100%;padding:4px 2px 8px;-webkit-overflow-scrolling:touch}
+.g-filters button{flex:0 0 auto;min-width:78px;padding:12px 14px;border-radius:14px;border:2px solid var(--brd);background:var(--bg2);color:var(--tx);font-size:15px;font-weight:600}
+.g-filters button.on{border-color:var(--pri);background:var(--pri);color:#fff}
+.g-flab{color:var(--tx2);font-size:13px;margin-bottom:-4px}
+#gShotInfo{position:absolute;top:70px;left:50%;transform:translateX(-50%);z-index:25;background:rgba(0,0,0,.6);color:#fff;font-size:24px;font-weight:800;padding:10px 26px;border-radius:999px;display:none;white-space:nowrap}
+#gShotInfo.on{display:block}
+#gRev{display:none;flex-direction:column;align-items:center;gap:14px;width:100%;max-width:420px}
+#preview.gflow #gRev{display:flex}
+.g-row{display:flex;gap:12px;width:100%;justify-content:center}
+.g-btn{flex:1;padding:16px 10px;font-size:18px;font-weight:700;border-radius:14px;border:2px solid var(--brd);background:var(--bg2);color:var(--tx);cursor:pointer}
+.g-btn.on{border-color:var(--acc);background:var(--bg3)}
+.g-btn:active{transform:scale(.97)}
+.g-copies{display:flex;align-items:center;gap:16px;background:var(--bg2);border:2px solid var(--brd);border-radius:14px;padding:8px 14px}
+.g-copies span.l{font-size:16px;color:var(--tx2);font-weight:600}
+.g-copies button{width:54px;height:54px;border-radius:50%;border:none;font-size:28px;font-weight:800;background:var(--bg3);color:var(--tx);cursor:pointer}
+#gCopyN{font-size:30px;font-weight:900;min-width:40px;text-align:center}
+.g-print{width:100%;padding:20px;font-size:24px;font-weight:900;border:none;border-radius:16px;color:#fff;background:linear-gradient(135deg,var(--pri),var(--acc));box-shadow:0 6px 24px rgba(0,0,0,.35);cursor:pointer}
+.g-print:active{transform:scale(.98)}
+.g-done{position:relative;overflow:hidden;margin-top:14px;width:100%;max-width:420px;padding:16px 18px;border-radius:14px;
+  border:2px solid var(--brd);background:var(--bg3);color:var(--tx);font-size:17px;font-weight:700;cursor:pointer;
+  -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;touch-action:none}
+.g-done .g-done-fill{position:absolute;left:0;top:0;bottom:0;width:0;background:var(--ok);opacity:.35;transition:none}
+.g-done.holding .g-done-fill{width:100%;transition:width 1.2s linear}
+.g-done .g-done-t{position:relative}
+body.guest #preview .send-btn,body.guest #preview .acts,body.guest #qrMod .qr-actions{display:none!important}
+#preview.gflow #prevCanvas{max-height:62vh}
+@media (orientation:landscape) and (min-width:700px){
+  #preview.gflow{flex-direction:row;gap:32px}
+  #preview.gflow #prevCanvas{max-height:86vh;max-width:55vw}
+}
+#adminHot{position:fixed;top:0;left:0;width:72px;height:72px;z-index:500;display:none;-webkit-touch-callout:none;user-select:none;-webkit-user-select:none}
+body.guest.on-idle #adminHot{display:block}
+#pinInput{font-size:28px;letter-spacing:10px;text-align:center}
+#pinMsg{color:var(--err);min-height:20px;font-size:13px;margin:6px 0}
+#pinMod{z-index:600}
+
+/* ===== CUSTOM TEMPLATES ===== */
+.ltile.ctpl-tile .ctpl-th{max-width:130px;max-height:140px;width:auto;height:auto;background:#fff;border-radius:6px;box-shadow:0 4px 14px rgba(0,0,0,.35);display:block}
+.ltile.ctpl-tile small{color:var(--txm);font-size:13px;margin-top:-6px}
+.ctpl-item{display:flex;align-items:center;gap:10px;padding:8px;border:1px solid var(--brd);border-radius:var(--rad2);margin-top:8px;background:var(--bg)}
+.ctpl-item img{width:52px;height:52px;object-fit:contain;background:#fff;border-radius:6px;flex:0 0 auto}
+.ctpl-meta{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.ctpl-meta b{font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ctpl-meta small{color:var(--txm);font-size:12px}
+.ctpl-src{font-size:11px;padding:3px 8px;border-radius:999px;background:var(--bg3);color:var(--tx2)}
+.ctpl-del{background:var(--err);color:#fff;border:none;border-radius:8px;padding:8px 10px;font-size:14px;cursor:pointer}
+#ctplMsg{font-size:13px;min-height:18px;margin-top:6px}
+#ctplMsg.err{color:var(--err)}#ctplMsg.ok{color:var(--ok)}
+
+/* ===== Guest capture: framed booth layout (v25) ===== */
+#capture:not(.gflow) .g-stage{display:contents}
+#capture.gflow{background:linear-gradient(135deg,var(--bg),var(--bg2));display:none;flex-direction:column}
+#capture.gflow.active{display:flex}
+#capture.gflow .cap-hdr{position:relative;background:none;flex:0 0 auto}
+#capture.gflow #capInfo{font-size:clamp(18px,3vw,28px);font-weight:800;background:none;backdrop-filter:none;padding:0}
+#capture.gflow .g-stage{flex:1;display:flex;align-items:center;justify-content:center;gap:clamp(16px,4vw,48px);padding:8px clamp(12px,3vw,40px) 24px;min-height:0}
+#capture.gflow #vidBox{flex:0 1 auto;width:min(68vw,calc((100vh - 140px)*1.333));aspect-ratio:4/3;max-height:calc(100vh - 140px);border:8px solid #fff;border-radius:6px;box-shadow:0 10px 40px rgba(0,0,0,.45);background:#000;position:relative;overflow:hidden}
+#capture.gflow .cap-ctrl{position:static;background:none;padding:0;flex:0 0 auto;display:flex;flex-direction:column;align-items:center;gap:10px}
+#capture.gflow #gTakeBtn{display:flex;align-items:center;justify-content:center;width:clamp(110px,16vw,170px);height:clamp(110px,16vw,170px);min-width:0;padding:0;border-radius:50%;background:#111;border:6px solid #fff;font-size:clamp(46px,7vw,74px);box-shadow:0 8px 30px rgba(0,0,0,.5)}
+#capture.gflow #gTakeBtn:active{transform:scale(.93)}
+#capture.gflow .g-takelbl{color:var(--tx);font-size:clamp(15px,2vw,20px);font-weight:700;letter-spacing:.5px}
+#capture.gflow #tplLive{z-index:4}
+#capture.gflow.tplmode #vid{opacity:0}
+#capture.gflow.tplmode #vidBox{background:transparent;border:none;box-shadow:none}
+#capture.gflow.tplmode #tplLive{filter:drop-shadow(0 10px 30px rgba(0,0,0,.45))}
+#capture.gflow #gShotInfo{top:12px}
+.g-takelbl{display:none}
+#capture.gflow .g-takelbl{display:block}
+#capture.gflow #gTakeBtn[style*="none"]+.g-takelbl{visibility:hidden}
+@media (orientation:portrait){
+  #capture.gflow .g-stage{flex-direction:column;gap:20px}
+  #capture.gflow #vidBox{width:min(92vw,calc((100vh - 330px)*1.333));max-height:calc(100vh - 330px)}
+}
+/* template preview: use a taller box that fits the template */
+
+/* ===== Vouchers (pay at counter) ===== */
+#vMod .m-box{max-width:440px}
+#vInput{width:100%;font-size:40px;letter-spacing:12px;text-align:center;padding:14px;border-radius:14px;border:2px solid var(--brd);background:var(--bg3);color:var(--tx);margin:6px 0 8px}
+#vPrice{color:var(--acc);font-size:20px;font-weight:800;margin-bottom:4px}
+#vMsg{min-height:22px;font-size:14px;color:var(--err);margin-bottom:8px}
+.vkeys{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:6px 0 12px}
+.vkeys button{padding:16px 0;font-size:24px;font-weight:700;border-radius:12px;border:none;background:var(--bg3);color:var(--tx)}
+.vkeys button:active{background:var(--pri)}
+#gVLeft{color:var(--tx2);font-size:14px;text-align:center;display:none}
+body.vmode #gVLeft{display:block}
+body.notext #gTextBtn{display:none}
+#gToast{position:fixed;left:50%;bottom:40px;transform:translateX(-50%);z-index:700;background:rgba(0,0,0,.88);color:#fff;padding:14px 22px;border-radius:14px;font-size:16px;max-width:90vw;text-align:center;display:none}
+#gToast.on{display:block}
+.vlist{max-height:180px;overflow-y:auto;font:14px ui-monospace,Consolas,monospace;background:var(--bg3);border-radius:8px;padding:8px 10px;margin-top:8px;line-height:1.7}
+.vlist .u{opacity:.4;text-decoration:line-through}
+.vbtns{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.vbtns button{flex:1 1 140px}
+
+#vTimer{position:fixed;top:12px;left:50%;transform:translateX(-50%);z-index:650;display:none;align-items:center;gap:8px;
+  background:rgba(0,0,0,.72);color:#fff;font:700 clamp(16px,2.4vw,22px) system-ui,sans-serif;padding:8px 18px;border-radius:999px;
+  box-shadow:0 4px 18px rgba(0,0,0,.35);pointer-events:none;font-variant-numeric:tabular-nums}
+#vTimer.on{display:flex}
+#vTimer.warn{background:#d63031;animation:vPulse 1s ease-in-out infinite}
+@keyframes vPulse{50%{transform:translateX(-50%) scale(1.06)}}
+
+/* ===== Guest custom text (v32) ===== */
+#gtMod .m-box{max-width:460px}
+#gtInput{width:100%;font-size:22px;padding:12px 14px;border-radius:12px;border:2px solid var(--brd);background:var(--bg3);color:var(--tx);margin-bottom:12px;text-align:center}
+.gt-row{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-bottom:12px}
+.gt-row .l{width:100%;color:var(--tx2);font-size:13px;margin-bottom:2px}
+.gt-row button{padding:10px 14px;border-radius:10px;border:2px solid var(--brd);background:var(--bg3);color:var(--tx);font-size:15px;font-weight:600}
+.gt-row button.on{border-color:var(--pri);background:var(--pri);color:#fff}
+.gt-sw{width:38px;height:38px;padding:0!important;border-radius:50%!important}
+#gtCount{color:var(--txm);font-size:12px;margin:-8px 0 10px}
+
+/* ===== Licence lock (v33) ===== */
+#licLock{position:fixed;inset:0;z-index:900;background:linear-gradient(135deg,var(--bg),var(--bg2));display:none;align-items:center;justify-content:center;padding:20px}
+#licLock.on{display:flex}
+#licLock .box{background:var(--bg2);border:1px solid var(--brd);border-radius:16px;padding:26px;max-width:440px;width:100%;text-align:center}
+#licLock h2{margin:0 0 6px;font-size:24px}
+#licLock p{color:var(--tx2);font-size:14px;margin:6px 0 14px}
+#licLock input{width:100%;padding:12px;border-radius:10px;border:1px solid var(--brd);background:var(--bg3);color:var(--tx);margin-top:8px;font-size:16px;text-align:center}
+#licKey{font:700 16px ui-monospace,Consolas,monospace!important;letter-spacing:1px;text-transform:uppercase}
+#licLock .acc-up{display:none}
+#licLock.up .acc-up{display:block}
+.acc-tabs{display:flex;gap:6px;margin:4px 0 6px}
+.acc-tabs button{flex:1;padding:10px!important;font-size:15px!important;background:var(--bg3)!important;color:var(--tx2)!important;border:2px solid var(--brd)!important}
+.acc-tabs button.on{background:var(--pri)!important;color:#fff!important;border-color:var(--pri)!important}
+
+#licMsg{min-height:22px;color:var(--err);font-size:14px;margin:10px 0}
+#licLock button{width:100%;padding:14px;font-size:17px;font-weight:700;border:none;border-radius:10px;background:var(--pri);color:#fff}
+#licBanner{position:fixed;left:50%;bottom:28px;transform:translateX(-50%);z-index:640;background:#e17055;color:#fff;padding:8px 16px;border-radius:999px;font:600 13px system-ui,sans-serif;display:none}
+#licBanner.on{display:block}
+
+/* ===== Template Gallery (v36) ===== */
+#tgal{background:var(--bg);overflow-y:auto;-webkit-overflow-scrolling:touch}
+#tgal .tg-wrap{padding:14px;max-width:1100px;margin:0 auto;width:100%}
+#tgal h4{margin:18px 0 8px;color:var(--tx2);font-size:14px;text-transform:uppercase;letter-spacing:1px}
+.tg-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px}
+.tg-card{background:var(--bg2);border:3px solid var(--brd);border-radius:14px;padding:12px;text-align:center;cursor:pointer;position:relative;transition:border-color .15s,opacity .15s}
+.tg-card.off{opacity:.45;border-style:dashed}
+.tg-card.on{border-color:var(--ok)}
+.tg-card img{max-width:100%;max-height:150px;background:#fff;border-radius:6px;display:block;margin:0 auto 8px}
+.tg-card .lp{margin:0 auto 8px}
+.tg-card b{display:block;font-size:14px}
+.tg-card small{color:var(--txm);font-size:12px}
+.tg-chk{position:absolute;top:8px;right:8px;width:28px;height:28px;border-radius:50%;background:var(--ok);color:#fff;font-weight:800;display:flex;align-items:center;justify-content:center}
+.tg-card.off .tg-chk{background:var(--bg3);color:var(--txm)}
+.tg-src{display:inline-block;font-size:11px;padding:2px 8px;border-radius:999px;background:var(--bg3);margin-top:4px}
+.tg-bar{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}
+#tgCount{color:var(--tx2);font-size:14px}
+
+/* ===== Plans / tiers (v40) ===== */
+.plan-lock{display:none;color:var(--txm);font-size:13px;background:var(--bg3);border:1px dashed var(--brd);border-radius:10px;padding:8px 12px;margin:6px 0}
+.plan-lock.on{display:block}
+.plan-off{display:none!important}
+.tg-card.locked{opacity:.45;border-style:dashed;cursor:not-allowed;filter:grayscale(.7)}
+.tg-card.locked .tg-chk{background:var(--bg3);color:var(--txm);font-size:13px}
+.tg-lockbadge{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;background:#2d3436;color:#fff;margin-top:4px}
+
+/* ===== Camera code scan (v43) ===== */
+#vScanBtn{width:100%;padding:14px;font-size:17px;font-weight:700;border-radius:12px;border:2px solid var(--pri);background:transparent;color:var(--tx);margin:4px 0 10px}
+#vScanBox{display:none;position:relative;margin:0 0 10px;border-radius:12px;overflow:hidden;background:#000;aspect-ratio:4/3}
+#vScanBox.on{display:block}
+#vScanVid{width:100%;height:100%;object-fit:cover;display:block}
+#vScanFrame{position:absolute;inset:18%;border:3px solid #fff;border-radius:14px;box-shadow:0 0 0 999px rgba(0,0,0,.35)}
+#vScanTip{position:absolute;left:0;right:0;bottom:8px;text-align:center;color:#fff;font-size:13px;text-shadow:0 1px 3px #000}
+</style>
+</head>
+<body>
+
+<!-- ===== HOME SCREEN ===== -->
+<div id="home" class="scr active">
+  <div class="gal-btn" onclick="showScreen('gallery');loadGallery()">&#x1f5bc;&#xfe0f;</div>
+  <div class="gear" onclick="showScreen('settings')">&#x2699;&#xfe0f;</div>
+  <div class="logo-wrap">
+    <img id="homeLogo" src="" alt="Logo">
+    <span class="logo-icon">&#x1f4f8;</span>
+    <div class="logo" id="boothTitle">Grinzy</div>
+  </div>
+  <div class="sub">Choose what to open</div>
+  <div class="modes">
+    <div class="mcard" onclick="gEnterGuest()">
+      <div class="ic">&#x1f39f;&#xfe0f;</div><h3>Guest Kiosk</h3><p>Start the booth for guests</p>
+    </div>
+    <div class="mcard" onclick="showScreen('gallery');loadGallery()">
+      <div class="ic">&#x1f5c2;&#xfe0f;</div><h3>Gallery</h3><p>View saved photos</p>
+    </div>
+    <div class="mcard" onclick="tgOpen()">
+      <div class="ic">&#x1f5bc;&#xfe0f;</div><h3>Template Gallery</h3><p>Choose which layouts guests see</p>
+    </div>
+  </div>
+</div>
+
+<!-- ===== IDLE / ATTRACT SCREEN ===== -->
+<div id="idle" class="scr" onclick="gIdleTap(event)">
+  <div class="idle-bg"></div>
+  <div class="idle-inner">
+    <div id="idleBrand">
+      <img id="idleLogo" src="" alt="">
+      <div class="idle-emoji" id="idleEmoji">&#x1f4f8;</div>
+      <div class="idle-title" id="idleTitle">Grinzy</div>
+      <div class="idle-tag" id="idleTag"></div>
+    </div>
+    <div class="idle-tap">&#x1f446; Tap the screen to start</div>
+  </div>
+</div>
+
+<!-- ===== LAYOUT PICKER ===== -->
+<div id="layouts" class="scr">
+  <div class="lay-hdr">
+    <button class="ibtn" onclick="gLayoutBack()" style="background:var(--bg3)">&#x2715;</button>
+    <h2 id="layHdr">Choose your layout</h2>
+    <div style="width:42px"></div>
+  </div>
+  <div class="lay-grid">
+    <div class="ltile" data-key="single" onclick="gPickLayout('single')"><div class="lp l1"><i></i><b></b></div><h4>1 Photo</h4></div>
+    <div class="ltile" data-key="strip2" onclick="gPickLayout('strip2')"><div class="lp ls"><i></i><i></i><b></b></div><h4>2 Strip</h4></div>
+    <div class="ltile" data-key="strip3" onclick="gPickLayout('strip3')"><div class="lp ls"><i></i><i></i><i></i><b></b></div><h4>3 Strip</h4></div>
+    <div class="ltile" data-key="strip4" onclick="gPickLayout('strip4')"><div class="lp ls"><i></i><i></i><i></i><i></i><b></b></div><h4>4 Strip</h4></div>
+    <div class="ltile" data-key="grid4" onclick="gPickLayout('grid4')"><div class="lp lg"><i></i><i></i><i></i><i></i><b style="grid-column:span 2"></b></div><h4>2&#xd7;2 Grid</h4></div>
+    <div class="ltile" data-key="receipt4" onclick="gPickLayout('receipt4')"><div class="lp lr"><b class="hd"></b><i></i><i></i><i></i><i></i><b></b></div><h4>Receipt (4)</h4></div>
+  </div>
+</div>
+
+<!-- ===== CAPTURE SCREEN ===== -->
+<div id="capture" class="scr">
+  <div class="cap-hdr">
+    <button class="ibtn" onclick="capClose()">&#x2715;</button>
+    <div class="cap-info" id="capInfo">Classic</div>
+    <div style="display:flex;gap:8px">
+      <button class="ibtn" id="mirrorBtn" onclick="toggleMirror()">&#x2194;&#xfe0f;</button>
+      <button class="ibtn" id="flipBtn" onclick="flipCam()">&#x1f504;</button>
+    </div>
+  </div>
+  <div class="g-stage">
+  <div id="vidBox">
+    <video id="vid" autoplay playsinline muted></video>
+    <canvas id="tplLive"></canvas>
+    <canvas id="tmpCanvas"></canvas>
+    <div id="cntOvl"><div id="cntNum">3</div></div>
+    <div id="flashOvl"></div>
+    <div id="gShotInfo"></div>
+  </div>
+  <div class="cap-ctrl">
+    <button class="shutter" id="shutterBtn" onclick="takePhoto()"><div class="shutter-in"></div></button>
+    <button id="gTakeBtn" onclick="gStartSeq()">&#x1f4f7;</button>
+    <div class="g-takelbl">Tap to start</div>
+  </div>
+  </div>
+  <div class="fbar" id="filterBar">
+    <button class="fbtn active" data-f="none" onclick="setFilter(this)">None</button>
+    <button class="fbtn" data-f="grayscale(100%)" onclick="setFilter(this)">B&amp;W</button>
+    <button class="fbtn" data-f="sepia(100%)" onclick="setFilter(this)">Sepia</button>
+    <button class="fbtn" data-f="sepia(50%) contrast(1.1) brightness(1.05)" onclick="setFilter(this)">Vintage</button>
+    <button class="fbtn" data-f="sepia(30%) saturate(1.4) brightness(1.1)" onclick="setFilter(this)">Warm</button>
+    <button class="fbtn" data-f="saturate(0.8) hue-rotate(180deg) brightness(1.05)" onclick="setFilter(this)">Cool</button>
+    <button class="fbtn" data-f="contrast(1.5) saturate(1.2)" onclick="setFilter(this)">Hi-Contrast</button>
+    <button class="fbtn" data-f="brightness(1.25) saturate(1.1)" onclick="setFilter(this)">Bright</button>
+    <button class="fbtn" data-f="saturate(1.8) contrast(1.1)" onclick="setFilter(this)">Vivid</button>
+    <button class="fbtn" data-f="brightness(1.1) contrast(0.9) saturate(1.2) blur(0.5px)" onclick="setFilter(this)">Dreamy</button>
+  </div>
+  
+</div>
+
+<!-- ===== PREVIEW SCREEN ===== -->
+<div id="preview" class="scr">
+  <canvas id="prevCanvas"></canvas>
+  <button class="send-btn" onclick="sharePhoto()">&#x1f4e4; Send to Guest</button>
+  <div class="acts">
+    <button class="btn bp" onclick="savePhoto()">&#x1f4be; Save</button>
+    <button class="btn bo" onclick="retake()">&#x1f504; Retake</button>
+    <button class="btn bo" onclick="openMarkup()">&#x270f;&#xfe0f; Markup</button>
+    <button class="btn bo" onclick="gPrint()">&#x1f5a8;&#xfe0f; Print</button>
+    <button class="btn bo" data-feat="qr" onclick="openQR()">&#x1f4f1; QR</button>
+    <button class="btn bo" onclick="stopCam();showScreen('home')">&#x1f3e0; Home</button>
+  </div>
+  <div id="gRev">
+    <div class="g-flab">&#x2728; Choose a filter</div>
+    <div class="g-filters" id="gFilters"><button data-gf="none" class="on" onclick="gSetFilter('none')">None</button><button data-gf="bw" class="" onclick="gSetFilter('bw')">B&amp;W</button><button data-gf="sepia" class="" onclick="gSetFilter('sepia')">Sepia</button><button data-gf="vintage" class="" onclick="gSetFilter('vintage')">Vintage</button><button data-gf="warm" class="" onclick="gSetFilter('warm')">Warm</button><button data-gf="cool" class="" onclick="gSetFilter('cool')">Cool</button><button data-gf="contrast" class="" onclick="gSetFilter('contrast')">Hi-Contrast</button><button data-gf="bright" class="" onclick="gSetFilter('bright')">Bright</button><button data-gf="vivid" class="" onclick="gSetFilter('vivid')">Vivid</button><button data-gf="dreamy" class="" onclick="gSetFilter('dreamy')">Dreamy</button></div>
+    <div class="g-row">
+      <button class="g-btn" onclick="gRetake()">&#x1f504; Retake</button>
+      <button class="g-btn" onclick="gChangeLayout()">&#x1f5bc;&#xfe0f; Change layout</button>
+      <button class="g-btn" id="gTextBtn" onclick="gtOpen()">&#x270f;&#xfe0f; Add text</button>
+      <button class="g-btn" id="gMirBtn" onclick="gToggleMirror()">&#x2194;&#xfe0f; Mirror</button>
+    </div>
+    <div class="g-copies">
+      <span class="l">Copies</span>
+      <button onclick="gCopies(-1)">&#x2212;</button>
+      <span id="gCopyN">1</span>
+      <button onclick="gCopies(1)">+</button>
+    </div>
+    <div id="gVLeft"></div>
+    <button class="g-print" onclick="gPrint()">&#x1f5a8;&#xfe0f; Print</button>
+    <div class="g-row">
+      <button class="g-btn" data-feat="qr" onclick="openQR()">&#x1f4f1; QR Code</button>
+    </div>
+    <button class="g-done" id="gDoneBtn"><span class="g-done-fill"></span><span class="g-done-t">&#x2705; Hold to finish &mdash; next guest</span></button>
+  </div>
+</div>
+
+
+<!-- ===== TEMPLATE GALLERY ===== -->
+<div id="tgal" class="scr">
+  <div class="s-hdr">
+    <button class="ibtn" onclick="showScreen('home')" style="background:var(--bg3)">&#x2190;</button>
+    <h2>&#x1f5bc;&#xfe0f; Template Gallery</h2>
+  </div>
+  <div class="tg-wrap">
+    <div class="s-note">Tap a card to show or hide it on the guest layout picker. A green &#x2713; means guests can choose it.</div>
+    <div class="tg-bar">
+      <span id="tgCount"></span>
+      <button class="btn bo" onclick="tgAll(true)">Show all</button>
+      <button class="btn bo" onclick="tgAll(false)">Hide all</button>
+      <button class="btn bo" onclick="ctplBoot();setTimeout(tgRender,1200)">&#x1f504; Reload GitHub templates</button>
+    </div>
+    <h4>Your GitHub templates</h4><div class="tg-grid" id="tgGit"></div>
+    <h4>Your templates</h4><div class="tg-grid" id="tgDev"></div>
+    <h4>Built-in layouts</h4><div class="tg-grid" id="tgBuilt"></div>
+    <h4 data-feat="ownTemplates">Add a template on this device</h4>
+    <div class="plan-lock" data-lock="ownTemplates"></div>
+    <div class="s-sec" style="margin:0" data-feat="ownTemplates">
+      <div class="s-row"><label>Template Name</label><input type="text" id="tgName" placeholder="e.g. Wedding 4-Strip"></div>
+      <div class="s-row"><label>PNG File</label><input type="file" id="tgFile" accept="image/png" style="font-size:12px"></div>
+      <div class="s-row"><label></label><button class="btn bp" onclick="tgAdd()">&#x2795; Add template</button></div>
+      <div id="tgMsg" class="s-note"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== SETTINGS SCREEN ===== -->
+<div id="settings" class="scr">
+  <div class="s-hdr">
+    <button class="ibtn" onclick="saveSettings();showScreen('home')" style="background:var(--bg3)">&#x2190;</button>
+    <h2>&#x2699;&#xfe0f; Settings</h2>
+  </div>
+
+  <!-- Account -->
+  <div class="s-sec" id="accSec" style="display:none">
+    <h3>&#x1f464; Account</h3>
+    <div class="s-row"><label>Signed in as</label><span id="accWho">Not signed in</span></div>
+    <div class="s-row"><label>Plan</label><span id="accPlan">&mdash;</span></div>
+    <div class="s-row"><label>Licence ends</label><span id="accExp">&mdash;</span></div>
+    <div class="s-row"><label>Last synced</label><span id="accSync">&mdash;</span></div>
+    <div class="s-note">Settings, Template Gallery choices, booth codes and your templates follow your account to every device you sign in on. Printer, paper, camera and logo settings stay on each device.</div>
+    <div class="vbtns"><button class="btn bp" onclick="accSyncNow()">&#x1f504; Sync now</button><button class="btn bo" onclick="accSignOut()">Sign out</button></div>
+  </div>
+
+  <!-- Branding -->
+  <div class="s-sec">
+    <h3>&#x1f3a8; Branding</h3>
+    <div class="s-row"><label>Booth Name</label><input type="text" id="sName" value="Grinzy" onchange="saveSettings()"></div>
+    <div class="s-row"><label>Logo</label><input type="file" id="sLogo" accept="image/*" onchange="handleLogo(this)" style="font-size:12px"></div>
+    <div id="logoPreview" class="tpl-prv" style="display:none"><img id="logoPrvImg" src=""><button class="rm-btn" onclick="removeLogo()">&#x2715;</button></div>
+    <div class="s-row"><label>Primary</label><input type="color" id="cPri" value="#6c5ce7" onchange="saveSettings()"></div>
+    <div class="s-row"><label>Accent</label><input type="color" id="cAcc" value="#fd79a8" onchange="saveSettings()"></div>
+    <div class="s-row"><label>Background</label><input type="color" id="cBg" value="#1a1a2e" onchange="saveSettings()"></div>
+    <div class="s-row"><label>Card / Panel</label><input type="color" id="cBg2" value="#16213e" onchange="saveSettings()"></div>
+    <div class="s-row"><label>Text</label><input type="color" id="cTx" value="#ffffff" onchange="saveSettings()"></div>
+    <div class="s-row"><label>Preset Themes</label></div>
+    <div class="theme-row">
+      <button class="theme-btn" onclick="applyTheme('default')">Default</button>
+      <button class="theme-btn" onclick="applyTheme('rosegold')">Rose Gold</button>
+      <button class="theme-btn" onclick="applyTheme('neon')">Neon Purple</button>
+      <button class="theme-btn" onclick="applyTheme('blackgold')">Black &amp; Gold</button>
+      <button class="theme-btn" onclick="applyTheme('minimal')">Minimal White</button>
+      <button class="theme-btn" onclick="applyTheme('retro')">Retro Warm</button>
+    </div>
+  </div>
+
+  <!-- Camera -->
+  <div class="s-sec">
+    <h3>&#x1f4f7; Camera</h3>
+    <div class="s-row"><label>Camera Source</label>
+      <select id="sCamSrc" onchange="camSrcChanged()"><option value="user">Front / built-in</option><option value="environment">Rear</option></select>
+    </div>
+    <div class="s-note">Plug in your USB webcam, open the camera once, then pick it here by name. The &#x1f504; button on the camera screen also switches between cameras.
+    </div>
+    <div class="s-row"><label>Countdown (sec)</label><input type="number" id="sCntDown" value="5" min="0" max="10"></div>
+    <div class="s-row"><label>Mirror Camera</label><label class="tgl"><input type="checkbox" id="sMirror" checked><span class="tgl-s"></span></label></div>
+  </div>
+
+  <!-- Photo Strip -->
+  <div class="s-sec">
+    <h3>&#x1f39e;&#xfe0f; Photo Strip</h3>
+    <div class="s-row"><label>Number of Tiles</label><input type="number" id="sTiles" value="4" min="1" max="4"></div>
+    <div class="s-row"><label>Layout</label>
+      <select id="sLayout"><option value="vertical">Vertical</option><option value="horizontal">Horizontal</option><option value="grid">Grid</option></select>
+    </div>
+  </div>
+
+  <!-- Template -->
+  <div class="s-sec">
+    <h3>&#x1f3a8; Template</h3>
+    <div class="s-row"><label>Background Color</label><input type="color" id="sTplBg" value="#1a1a2e"></div>
+    <div class="tpl-up" onclick="document.getElementById('sTplFile').click()">
+      <div style="font-size:28px">&#x1f4c1;</div>
+      <p>Upload overlay PNG</p>
+      <input type="file" id="sTplFile" accept="image/png" style="display:none" onchange="handleOverlay(this)">
+    </div>
+    <div id="tplPreview" class="tpl-prv" style="display:none"><img id="tplPrvImg" src=""><button class="rm-btn" onclick="removeOverlay()">&#x2715;</button></div>
+  </div>
+
+  <!-- Receipt Mode -->
+  <div class="s-sec">
+    <h3>&#x1f9fe; Receipt Mode</h3>
+    <div class="s-row"><label>Business Name</label><input type="text" id="rBizName" value="Grinzy Studio"></div>
+    <div class="s-row"><label>Tagline</label><input type="text" id="rTagline" value="Memories Made Instantly"></div>
+    <div class="s-row"><label>Line 1 Left</label><input type="text" id="rL1L" value="EVENT"></div>
+    <div class="s-row"><label>Line 1 Right</label><input type="text" id="rL1R" value="Photo Session"></div>
+    <div class="s-row"><label>Line 2 Left</label><input type="text" id="rL2L" value="GUEST"></div>
+    <div class="s-row"><label>Line 2 Right</label><input type="text" id="rL2R" value=""></div>
+    <div class="s-row"><label>Custom Message</label><textarea id="rMsg" rows="2">Thank you for visiting our booth!</textarea></div>
+    <div class="s-row"><label>Footer</label><input type="text" id="rFooter" value="www.snapbooth.app"></div>
+    <div class="s-row"><label>Show Order #</label><label class="tgl"><input type="checkbox" id="rOrder" checked><span class="tgl-s"></span></label></div>
+    <div class="s-row"><label>Show Date/Time</label><label class="tgl"><input type="checkbox" id="rDate" checked><span class="tgl-s"></span></label></div>
+  </div>
+
+  <!-- Guest & Event -->
+  <div class="s-sec">
+    <h3>&#x1f464; Guest &amp; Event</h3>
+    <div class="s-row"><label>Ask Guest Name</label><label class="tgl"><input type="checkbox" id="sAskName"><span class="tgl-s"></span></label></div>
+    <div class="s-row"><label>Print Guest Name</label><label class="tgl"><input type="checkbox" id="sPrintName"><span class="tgl-s"></span></label></div>
+    <div class="s-row"><label>Kiosk Mode</label><label class="tgl"><input type="checkbox" id="sKiosk"><span class="tgl-s"></span></label></div>
+    <div class="s-row"><label>Auto-Restart (sec)</label><input type="number" id="sRestart" value="15" min="5" max="60"></div>
+  </div>
+
+  <!-- Guest Kiosk Flow -->
+  <div class="s-sec">
+    <h3>&#x1f39f;&#xfe0f; Guest Kiosk Flow</h3>
+    <div class="s-row"><label>Guest Mode</label><label class="tgl"><input type="checkbox" id="sGuestMode" checked><span class="tgl-s"></span></label></div>
+    <div class="s-row"><label>Admin PIN</label><input type="text" id="sAdminPin" inputmode="numeric" placeholder="1234"></div>
+    <div class="s-row"><label>Let guests add text</label><label class="tgl"><input type="checkbox" id="sGuestText" checked><span class="tgl-s"></span></label></div>
+    <div class="s-row"><label>Hashtag</label><input type="text" id="sHashtag" placeholder="#RXMPHOTOBOOTH"></div>
+    <div class="s-row"><label>Date in Footer</label><label class="tgl"><input type="checkbox" id="sFootDate" checked><span class="tgl-s"></span></label></div>
+    <div class="s-row"><label>Black &amp; White Output</label>
+      <select id="sBW"><option value="receipt">Receipt layout only</option><option value="always">All layouts</option><option value="off">Off</option></select>
+    </div>
+    <div class="s-row"><label>Printer / Paper</label>
+      <select id="sPaper"><optgroup label="Inkjet photo paper (Epson L320 etc.)"><option value="ij_wallet">Wallet 2.5×3.5 in (64×89mm)</option><option value="ij_2x3">Mini 2×3 in (51×76mm)</option><option value="ij_3r">3R 3.5×5 in (89×127mm)</option><option value="ij_kg">KG / 4R 4×6 in (102×152mm)</option><option value="ij_4x6x2">4×6 in — 2 photo strips side by side (cut in half)</option><option value="ij_4x7">4×7 in (102×178mm)</option><option value="ij_5r">5R 5×7 in (127×178mm)</option><option value="ij_6r">6R 6×8 in (152×203mm)</option><option value="ij_8r">8R 8×10 in (203×254mm)</option><option value="ij_sq4">Square 4×4 in (102×102mm)</option><option value="ij_sq5">Square 5×5 in (127×127mm)</option><option value="ij_sq6">Square 6×6 in (152×152mm)</option><option value="ij_hagaki">Hagaki / Postcard (100×148mm)</option><option value="ij_a6">A6 (105×148mm)</option><option value="ij_a5">A5 (148×210mm)</option><option value="ij_a4">A4 (210×297mm)</option><option value="ij_letter">Letter 8.5×11 in (216×279mm)</option></optgroup><optgroup label="Receipt rolls (continuous)"><option value="48mm">Receipt 48mm</option><option value="57mm">Receipt 57mm</option><option value="58mm">Receipt 58mm (2 in)</option><option value="76mm">Receipt 76mm</option><option value="80mm">Receipt 80mm (3 in)</option><option value="110mm">Receipt 110mm (4 in)</option></optgroup><optgroup label="Waybill / shipping labels"><option value="wb4x6">Waybill 4×6 in (100×150mm)</option><option value="wb100x100">Waybill 100×100mm</option><option value="wb4x4">Label 4×4 in (102×102mm)</option><option value="wb4x3">Label 4×3 in (102×76mm)</option><option value="wb4x2">Label 4×2 in (102×51mm)</option><option value="wb76x130">Label 76×130mm</option><option value="wb3x2">Label 3×2 in (76×51mm)</option><option value="wb60x40">Label 60×40mm</option><option value="wb50x30">Label 50×30mm</option><option value="wb2x1">Label 2×1 in (51×25mm)</option></optgroup><optgroup label="Photo paper"><option value="ph2x6">Photo strip 2×6 in (51×152mm)</option><option value="ph3r">3R 3.5×5 in (89×127mm)</option><option value="ph4r">4R 4×6 in (102×152mm)</option><option value="ph5r">5R 5×7 in (127×178mm)</option><option value="ph6r">6R 6×8 in (152×203mm)</option><option value="ph8r">8R 8×10 in (203×254mm)</option><option value="phsq">Square 4×4 in (102×102mm)</option><option value="phwallet">Wallet 2.5×3.5 in (64×89mm)</option><option value="phinstaxm">Instax Mini (54×86mm)</option><option value="phinstaxs">Instax Square (72×86mm)</option><option value="phinstaxw">Instax Wide (108×86mm)</option><option value="phpost">Postcard (100×148mm)</option></optgroup><optgroup label="Office paper"><option value="a4">A4 (210×297mm)</option><option value="a5">A5 (148×210mm)</option><option value="a6">A6 (105×148mm)</option><option value="letter">Letter (8.5×11 in)</option></optgroup><optgroup label="Other"><option value="custom">Custom size…</option></optgroup></select></div>
+    <div class="s-row" id="rowCustom"><label>Custom W × H (mm)</label><span style="display:flex;gap:6px"><input type="number" id="sPW" min="20" max="300" style="width:70px" placeholder="76"><input type="number" id="sPH" min="0" max="500" style="width:70px" placeholder="0 = auto"></span></div>
+    <div class="s-row"><label>Printer DPI</label><select id="sDPI"><option value="203">203 dpi (most thermal / waybill)</option><option value="300">300 dpi</option><option value="180">180 dpi</option></select></div>
+    <div class="s-row"><label>Fill mode</label><select id="sFit"><option value="auto">Auto (by paper type)</option><option value="width">Fill paper width</option><option value="page">Fit whole label (waybill)</option><option value="cover">Fill whole sheet, crop edges (borderless)</option></select></div>
+    <div class="s-row"><label>Thermal photo mode</label><select id="sThermal"><option value="atkinson">Dither – Atkinson (light, recommended)</option><option value="floyd">Dither – Floyd-Steinberg (more detail)</option><option value="halftone">Halftone dots (newspaper look)</option><option value="off">Off (send grayscale photo)</option></select></div>
+    <div class="s-row"><label>Thermal brightness</label><input type="range" id="sThBri" min="-40" max="60" step="5" value="5"></div>
+    <div class="s-row"><label>Thermal contrast</label><input type="range" id="sThCon" min="-30" max="60" step="5" value="15"></div>
+    <div class="s-note">Used for receipt and label sizes only. In RawBT, set dithering/image mode to <b>None / Threshold</b> so it doesn't dither twice.</div>
+    <div style="display:none">
+    </div>
+    <div class="s-row"><label>Print Method</label>
+      <select id="sPrintMode"><option value="rawbt">RawBT direct (no app picker)</option><option value="share">Choose printer app (RawBT etc.)</option><option value="system">System print dialog (Wi-Fi printers, Epson)</option></select>
+    </div>
+    <div class="s-note">Guest Mode opens on the &ldquo;Tap to start&rdquo; screen and hides admin buttons. To exit: long-press the top-left corner for 2 seconds, or tap the logo 5 times on the start screen, then enter the PIN.</div>
+  </div>
+
+  <!-- Custom Templates -->
+  <div class="s-sec">
+    <h3>&#x1f5bc;&#xfe0f; Custom Templates</h3>
+    <div class="s-note">Upload a PNG design with <b>transparent windows</b> where the photos go. Each window becomes one photo. Templates appear on the guest layout picker.</div>
+    <div class="plan-lock" data-lock="ownTemplates"></div>
+    <div data-feat="ownTemplates">
+    <div class="s-row"><label>Template Name</label><input type="text" id="ctplName" placeholder="e.g. Wedding 4-Strip"></div>
+    <div class="s-row"><label>PNG File</label><input type="file" id="ctplFile" accept="image/png" style="font-size:12px"></div>
+    <div class="s-row"><label></label><button class="btn bp" onclick="ctplAdd()">&#x2795; Add template</button></div>
+    </div>
+    <div id="ctplMsg"></div>
+    <div id="ctplList"></div>
+  </div>
+
+  <!-- Vouchers -->
+  <div class="s-sec">
+    <h3>&#x1f4b3; Pay at Counter (Booth Codes)</h3>
+    <div class="plan-lock" data-lock="vouchers"></div>
+    <div data-feat="vouchers">
+    <div class="s-row"><label>Require a code to start</label><label class="tgl"><input type="checkbox" id="sVoucherOn"><span class="tgl-s"></span></label></div>
+    <div class="s-row"><label>Price text</label><input type="text" id="sVPrice" placeholder="&#x20b1;100 per session"></div>
+    <div class="s-row"><label>Ticket message</label><input type="text" id="sVTicketMsg" maxlength="48" placeholder="Thank you! Valid today only"></div>
+    <div class="s-row"><label>Auto-cut after each ticket</label><input type="checkbox" id="sVCut" checked></div>
+    <div class="s-row"><label>Cut type</label><select id="sVCutType"><option value="partial">Partial cut (tickets stay hanging)</option><option value="full">Full cut</option></select></div>
+    <div class="s-row"><label>Prints per code</label><input type="number" id="sVCopies" min="1" max="10" value="1"></div>
+    <div class="s-row"><label>Code valid for (minutes)</label><input type="number" id="sVMin" min="2" max="120" value="10"></div>
+    <div class="s-note">Guests pay at the counter, get a one-time code, and enter it on the start screen. Each code works once. Codes are stored on <b>this device only</b>; each booth needs its own list.</div>
+    <div class="s-row"><label>Generate new codes</label><span style="display:flex;gap:6px"><input type="number" id="sVGenN" min="1" max="500" value="50" style="width:80px"><button class="btn bp" onclick="vGenerate()">Generate</button></span></div>
+    <div class="s-row" style="flex-direction:column;align-items:stretch"><label>Or paste your own codes (one per line)</label>
+      <textarea id="sVAdd" rows="3" style="width:100%;margin-top:6px;border-radius:8px;background:var(--bg3);color:var(--tx);border:1px solid var(--brd);padding:8px" placeholder="482913&#10;771045"></textarea>
+      <button class="btn bo" style="margin-top:6px" onclick="vAddPasted()">Add pasted codes</button></div>
+    <div id="vStats" style="color:var(--tx2);font-size:14px;margin-top:6px"></div>
+    <div id="vList" class="vlist"></div>
+    <div class="vbtns">
+      <button class="btn bp" onclick="vPrintSheet()">&#x1f4c4; Print on A4 (cut-out sheet)</button>
+      <button class="btn bp" onclick="vPrintThermal()">&#x1f9fe; Print on thermal (continuous)</button>
+      <button class="btn bp" onclick="vTicketsPDF()">&#x1f4e5; Save tickets PDF (1 page per code, for RawBT)</button>
+      <button class="btn bo" onclick="vExportCSV()">&#x2b07;&#xfe0f; Download list (CSV)</button>
+      <button class="btn bo" onclick="vClearUsed()">Remove used codes</button>
+      <button class="btn bo" onclick="vDeleteAll()">Delete all codes</button>
+    </div>
+    </div>
+  </div>
+
+  <!-- Output -->
+  <div class="s-sec">
+    <h3>&#x1f4be; Output</h3>
+    <div id="cldManaged" class="s-note" style="display:none">&#x2601;&#xfe0f; <b>Cloud uploads: managed by your provider.</b> QR photos and shared templates upload securely through your account. Nothing to set up here.</div>
+    <div id="cldFields">
+    <div class="s-row"><label>Cloudinary Cloud Name</label><input type="text" id="sCloudName" placeholder="e.g. dxyz123ab"></div>
+    <div class="s-row"><label>Upload Preset</label><input type="text" id="sCloudPreset" placeholder="e.g. snapbooth_unsigned"></div>
+    <div class="s-row"><label>Template upload preset</label><input type="text" id="sTplPreset" placeholder="e.g. RXMTEMPLATES"></div>
+    <div class="s-note">Used to share your own templates with your other devices. Use a <b>separate unsigned preset with no &ldquo;snapbooth&rdquo; tag</b>, so the 2-hour photo cleanup doesn&rsquo;t delete your templates.</div>
+    <div class="s-note">Free CDN hosting \u2014 loads on any device. Get both at <a href="https://cloudinary.com/users/register_free" target="_blank">cloudinary.com</a> (see setup steps in chat).</div>
+    </div>
+    <div class="s-row"><label>File Prefix</label><input type="text" id="sPrefix" value="snapbooth"></div>
+    <div class="s-row"><label>File Naming</label>
+      <select id="sNaming"><option value="prefix_seq">Prefix + Sequence</option><option value="date">Date</option><option value="timestamp">Timestamp</option><option value="guest">Guest Name</option></select>
+    </div>
+    <div class="s-row"><label>Auto-Download</label><label class="tgl"><input type="checkbox" id="sAutoDL"><span class="tgl-s"></span></label></div>
+    <div class="s-row"><label>Quality</label>
+      <select id="sQuality"><option value="0.85">Standard</option><option value="0.92">High</option><option value="1">Max</option></select>
+    </div>
+    <div class="s-row"><label>Format</label>
+      <select id="sFormat"><option value="jpeg">JPEG</option><option value="png">PNG</option><option value="webp">WebP</option></select>
+    </div>
+    <div class="s-row"><label>Auto-Save to Gallery</label><label class="tgl"><input type="checkbox" id="sAutoGal" checked><span class="tgl-s"></span></label></div>
+  </div>
+
+  <!-- Storage -->
+  <div class="s-sec">
+    <h3>&#x1f5c4;&#xfe0f; Storage</h3>
+    <div class="s-row"><label>Gallery Items</label><span id="storCount">0</span></div>
+    <div class="s-row"><label>Approx Size</label><span id="storSize">0 KB</span></div>
+    <div class="s-row"><button class="btn bd" onclick="clearStorage()">&#x1f5d1;&#xfe0f; Clear All Data</button></div>
+  </div>
+</div>
+
+<!-- ===== GALLERY SCREEN ===== -->
+<div id="gallery" class="scr">
+  <div class="g-hdr">
+    <button class="ibtn" onclick="showScreen('home')" style="background:var(--bg3)">&#x2190;</button>
+    <h2>&#x1f5bc;&#xfe0f; Gallery</h2>
+    <button class="btn bp" id="ssStartBtn" onclick="startSlideshow()" style="display:none">&#x25b6; Slideshow</button>
+  </div>
+  <div id="galGrid" class="g-grid"></div>
+</div>
+
+<!-- ===== MARKUP SCREEN ===== -->
+<div id="markup" class="scr">
+  <div style="display:flex;gap:8px;width:100%;justify-content:space-between;padding:0 4px">
+    <button class="mk-btn" onclick="finishMarkup()">&#x2713; Done</button>
+    <button class="mk-btn" onclick="cancelMarkup()">&#x2715; Cancel</button>
+  </div>
+  <canvas id="mkCanvas"></canvas>
+  <div class="mk-bar" id="mkToolbar">
+    <button class="mk-btn active" data-tool="draw" onclick="setMkTool(this)">&#x270f;&#xfe0f; Draw</button>
+    <button class="mk-btn" data-tool="text" onclick="setMkTool(this)">&#x1f524; Text</button>
+    <button class="mk-btn" data-tool="sticker" onclick="setMkTool(this)">&#x1f600; Sticker</button>
+    <button class="mk-btn" onclick="mkUndo()">&#x21a9;&#xfe0f; Undo</button>
+    <button class="mk-btn" onclick="mkClear()">&#x1f5d1;&#xfe0f; Clear</button>
+    <div class="mk-color"><input type="color" id="mkColor" value="#ff0000"></div>
+    <input type="range" class="mk-size" id="mkSize" min="2" max="20" value="4">
+  </div>
+  <div id="stickerPanel" class="modal">
+    <div class="m-box">
+      <h3>Choose Sticker</h3>
+      <div class="stk-grid" id="stkGrid"></div>
+      <button class="btn bo" onclick="closeStickerPanel()" style="margin-top:10px">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== GUEST NAME MODAL ===== -->
+<div id="guestMod" class="modal">
+  <div class="m-box">
+    <h3>&#x1f464; What's your name?</h3>
+    <input type="text" id="guestInput" placeholder="Enter your name">
+    <div style="display:flex;gap:10px;justify-content:center">
+      <button class="btn bp" onclick="confirmGuest()">Let's Go! &#x1f4f8;</button>
+      <button class="btn bo" onclick="skipGuest()">Skip</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== QR MODAL ===== -->
+<div id="qrMod" class="modal">
+  <div class="m-box">
+    <h3>&#x1f4f1; Share Photo</h3>
+    <div class="qr-actions">
+      <button class="btn bp" onclick="sharePhoto()">&#x1f4e4; Share</button>
+      <button class="btn bg" onclick="qrSavePhoto()">&#x1f4be; Save</button>
+    </div>
+    <div id="qrContent"></div>
+    <div id="qrMsg" class="qr-msg"></div>
+    <button class="btn bo" onclick="closeQR()" style="margin-top:12px">Close</button>
+  </div>
+</div>
+
+<!-- ===== ADMIN PIN MODAL ===== -->
+<div id="pinMod" class="modal">
+  <div class="m-box">
+    <h3>&#x1f512; Admin PIN</h3>
+    <input type="password" id="pinInput" inputmode="numeric" autocomplete="off" placeholder="&#x2022;&#x2022;&#x2022;&#x2022;">
+    <div id="pinMsg"></div>
+    <div style="display:flex;gap:10px;justify-content:center">
+      <button class="btn bp" onclick="gPinOk()">Unlock</button>
+      <button class="btn bo" onclick="gPinCancel()">Cancel</button>
+    </div>
+  </div>
+</div>
+<div id="vMod" class="modal">
+  <div class="m-box">
+    <h3>&#x1f39f;&#xfe0f; Enter your booth code</h3>
+    <div id="vPrice"></div>
+    <div style="color:var(--tx2);font-size:14px">Pay at the counter to get a code.</div>
+    <input type="text" id="vInput" inputmode="numeric" autocomplete="off" maxlength="8" onkeydown="if(event.key==='Enter'){event.preventDefault();vSubmit()}" placeholder="&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;">
+    <button id="vScanBtn" onclick="vScanToggle()">&#x1f4f7; Scan code from ticket</button>
+    <div id="vScanBox"><video id="vScanVid" autoplay playsinline muted></video><div id="vScanFrame"></div><div id="vScanTip">Hold the ticket QR inside the box</div></div>
+    <div class="vkeys">
+      <button onclick="vKey('1')">1</button><button onclick="vKey('2')">2</button><button onclick="vKey('3')">3</button>
+      <button onclick="vKey('4')">4</button><button onclick="vKey('5')">5</button><button onclick="vKey('6')">6</button>
+      <button onclick="vKey('7')">7</button><button onclick="vKey('8')">8</button><button onclick="vKey('9')">9</button>
+      <button onclick="vKey('del')">&#x232b;</button><button onclick="vKey('0')">0</button><button onclick="vKey('clr')">C</button>
+    </div>
+    <div id="vMsg"></div>
+    <div style="display:flex;gap:10px;justify-content:center">
+      <button class="btn bp" style="flex:1;padding:16px;font-size:18px" onclick="vSubmit()">Start</button>
+      <button class="btn bo" style="flex:1" onclick="vClose()">Cancel</button>
+    </div>
+  </div>
+</div>
+<div id="gtMod" class="modal">
+  <div class="m-box">
+    <h3>&#x270f;&#xfe0f; Add your name or message</h3>
+    <input type="text" id="gtInput" maxlength="30" autocomplete="off" placeholder="e.g. Maria &amp; Jose 2026" oninput="gtCount()">
+    <div id="gtCount">0 / 30</div>
+    <div class="gt-row" id="gtPos"><div class="l">Position</div>
+      <button data-v="top" onclick="gtPick('pos','top')">Top</button>
+      <button data-v="middle" onclick="gtPick('pos','middle')">Middle</button>
+      <button data-v="bottom" onclick="gtPick('pos','bottom')">Bottom</button>
+    </div>
+    <div class="gt-row" id="gtSize"><div class="l">Size</div>
+      <button data-v="s" onclick="gtPick('size','s')">Small</button>
+      <button data-v="m" onclick="gtPick('size','m')">Medium</button>
+      <button data-v="l" onclick="gtPick('size','l')">Large</button>
+    </div>
+    <div class="gt-row" id="gtColor"><div class="l">Color</div>
+      <button class="gt-sw" data-v="#ffffff" style="background:#ffffff" onclick="gtPick('color','#ffffff')"></button>
+      <button class="gt-sw" data-v="#111111" style="background:#111111" onclick="gtPick('color','#111111')"></button>
+      <button class="gt-sw" data-v="#fd79a8" style="background:#fd79a8" onclick="gtPick('color','#fd79a8')"></button>
+      <button class="gt-sw" data-v="#f9ca24" style="background:#f9ca24" onclick="gtPick('color','#f9ca24')"></button>
+      <button class="gt-sw" data-v="#74b9ff" style="background:#74b9ff" onclick="gtPick('color','#74b9ff')"></button>
+    </div>
+    <div style="display:flex;gap:10px;justify-content:center">
+      <button class="btn bp" style="flex:1;padding:14px" onclick="gtApply()">Apply</button>
+      <button class="btn bo" style="flex:1" onclick="gtRemove()">Remove</button>
+      <button class="btn bo" style="flex:1" onclick="gtClose()">Cancel</button>
+    </div>
+  </div>
+</div>
+<div id="licLock">
+  <div class="box">
+    <div style="font-size:42px">&#x1f4f8;</div>
+    <h2 id="accTitle">Sign in to Grinzy</h2>
+    <p id="licSub">Sign in with your Grinzy account to use this booth.</p>
+    <div class="acc-tabs"><button id="accTabIn" class="on" onclick="accMode('in')">Sign in</button><button id="accTabUp" onclick="accMode('up')">Create account</button></div>
+    <input id="accEmail" type="email" placeholder="Email" autocomplete="username" autocapitalize="off">
+    <input id="accPass" type="password" placeholder="Password" autocomplete="current-password">
+    <input id="accPass2" class="acc-up" type="password" placeholder="Repeat password" autocomplete="new-password">
+    <input id="licKey" class="acc-up" placeholder="Licence key (SB-XXXX-XXXX-XXXX-XXXX)" autocomplete="off" autocapitalize="characters">
+    <input id="licDevName" placeholder="Device name (e.g. Tablet 1)" maxlength="40">
+    <div id="licMsg"></div>
+    <button id="accGo" class="acc-go" onclick="accSubmit()">Sign in</button>
+    <p style="margin-top:14px;font-size:12px">Forgot your password? Ask your Grinzy provider to reset it.</p>
+  </div>
+</div>
+<div id="licBanner"></div>
+<div id="gToast"></div>
+<div id="vTimer">&#x23f1;&#xfe0f; <span id="vTimerT">10:00</span> left</div>
+<div id="adminHot"></div>
+<div id="appCopy" style="position:fixed;left:8px;bottom:6px;z-index:600;font:10px system-ui,sans-serif;color:rgba(255,255,255,.35);pointer-events:none">&copy; 2026 Grinzy</div>
+<div id="appVer" style="position:fixed;right:8px;bottom:6px;z-index:600;font:11px system-ui,sans-serif;color:rgba(255,255,255,.45);pointer-events:none">Grinzy Beta 1.2</div>
+
+<!-- ===== SLIDESHOW ===== -->
+<div id="slideshow">
+  <button class="ss-btn ss-close" onclick="stopSlideshow()">&#x2715;</button>
+  <img id="ssImg" src="" alt="Slideshow">
+  <div class="ss-ctrl">
+    <button class="ss-btn" onclick="ssPrev()">&#x23ee;</button>
+    <button class="ss-btn" id="ssPlayBtn" onclick="ssToggle()">&#x23f8;</button>
+    <button class="ss-btn" onclick="ssNext()">&#x23ed;</button>
+    <span class="ss-counter" id="ssCounter">1 / 1</span>
+  </div>
+</div>
+
+<script>
+/* === ERROR SUPPRESSION === */
+window.onerror=function(){return true};
+window.addEventListener('error',function(e){e.preventDefault();return true});
+window.addEventListener('unhandledrejection',function(e){e.preventDefault()});
+
+/* === STATE === */
+var S = {
+  mode:'classic', filter:'none', mirror:true, facing:'user',
+  guestName:'', stripShots:[], stripCount:0,
+  currentBlob:null, currentDataUrl:'',
+  seqNum:1, orderNum:1000,
+  audioCtx:null, db:null,
+  ssIdx:0, ssTimer:null, ssPlaying:true,
+  galItems:[], mkHistory:[], mkTool:'draw', mkDrawing:false,
+  camStream:null, overlayImg:null, logoData:null
+};
+
+/* === SETTINGS OBJECT === */
+var CFG = {
+  name:'Grinzy',pri:'#6c5ce7',acc:'#fd79a8',bg:'#1a1a2e',bg2:'#16213e',tx:'#ffffff',
+  camSrc:'user',countdown:5,mirror:true,
+  tiles:4,layout:'vertical',tplBg:'#1a1a2e',overlayData:null,
+  rBizName:'Grinzy Studio',rTagline:'Memories Made Instantly',
+  rL1L:'EVENT',rL1R:'Photo Session',rL2L:'GUEST',rL2R:'',
+  rMsg:'Thank you for visiting our booth!',rFooter:'www.snapbooth.app',
+  rOrder:true,rDate:true,
+  askName:false,printName:false,kiosk:false,restart:15,
+  cloudName:'',cloudPreset:'',tplPreset:'',prefix:'snapbooth',naming:'prefix_seq',autoDL:false,
+  quality:'0.85',format:'jpeg',autoGal:true,
+  guestMode:true,adminPin:'1234',hashtag:'#RXMPHOTOBOOTH',footDate:true,bw:'receipt',paper:'58mm',printMode:'rawbt',pw:76,ph:0,dpi:203,fit:'auto',guestText:true,hiddenLayouts:{},voucherOn:false,vMsg:'',vPrice:'',vCopies:1,vMin:10,thermal:'atkinson',thBri:5,thCon:15,
+  logoData:null
+};
+
+/* === THEMES === */
+var THEMES = {
+  'default':{pri:'#6c5ce7',acc:'#fd79a8',bg:'#1a1a2e',bg2:'#16213e',tx:'#ffffff'},
+  'rosegold':{pri:'#b76e79',acc:'#f7cac9',bg:'#2d1f2f',bg2:'#3d2b3d',tx:'#fce4ec'},
+  'neon':{pri:'#b24bf3',acc:'#00f5d4',bg:'#0d0221',bg2:'#1a0a3e',tx:'#e0e0ff'},
+  'blackgold':{pri:'#d4af37',acc:'#ffd700',bg:'#0a0a0a',bg2:'#1a1a1a',tx:'#f0e6cc'},
+  'minimal':{pri:'#333333',acc:'#0066ff',bg:'#ffffff',bg2:'#f5f5f5',tx:'#222222'},
+  'retro':{pri:'#e07a5f',acc:'#81b29a',bg:'#3d405b',bg2:'#2d2f44',tx:'#f4f1de'}
+};
+
+var STICKERS = ['\u{1f600}','\u{1f60d}','\u{1f973}','\u{1f60e}','\u{1f929}','\u{1f389}','\u{1f38a}','\u2764\ufe0f','\u{1f525}','\u2b50','\u{1f308}','\u{1f490}','\u{1f98b}','\u{1f451}','\u{1f48e}','\u{1f355}','\u{1f3b5}','\u2728','\u{1f495}','\u{1f388}'];
+
+/* === DOM HELPERS === */
+function $(id){try{return document.getElementById(id)}catch(e){return null}}
+function showScreen(id){
+  var scrs=document.querySelectorAll('.scr');
+  for(var i=0;i<scrs.length;i++){scrs[i].classList.remove('active')}
+  var el=$(id);
+  if(el)el.classList.add('active');
+  /* Admin long-press corner only on the start screen, so it never blocks the X buttons */
+  try{
+    if(id==='idle')document.body.classList.add('on-idle');
+    else document.body.classList.remove('on-idle');
+  }catch(e){}
+  try{
+    if(id==='settings')ctplRenderList();
+    if(id==='layouts')ctplRenderTiles();
+  }catch(e){}
+}
+
+/* === AUDIO === */
+function getAudioCtx(){
+  if(!S.audioCtx){
+    try{S.audioCtx=new(window.AudioContext||window.webkitAudioContext)()}
+    catch(e){S.audioCtx=null}
   }
-  /* Cache-first for everything else (icons, etc.) */
-  event.respondWith(
-    caches.match(req).then(function(cached){
-      return cached || fetch(req).then(function(response){
-        if(response && response.status === 200){
-          var clone = response.clone();
-          caches.open(CACHE_NAME).then(function(cache){cache.put(req, clone)});
+  if(S.audioCtx&&S.audioCtx.state==='suspended'){
+    try{S.audioCtx.resume()}catch(e){}
+  }
+  return S.audioCtx;
+}
+function playBeep(freq,dur){
+  var ctx=getAudioCtx();if(!ctx)return;
+  try{
+    var o=ctx.createOscillator(),g=ctx.createGain();
+    o.connect(g);g.connect(ctx.destination);
+    o.frequency.value=freq||880;o.type='sine';
+    g.gain.value=0.3;
+    o.start(ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+(dur||0.15));
+    o.stop(ctx.currentTime+(dur||0.15)+0.01);
+  }catch(e){}
+}
+function playShutter(){
+  var ctx=getAudioCtx();if(!ctx)return;
+  try{
+    var buf=ctx.createBuffer(1,ctx.sampleRate*0.08,ctx.sampleRate);
+    var d=buf.getChannelData(0);
+    for(var i=0;i<d.length;i++){d[i]=(Math.random()*2-1)*Math.exp(-i/(d.length*0.1))}
+    var src=ctx.createBufferSource(),g=ctx.createGain();
+    src.buffer=buf;src.connect(g);g.connect(ctx.destination);
+    g.gain.value=0.5;src.start();
+  }catch(e){}
+}
+
+/* === IndexedDB === */
+function openDB(){
+  return new Promise(function(resolve){
+    try{
+      if(S.db){resolve(S.db);return}
+      var req=indexedDB.open('SnapBoothDB',2);
+      req.onupgradeneeded=function(e){
+        try{
+          var db=e.target.result;
+          if(!db.objectStoreNames.contains('photos')){
+            db.createObjectStore('photos',{keyPath:'id',autoIncrement:true});
+          }
+          if(!db.objectStoreNames.contains('templates')){
+            db.createObjectStore('templates',{keyPath:'id',autoIncrement:true});
+          }
+        }catch(err){}
+      };
+      req.onblocked=function(){};
+      req.onsuccess=function(e){S.db=e.target.result;resolve(S.db)};
+      req.onerror=function(){resolve(null)};
+    }catch(e){resolve(null)}
+  });
+}
+
+function dbSave(data){
+  return openDB().then(function(db){
+    if(!db)return null;
+    return new Promise(function(resolve){
+      try{
+        var tx=db.transaction('photos','readwrite');
+        var st=tx.objectStore('photos');
+        var req=st.add(data);
+        req.onsuccess=function(){resolve(req.result)};
+        req.onerror=function(){resolve(null)};
+      }catch(e){resolve(null)}
+    });
+  }).catch(function(){return null});
+}
+
+function dbGetAll(){
+  return openDB().then(function(db){
+    if(!db)return[];
+    return new Promise(function(resolve){
+      try{
+        var tx=db.transaction('photos','readonly');
+        var st=tx.objectStore('photos');
+        var req=st.getAll();
+        req.onsuccess=function(){resolve(req.result||[])};
+        req.onerror=function(){resolve([])};
+      }catch(e){resolve([])}
+    });
+  }).catch(function(){return[]});
+}
+
+function dbDelete(id){
+  return openDB().then(function(db){
+    if(!db)return;
+    return new Promise(function(resolve){
+      try{
+        var tx=db.transaction('photos','readwrite');
+        tx.objectStore('photos').delete(id);
+        tx.oncomplete=function(){resolve()};
+        tx.onerror=function(){resolve()};
+      }catch(e){resolve()}
+    });
+  }).catch(function(){});
+}
+
+function dbClear(){
+  return openDB().then(function(db){
+    if(!db)return;
+    return new Promise(function(resolve){
+      try{
+        var tx=db.transaction('photos','readwrite');
+        tx.objectStore('photos').clear();
+        tx.oncomplete=function(){resolve()};
+        tx.onerror=function(){resolve()};
+      }catch(e){resolve()}
+    });
+  }).catch(function(){});
+}
+
+/* === CAMERA === */
+function startCam(facingMode){
+  if(!facingMode)facingMode=CFG.camSrc||'user';
+  S.facing=facingMode;
+  var isDev=facingMode!=='user'&&facingMode!=='environment';
+  var vc={width:{ideal:1920},height:{ideal:1080}};
+  if(isDev){vc.deviceId={exact:facingMode}}else{vc.facingMode=facingMode}
+  var constraints={video:vc,audio:false};
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){camErr(null);return}
+  try{
+    navigator.mediaDevices.getUserMedia(constraints).then(function(stream){
+      S.camStream=stream;
+      try{var ce=$('camErrMsg');if(ce&&ce.parentNode)ce.parentNode.removeChild(ce)}catch(x){}
+      var v=$('vid');
+      if(v){v.setAttribute('playsinline','');v.muted=true;v.srcObject=stream;v.play().catch(function(){})}
+      applyMirror();
+      populateCamDevices(stream);
+    }).catch(function(err){
+      navigator.mediaDevices.getUserMedia({video:{facingMode:'user'},audio:false}).then(function(stream){
+        S.camStream=stream;
+        var v=$('vid');
+        if(v){v.setAttribute('playsinline','');v.muted=true;v.srcObject=stream;v.play().catch(function(){})}
+      }).catch(function(e2){camErr(e2||err)});
+    });
+  }catch(e){camErr(e)}
+}
+/* Show why the camera didn't start (helps on iPhone) */
+function camErr(e){
+  try{
+    var n=(e&&e.name)||'';var why='Camera could not start.';
+    if(!window.isSecureContext)why='Camera needs the https:// link (not a file or http link).';
+    else if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia)why='This browser can\'t use the camera. On iPhone, open the link in Safari (not inside another app).';
+    else if(n==='NotAllowedError')why='Camera permission was denied. iPhone: Settings \u2192 Safari \u2192 Camera \u2192 Allow, then reload.';
+    else if(n==='NotFoundError'||n==='OverconstrainedError')why='No matching camera found. Try the flip button.';
+    else if(n==='NotReadableError')why='Camera is busy in another app. Close other camera apps and reload.';
+    var b=$('vidBox');if(!b)return;
+    var d=$('camErrMsg');
+    if(!d){d=document.createElement('div');d.id='camErrMsg';d.style.cssText='position:absolute;inset:auto 16px 50% 16px;z-index:30;background:rgba(0,0,0,.8);color:#fff;padding:16px;border-radius:12px;text-align:center;font-size:15px';b.appendChild(d)}
+    d.textContent=why+(n?' ('+n+')':'');
+  }catch(x){}
+}
+
+function populateCamDevices(stream){
+  try{
+    navigator.mediaDevices.enumerateDevices().then(function(devs){
+      var sel=$('sCamSrc');if(!sel)return;
+      var cur=CFG.camSrc||'user';
+      var html='<option value="user">Front / built-in</option><option value="environment">Rear</option>';
+      var n=0;
+      for(var i=0;i<devs.length;i++){
+        if(devs[i].kind!=='videoinput'||!devs[i].deviceId)continue;
+        n++;
+        var lb=devs[i].label||('Camera '+n);
+        html+='<option value="'+devs[i].deviceId.replace(/"/g,'')+'">\ud83d\udcf7 '+lb.replace(/</g,'')+'</option>';
+      }
+      sel.innerHTML=html;
+      sel.value=cur;
+      /* names are hidden until camera permission is granted: ask once, then refill */
+      if(!S.camAsked){var named=false;for(var q=0;q<devs.length;q++){if(devs[q].kind==='videoinput'&&devs[q].label)named=true}
+        if(!named){S.camAsked=true;navigator.mediaDevices.getUserMedia({video:true}).then(function(st){try{st.getTracks().forEach(function(t){t.stop()})}catch(e){}populateCamDevices()}).catch(function(){})}}
+      if(sel.value!==cur)sel.value='user';
+    }).catch(function(){});
+  }catch(e){}
+}
+/* Switch camera immediately when changed in Settings */
+function camSrcChanged(){
+  try{CFG.camSrc=($('sCamSrc')||{}).value||'user';saveSettings();gToast('Camera set. It will be used on the next photo.')}catch(e){}
+}
+/* Flip button cycles through every camera */
+function flipCam(){
+  try{
+    navigator.mediaDevices.enumerateDevices().then(function(devs){
+      var ids=[];for(var i=0;i<devs.length;i++){if(devs[i].kind==='videoinput'&&devs[i].deviceId)ids.push(devs[i].deviceId)}
+      stopCam();
+      if(ids.length<2){startCam(S.facing==='user'?'environment':'user');return}
+      var k=ids.indexOf(S.facing);var nx=ids[(k+1)%ids.length];
+      CFG.camSrc=nx;try{saveSettings()}catch(e){}
+      startCam(nx);
+    }).catch(function(){stopCam();startCam(S.facing==='user'?'environment':'user')});
+  }catch(e){}
+}
+
+function stopCam(){
+  try{gLiveStop()}catch(e){}
+  try{
+    if(S.camStream){
+      var tracks=S.camStream.getTracks();
+      for(var i=0;i<tracks.length;i++){tracks[i].stop()}
+      S.camStream=null;
+    }
+    var v=$('vid');if(v)v.srcObject=null;
+  }catch(e){}
+}
+
+
+function toggleMirror(){
+  CFG.mirror=!CFG.mirror;
+  applyMirror();
+}
+
+function applyMirror(){
+  var v=$('vid');
+  if(v){v.style.transform=CFG.mirror?'scaleX(-1)':'none'}
+}
+
+/* === FILTERS === */
+function setFilter(btn){
+  var all=document.querySelectorAll('.fbtn');
+  for(var i=0;i<all.length;i++){all[i].classList.remove('active')}
+  btn.classList.add('active');
+  S.filter=btn.getAttribute('data-f')||'none';
+  var v=$('vid');
+  if(v){v.style.filter=S.filter==='none'?'':S.filter}
+}
+
+/* === COUNTDOWN & CAPTURE === */
+function takePhoto(){
+  var cd=parseInt(CFG.countdown)||0;
+  if(cd>0){
+    runCountdown(cd,function(){captureFrame()});
+  }else{
+    captureFrame();
+  }
+}
+
+function runCountdown(n,cb){
+  var ovl=$('cntOvl'),num=$('cntNum');
+  if(!ovl||!num){cb();return}
+  ovl.classList.add('on');
+  num.textContent=n;
+  playBeep(660,0.12);
+  var t=setInterval(function(){
+    n--;
+    if(n<=0){
+      clearInterval(t);
+      ovl.classList.remove('on');
+      cb();
+    }else{
+      num.textContent=n;
+      playBeep(n===1?1100:660,n===1?0.2:0.12);
+    }
+  },1000);
+}
+
+function captureFrame(){
+  playShutter();
+  doFlash();
+  var v=$('vid'),c=$('tmpCanvas');
+  if(!v||!c)return;
+  var w=v.videoWidth||640,h=v.videoHeight||480;
+  c.width=w;c.height=h;
+  var ctx=c.getContext('2d');
+  ctx.save();
+  if(CFG.mirror){ctx.translate(w,0);ctx.scale(-1,1)}
+  if(S.filter&&S.filter!=='none'){ctx.filter=S.filter}
+  ctx.drawImage(v,0,0,w,h);
+  ctx.restore();
+  var imgData=c.toDataURL('image/jpeg',0.92);
+
+  if(S.mode==='strip'){
+    S.stripShots.push(imgData);
+    S.stripCount++;
+    var need=parseInt(CFG.tiles)||4;
+    $('capInfo').textContent='Strip: '+S.stripCount+'/'+need;
+    if(S.stripCount>=need){
+      composeStrip();
+    }
+  }else if(S.mode==='receipt'){
+    composeReceipt(imgData);
+  }else{
+    composeClassic(imgData);
+  }
+}
+
+function doFlash(){
+  var f=$('flashOvl');if(!f)return;
+  f.classList.add('on');
+  setTimeout(function(){f.classList.remove('on')},120);
+}
+
+/* === COMPOSE CLASSIC === */
+function composeClassic(imgData){
+  var img=new Image();
+  img.onload=function(){
+    var pc=$('prevCanvas');if(!pc)return;
+    var w=img.width,h=img.height;
+    pc.width=w;pc.height=h;
+    var ctx=pc.getContext('2d');
+    ctx.fillStyle=CFG.tplBg||'#1a1a2e';
+    ctx.fillRect(0,0,w,h);
+    ctx.drawImage(img,0,0);
+    if(S.overlayImg){
+      try{ctx.drawImage(S.overlayImg,0,0,w,h)}catch(e){}
+    }
+    if(CFG.printName&&S.guestName){
+      ctx.font='bold 28px Segoe UI, sans-serif';
+      ctx.fillStyle='#fff';ctx.textAlign='center';
+      ctx.shadowColor='rgba(0,0,0,0.7)';ctx.shadowBlur=6;
+      ctx.fillText(S.guestName,w/2,h-30);
+      ctx.shadowBlur=0;
+    }
+    finishPreview(pc);
+  };
+  img.src=imgData;
+}
+
+/* === COMPOSE STRIP === */
+function composeStrip(){
+  var imgs=[];var loaded=0;var need=S.stripShots.length;
+  for(var i=0;i<need;i++){
+    (function(idx){
+      var im=new Image();
+      im.onload=function(){imgs[idx]=im;loaded++;if(loaded>=need)renderStrip(imgs)};
+      im.src=S.stripShots[idx];
+    })(i);
+  }
+}
+
+function renderStrip(imgs){
+  var pc=$('prevCanvas');if(!pc)return;
+  var n=imgs.length,layout=CFG.layout||'vertical';
+  var iw=imgs[0].width,ih=imgs[0].height;
+  var gap=16,pad=24;
+  var cw,ch;
+
+  if(layout==='vertical'){
+    cw=iw+pad*2;
+    ch=ih*n+gap*(n-1)+pad*2;
+  }else if(layout==='horizontal'){
+    cw=iw*n+gap*(n-1)+pad*2;
+    ch=ih+pad*2;
+  }else{
+    var cols=Math.ceil(Math.sqrt(n));
+    var rows=Math.ceil(n/cols);
+    cw=iw*cols+gap*(cols-1)+pad*2;
+    ch=ih*rows+gap*(rows-1)+pad*2;
+  }
+
+  pc.width=cw;pc.height=ch;
+  var ctx=pc.getContext('2d');
+  ctx.fillStyle=CFG.tplBg||'#1a1a2e';
+  ctx.fillRect(0,0,cw,ch);
+
+  for(var i=0;i<n;i++){
+    var x,y;
+    if(layout==='vertical'){
+      x=pad;y=pad+i*(ih+gap);
+    }else if(layout==='horizontal'){
+      x=pad+i*(iw+gap);y=pad;
+    }else{
+      var cols2=Math.ceil(Math.sqrt(n));
+      x=pad+(i%cols2)*(iw+gap);
+      y=pad+Math.floor(i/cols2)*(ih+gap);
+    }
+    ctx.save();
+    roundRect(ctx,x,y,iw,ih,8);
+    ctx.clip();
+    ctx.drawImage(imgs[i],x,y,iw,ih);
+    ctx.restore();
+  }
+
+  if(S.overlayImg){
+    try{ctx.drawImage(S.overlayImg,0,0,cw,ch)}catch(e){}
+  }
+  if(CFG.printName&&S.guestName){
+    ctx.font='bold 24px Segoe UI, sans-serif';
+    ctx.fillStyle='#fff';ctx.textAlign='center';
+    ctx.shadowColor='rgba(0,0,0,0.7)';ctx.shadowBlur=6;
+    ctx.fillText(S.guestName,cw/2,ch-12);ctx.shadowBlur=0;
+  }
+  finishPreview(pc);
+}
+
+function roundRect(ctx,x,y,w,h,r){
+  ctx.beginPath();
+  ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.quadraticCurveTo(x+w,y,x+w,y+r);
+  ctx.lineTo(x+w,y+h-r);ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+  ctx.lineTo(x+r,y+h);ctx.quadraticCurveTo(x,y+h,x,y+h-r);
+  ctx.lineTo(x,y+r);ctx.quadraticCurveTo(x,y,x+r,y);
+  ctx.closePath();
+}
+
+/* === COMPOSE RECEIPT === */
+function composeReceipt(imgData){
+  var img=new Image();
+  img.onload=function(){
+    var pc=$('prevCanvas');if(!pc)return;
+    var rw=400,padding=30;
+    var photoH=Math.round((img.height/img.width)*(rw-padding*2));
+    var topH=180,botH=160;
+    var ch=topH+photoH+botH;
+    pc.width=rw;pc.height=ch;
+    var ctx=pc.getContext('2d');
+    ctx.fillStyle='#f5f0e8';ctx.fillRect(0,0,rw,ch);
+    drawJagged(ctx,rw,true);
+    ctx.save();ctx.translate(0,ch);ctx.scale(1,-1);
+    drawJagged(ctx,rw,true);ctx.restore();
+
+    var yy=30;
+    ctx.textAlign='center';
+    ctx.fillStyle='#222';ctx.font='bold 20px Courier New,monospace';
+    ctx.fillText(CFG.rBizName||'Grinzy',rw/2,yy);yy+=18;
+    ctx.fillStyle='#666';ctx.font='11px Courier New,monospace';
+    ctx.fillText(CFG.rTagline||'',rw/2,yy);yy+=16;
+    drawDash(ctx,padding,yy,rw-padding);yy+=12;
+    if(CFG.rDate){
+      var now=new Date();
+      ctx.textAlign='left';ctx.fillStyle='#444';ctx.font='11px Courier New,monospace';
+      ctx.fillText('DATE: '+now.toLocaleDateString(),padding,yy);
+      ctx.textAlign='right';
+      ctx.fillText('TIME: '+now.toLocaleTimeString(),rw-padding,yy);yy+=14;
+    }
+    if(CFG.rOrder){
+      ctx.textAlign='left';
+      ctx.fillText('ORDER #'+S.orderNum,padding,yy);
+      S.orderNum++;yy+=14;
+    }
+    drawDash(ctx,padding,yy,rw-padding);yy+=12;
+    ctx.textAlign='left';ctx.font='12px Courier New,monospace';ctx.fillStyle='#333';
+    if(CFG.rL1L||CFG.rL1R){
+      ctx.fillText(CFG.rL1L||'',padding,yy);
+      ctx.textAlign='right';ctx.fillText(CFG.rL1R||'',rw-padding,yy);yy+=16;
+    }
+    if(CFG.rL2L||CFG.rL2R||S.guestName){
+      ctx.textAlign='left';ctx.fillText(CFG.rL2L||'',padding,yy);
+      ctx.textAlign='right';ctx.fillText(S.guestName||CFG.rL2R||'',rw-padding,yy);yy+=16;
+    }
+    drawDash(ctx,padding,yy,rw-padding);yy+=14;
+    var px=padding,pw=rw-padding*2;
+    ctx.save();
+    roundRect(ctx,px,yy,pw,photoH,6);ctx.clip();
+    ctx.drawImage(img,px,yy,pw,photoH);ctx.restore();
+    yy+=photoH+14;
+    if(CFG.rMsg){
+      ctx.textAlign='center';ctx.font='italic 11px Courier New,monospace';ctx.fillStyle='#555';
+      wrapText(ctx,CFG.rMsg,rw/2,yy,rw-padding*2,14);yy+=30;
+    }
+    drawDash(ctx,padding,yy,rw-padding);yy+=14;
+    ctx.textAlign='center';ctx.font='10px Courier New,monospace';ctx.fillStyle='#888';
+    ctx.fillText(CFG.rFooter||'',rw/2,yy);
+
+    finishPreview(pc);
+  };
+  img.src=imgData;
+}
+
+function drawJagged(ctx,w,top){
+  ctx.fillStyle='#1a1a2e';
+  var sz=10;
+  ctx.beginPath();ctx.moveTo(0,0);
+  for(var x=0;x<w;x+=sz){
+    ctx.lineTo(x+sz/2,sz);ctx.lineTo(x+sz,0);
+  }
+  ctx.closePath();ctx.fill();
+}
+
+function drawDash(ctx,x1,y,x2){
+  ctx.save();ctx.setLineDash([4,4]);
+  ctx.strokeStyle='#999';ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(x1,y);ctx.lineTo(x2,y);ctx.stroke();
+  ctx.restore();
+}
+
+function wrapText(ctx,text,x,y,maxW,lineH){
+  var words=text.split(' '),line='';
+  for(var i=0;i<words.length;i++){
+    var test=line+words[i]+' ';
+    if(ctx.measureText(test).width>maxW&&i>0){
+      ctx.fillText(line.trim(),x,y);y+=lineH;line=words[i]+' ';
+    }else{line=test}
+  }
+  ctx.fillText(line.trim(),x,y);
+}
+
+/* === FINISH PREVIEW === */
+function finishPreview(canvas){
+  stopCam();
+  S.currentDataUrl=canvas.toDataURL('image/'+CFG.format,parseFloat(CFG.quality)||0.85);
+  canvas.toBlob(function(blob){
+    S.currentBlob=blob;
+  },'image/'+CFG.format,parseFloat(CFG.quality)||0.85);
+  showScreen('preview');
+  if(CFG.autoGal){
+    saveToGallery(S.currentDataUrl);
+  }
+  if(CFG.autoDL){
+    downloadPhotoBlob(S.currentDataUrl);
+  }
+  if(CFG.kiosk){
+    setTimeout(function(){showScreen('home')},parseInt(CFG.restart)*1000||15000);
+  }
+}
+
+/* === MODE START === */
+function startMode(mode){
+  S.gActive=false;
+  try{$('capture').classList.remove('gflow');$('preview').classList.remove('gflow')}catch(e){}
+  S.mode=mode;
+  S.stripShots=[];S.stripCount=0;S.guestName='';
+  var info=$('capInfo');
+  if(mode==='strip'){if(info)info.textContent='Strip: 0/'+(CFG.tiles||4)}
+  else if(mode==='receipt'){if(info)info.textContent='Receipt'}
+  else{if(info)info.textContent='Classic'}
+  if(CFG.askName){
+    showGuestModal(function(){startCapture()});
+  }else{
+    startCapture();
+  }
+}
+
+function startCapture(){
+  showScreen('capture');
+  startCam();
+}
+
+/* === GUEST NAME === */
+function showGuestModal(cb){
+  S._guestCb=cb;
+  var m=$('guestMod');if(m)m.classList.add('on');
+  var inp=$('guestInput');if(inp){inp.value='';inp.focus()}
+}
+function confirmGuest(){
+  var inp=$('guestInput');
+  S.guestName=inp?inp.value.trim():'';
+  var m=$('guestMod');if(m)m.classList.remove('on');
+  if(S._guestCb)S._guestCb();
+}
+function skipGuest(){
+  S.guestName='';
+  var m=$('guestMod');if(m)m.classList.remove('on');
+  if(S._guestCb)S._guestCb();
+}
+
+/* === RETAKE === */
+function retake(){
+  if(S.gActive){gRetake();return}
+  S.stripShots=[];S.stripCount=0;
+  var info=$('capInfo');
+  if(S.mode==='strip'){if(info)info.textContent='Strip: 0/'+(CFG.tiles||4)}
+  showScreen('capture');startCam();
+}
+
+/* === SHARE === */
+function sharePhoto(){
+  if(!S.currentBlob){return}
+  var fname=getFilename();
+  try{
+    if(navigator.share&&navigator.canShare){
+      var file=new File([S.currentBlob],fname,{type:S.currentBlob.type});
+      var sd={files:[file],title:'Grinzy Photo'};
+      if(navigator.canShare(sd)){
+        navigator.share(sd).catch(function(){fallbackDownload()});
+        return;
+      }
+    }
+  }catch(e){}
+  fallbackDownload();
+}
+
+function fallbackDownload(){
+  downloadPhotoBlob(S.currentDataUrl);
+}
+
+/* === SAVE / DOWNLOAD === */
+function savePhoto(){
+  downloadPhotoBlob(S.currentDataUrl);
+  if(!CFG.autoGal){saveToGallery(S.currentDataUrl)}
+}
+
+function downloadPhotoBlob(dataUrl){
+  try{
+    var parts=dataUrl.split(',');
+    var mime=parts[0].match(/:(.*?);/)[1];
+    var b64=atob(parts[1]);
+    var arr=new Uint8Array(b64.length);
+    for(var i=0;i<b64.length;i++){arr[i]=b64.charCodeAt(i)}
+    var blob=new Blob([arr],{type:mime});
+    var url=URL.createObjectURL(blob);
+    var a=document.createElement('a');
+    a.href=url;
+    a.download=getFilename();
+    a.style.display='none';
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(function(){
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    },500);
+  }catch(e){}
+}
+
+function getFilename(){
+  var ext=CFG.format==='png'?'.png':CFG.format==='webp'?'.webp':'.jpg';
+  var n=CFG.naming||'prefix_seq';
+  var p=CFG.prefix||'snapbooth';
+  if(n==='date'){return p+'_'+new Date().toISOString().slice(0,10)+ext}
+  if(n==='timestamp'){return p+'_'+Date.now()+ext}
+  if(n==='guest'&&S.guestName){return p+'_'+S.guestName.replace(/[^a-zA-Z0-9]/g,'_')+ext}
+  return p+'_'+String(S.seqNum++).padStart(4,'0')+ext;
+}
+
+/* === SAVE TO GALLERY (IndexedDB) === */
+function saveToGallery(dataUrl){
+  dbSave({data:dataUrl,date:Date.now(),guest:S.guestName||''}).catch(function(){});
+}
+
+/* === PRINT === */
+function printPhoto(){
+  try{
+    var w=window.open('','_blank');
+    if(w){
+      w.document.write('<html><body style="margin:0;display:flex;align-items:center;justify-content:center;min-height:100vh"><img src="'+S.currentDataUrl+'" style="max-width:100%;max-height:100vh"></body></html>');
+      w.document.close();
+      setTimeout(function(){w.print()},300);
+    }
+  }catch(e){}
+}
+
+/* === QR MODAL === */
+function openQR(){
+  var mod=$('qrMod');if(mod)mod.classList.add('on');
+  var cont=$('qrContent');var msg=$('qrMsg');
+  if(!planHas('qr')){if(cont)cont.innerHTML='<p style="color:var(--txm)">'+planLockText('qr')+'</p>';if(msg)msg.textContent='You can still print your photo.';return}
+  if(cont)cont.innerHTML='<p style="color:var(--txm)">Uploading photo...</p>';
+  if(msg)msg.textContent='';
+
+  if(cldSignedOn()||(CFG.cloudName&&CFG.cloudName.trim()&&CFG.cloudPreset&&CFG.cloudPreset.trim())){
+    uploadCloudinary(function(imgUrl,errMsg){
+      if(imgUrl){
+        /* Point QR at our lightweight dl.html with the DIRECT image url */
+        var base=window.location.href.split('?')[0].split('#')[0];
+        base=base.replace(/index\.html$/,'').replace(/\/$/,'');
+        var dlUrl=base+'/dl.html?img='+encodeURIComponent(imgUrl);
+        renderQR(dlUrl);
+        if(msg)msg.innerHTML='Guest scans QR \u2192 opens photo \u2192 taps Save!<br><b style="color:var(--acc)">\u23f0 Save your photo now \u2014 this link expires in 2 hours.</b>';
+      }else{
+        if(cont)cont.innerHTML='<p style="color:var(--err);font-size:13px;word-break:break-word">'+(errMsg||'Upload failed.')+'</p>';
+        if(msg)msg.textContent=cldSignedOn()?'You can still use Print, or share the photo from the Gallery later.':'Tell this exact message to your helper to diagnose.';
+      }
+    });
+  }else{
+    if(cont)cont.innerHTML='<p style="color:var(--txm)">\u26a0\ufe0f QR photo sharing needs Cloudinary setup.</p><p style="color:var(--tx2);font-size:13px;margin-top:8px">Go to Settings > Output > enter your Cloudinary Cloud Name and Upload Preset.<br>Free at <a href="https://cloudinary.com/users/register_free" target="_blank" style="color:var(--pri-l)">cloudinary.com</a></p>';
+    if(msg)msg.textContent='Use the Share or Save button above to send photos without a key.';
+  }
+}
+
+function renderQR(url){
+  var cont=$('qrContent');if(!cont)return;
+  try{
+    var qr=qrcode(0,'M');
+    qr.addData(url);qr.make();
+    cont.innerHTML=qr.createImgTag(5,10);
+    var img=cont.querySelector('img');
+    if(img){img.id='qrImg';img.style.borderRadius='6px'}
+  }catch(e){
+    cont.innerHTML='<p style="color:var(--err)">QR generation failed</p>';
+  }
+}
+
+function closeQR(){
+  var m=$('qrMod');if(m)m.classList.remove('on');
+}
+
+function qrSavePhoto(){
+  if(!S.currentBlob){downloadPhotoBlob(S.currentDataUrl);return}
+  try{
+    var url=URL.createObjectURL(S.currentBlob);
+    var a=document.createElement('a');
+    a.href=url;a.download=getFilename();
+    document.body.appendChild(a);a.click();
+    document.body.removeChild(a);
+    setTimeout(function(){URL.revokeObjectURL(url)},1000);
+  }catch(e){
+    downloadPhotoBlob(S.currentDataUrl);
+  }
+}
+
+
+/* === SIGNED CLOUDINARY UPLOAD (v38) ===
+   With accounts on, the licence server signs each upload with the provider's
+   Cloudinary secret. The booth never sees any Cloudinary keys or presets. */
+function cldSignedOn(){return accOn()}
+function cldSignReason(st,max){
+  if(st==='tier_locked')return 'This feature isn\'t included in your plan.';
+  if(st==='not_configured')return 'Cloud uploads are not set up yet. Please contact your provider.';
+  if(st==='rate_limited')return 'Daily upload limit reached ('+(max||300)+'). Try again tomorrow or contact your provider.';
+  if(st==='invalid_session')return 'Please sign in again to upload photos.';
+  if(st==='expired')return 'Your licence has expired. Uploads are paused until it is renewed.';
+  if(st==='revoked')return 'Your licence is turned off. Please contact your provider.';
+  return 'Upload could not be authorised ('+(st||'unknown')+').';
+}
+function cldSignedUpload(dataUrl,kind,cb){
+  try{
+    var A=accGet();
+    if(!A||!A.token){cb(null,'Please sign in to upload photos.');return}
+    if(navigator.onLine===false){cb(null,'No internet connection. QR sharing needs internet \u2014 the photo is saved in the Gallery.');return}
+    licPost('/upload/sign',{token:A.token,device:licDevId(),kind:kind}).then(function(s){
+      try{
+        if(!s||!s.ok){cb(null,cldSignReason(s&&s.status,s&&s.max));return}
+        var xhr=new XMLHttpRequest();
+        xhr.open('POST','https://api.cloudinary.com/v1_1/'+encodeURIComponent(s.cloudName)+'/image/upload');
+        xhr.onload=function(){
+          try{
+            var res=JSON.parse(xhr.responseText);
+            if(res&&res.secure_url){cb(res.secure_url)}
+            else if(res&&res.error&&res.error.message){cb(null,'Cloudinary: '+res.error.message+' (HTTP '+xhr.status+')')}
+            else{cb(null,'Cloudinary returned HTTP '+xhr.status+' with no URL')}
+          }catch(e){cb(null,'Could not read Cloudinary response (HTTP '+xhr.status+')')}
+        };
+        xhr.onerror=function(){cb(null,'No internet connection. QR sharing needs internet \u2014 the photo is saved in the Gallery.')};
+        xhr.timeout=kind==='template'?45000:20000;
+        xhr.ontimeout=function(){cb(null,'Upload timed out')};
+        var fd=new FormData();
+        fd.append('file',dataUrl);
+        fd.append('api_key',s.apiKey);
+        fd.append('timestamp',String(s.timestamp));
+        fd.append('folder',s.folder);
+        if(s.tags)fd.append('tags',s.tags);
+        fd.append('signature',s.signature);
+        xhr.send(fd);
+      }catch(e){cb(null,'Upload error: '+(e&&e.message?e.message:'unknown'))}
+    }).catch(function(){cb(null,'No internet connection. QR sharing needs internet \u2014 the photo is saved in the Gallery.')});
+  }catch(e){cb(null,'Upload error')}
+}
+
+/* === CLOUDINARY UPLOAD === */
+function uploadCloudinary(cb){
+  try{
+    if(cldSignedOn()){cldSignedUpload(S.currentDataUrl,'photo',cb);return}
+    var xhr=new XMLHttpRequest();
+    var url='https://api.cloudinary.com/v1_1/'+encodeURIComponent(CFG.cloudName.trim())+'/image/upload';
+    xhr.open('POST',url);
+    xhr.onload=function(){
+      try{
+        var res=JSON.parse(xhr.responseText);
+        if(res&&res.secure_url){
+          cb(res.secure_url)
         }
-        return response;
+        else if(res&&res.error&&res.error.message){
+          /* Surface Cloudinary's real error so we can see what's wrong */
+          cb(null,'Cloudinary: '+res.error.message+' (HTTP '+xhr.status+')')
+        }
+        else{cb(null,'Cloudinary returned HTTP '+xhr.status+' with no URL')}
+      }catch(e){cb(null,'Could not read Cloudinary response (HTTP '+xhr.status+')')}
+    };
+    xhr.onerror=function(){cb(null,'Network error reaching Cloudinary (check cloud name)')};
+    xhr.timeout=20000;
+    xhr.ontimeout=function(){cb(null,'Upload timed out')};
+    var fd=new FormData();
+    fd.append('file',S.currentDataUrl);
+    fd.append('upload_preset',CFG.cloudPreset.trim());
+    xhr.send(fd);
+  }catch(e){cb(null,'Upload error: '+(e&&e.message?e.message:'unknown'))}
+}
+
+/* === GALLERY === */
+function loadGallery(){
+  dbGetAll().then(function(items){
+    S.galItems=items;
+    var grid=$('galGrid');if(!grid)return;
+    var ssBtn=$('ssStartBtn');
+    if(items.length===0){
+      grid.innerHTML='<div class="g-empty"><span>&#x1f4f7;</span><p>No photos yet.<br>Take some shots!</p></div>';
+      if(ssBtn)ssBtn.style.display='none';
+      return;
+    }
+    if(ssBtn)ssBtn.style.display='inline-flex';
+    var html='';
+    for(var i=items.length-1;i>=0;i--){
+      html+='<div class="g-item" onclick="viewGalItem('+items[i].id+')">';
+      html+='<img src="'+items[i].data+'" alt="Photo" loading="lazy">';
+      html+='<button class="g-del" onclick="event.stopPropagation();delGalItem('+items[i].id+')">&#x1f5d1;&#xfe0f;</button>';
+      html+='</div>';
+    }
+    grid.innerHTML=html;
+    updateStorageInfo();
+  }).catch(function(){});
+}
+
+function delGalItem(id){
+  dbDelete(id).then(function(){loadGallery()}).catch(function(){});
+}
+
+function viewGalItem(id){
+  for(var i=0;i<S.galItems.length;i++){
+    if(S.galItems[i].id===id){
+      S.currentDataUrl=S.galItems[i].data;
+      try{
+        var byteStr=atob(S.galItems[i].data.split(',')[1]);
+        var ab=new ArrayBuffer(byteStr.length);
+        var ia=new Uint8Array(ab);
+        for(var j=0;j<byteStr.length;j++){ia[j]=byteStr.charCodeAt(j)}
+        S.currentBlob=new Blob([ab],{type:'image/jpeg'});
+      }catch(e){}
+      var img=new Image();
+      img.onload=function(){
+        var pc=$('prevCanvas');if(!pc)return;
+        pc.width=img.width;pc.height=img.height;
+        pc.getContext('2d').drawImage(img,0,0);
+        showScreen('preview');
+      };
+      img.src=S.galItems[i].data;
+      break;
+    }
+  }
+}
+
+function updateStorageInfo(){
+  dbGetAll().then(function(items){
+    var cnt=$('storCount'),sz=$('storSize');
+    if(cnt)cnt.textContent=items.length;
+    var total=0;
+    for(var i=0;i<items.length;i++){total+=(items[i].data||'').length}
+    if(sz){
+      if(total>1048576){sz.textContent=(total/1048576).toFixed(1)+' MB'}
+      else{sz.textContent=Math.round(total/1024)+' KB'}
+    }
+  }).catch(function(){});
+}
+
+function clearStorage(){
+  if(confirm('Delete all saved photos?')){
+    dbClear().then(function(){
+      loadGallery();updateStorageInfo();
+      alert('All data cleared');
+    }).catch(function(){});
+  }
+}
+
+/* === SLIDESHOW === */
+function startSlideshow(){
+  if(S.galItems.length===0)return;
+  S.ssIdx=0;S.ssPlaying=true;
+  var ss=$('slideshow');if(ss)ss.classList.add('on');
+  showSSImage();
+  S.ssTimer=setInterval(function(){ssNext()},4000);
+  $('ssPlayBtn').textContent='\u23f8';
+}
+function stopSlideshow(){
+  var ss=$('slideshow');if(ss)ss.classList.remove('on');
+  if(S.ssTimer){clearInterval(S.ssTimer);S.ssTimer=null}
+}
+function ssNext(){
+  S.ssIdx=(S.ssIdx+1)%S.galItems.length;
+  showSSImage();
+}
+function ssPrev(){
+  S.ssIdx=(S.ssIdx-1+S.galItems.length)%S.galItems.length;
+  showSSImage();
+}
+function ssToggle(){
+  S.ssPlaying=!S.ssPlaying;
+  if(S.ssPlaying){
+    S.ssTimer=setInterval(function(){ssNext()},4000);
+    $('ssPlayBtn').textContent='\u23f8';
+  }else{
+    if(S.ssTimer){clearInterval(S.ssTimer);S.ssTimer=null}
+    $('ssPlayBtn').textContent='\u25b6';
+  }
+}
+function showSSImage(){
+  var img=$('ssImg'),counter=$('ssCounter');
+  if(!img||!S.galItems[S.ssIdx])return;
+  img.style.opacity='0';
+  setTimeout(function(){
+    img.src=S.galItems[S.ssIdx].data;
+    img.style.opacity='1';
+  },300);
+  if(counter)counter.textContent=(S.ssIdx+1)+' / '+S.galItems.length;
+}
+
+/* === MARKUP EDITOR === */
+function openMarkup(){
+  showScreen('markup');
+  var mc=$('mkCanvas'),pc=$('prevCanvas');
+  if(!mc||!pc)return;
+  mc.width=pc.width;mc.height=pc.height;
+  var ctx=mc.getContext('2d');
+  ctx.drawImage(pc,0,0);
+  S.mkHistory=[ctx.getImageData(0,0,mc.width,mc.height)];
+  S.mkTool='draw';S.mkDrawing=false;
+  var btns=document.querySelectorAll('#mkToolbar .mk-btn[data-tool]');
+  for(var i=0;i<btns.length;i++){
+    btns[i].classList.toggle('active',btns[i].getAttribute('data-tool')==='draw');
+  }
+  initMarkupEvents();
+}
+
+function initMarkupEvents(){
+  var mc=$('mkCanvas');if(!mc)return;
+  mc.onpointerdown=function(e){mkDown(e)};
+  mc.onpointermove=function(e){mkMove(e)};
+  mc.onpointerup=function(e){mkUp(e)};
+}
+
+function mkGetPos(e){
+  var mc=$('mkCanvas');if(!mc)return{x:0,y:0};
+  var r=mc.getBoundingClientRect();
+  return{
+    x:(e.clientX-r.left)*(mc.width/r.width),
+    y:(e.clientY-r.top)*(mc.height/r.height)
+  };
+}
+
+function mkDown(e){
+  if(S.mkTool==='sticker'){openStickerPanel(e);return}
+  if(S.mkTool==='text'){mkAddText(e);return}
+  S.mkDrawing=true;
+  var mc=$('mkCanvas');if(!mc)return;
+  var ctx=mc.getContext('2d');
+  var p=mkGetPos(e);
+  ctx.beginPath();ctx.moveTo(p.x,p.y);
+  ctx.strokeStyle=$('mkColor').value||'#ff0000';
+  ctx.lineWidth=parseInt($('mkSize').value)||4;
+  ctx.lineCap='round';ctx.lineJoin='round';
+}
+
+function mkMove(e){
+  if(!S.mkDrawing)return;
+  var mc=$('mkCanvas');if(!mc)return;
+  var ctx=mc.getContext('2d');
+  var p=mkGetPos(e);
+  ctx.lineTo(p.x,p.y);ctx.stroke();
+}
+
+function mkUp(e){
+  if(S.mkDrawing){
+    S.mkDrawing=false;
+    saveMkState();
+  }
+}
+
+function mkAddText(e){
+  var text=prompt('Enter text:');if(!text)return;
+  var mc=$('mkCanvas');if(!mc)return;
+  var ctx=mc.getContext('2d');
+  var p=mkGetPos(e);
+  var sz=parseInt($('mkSize').value)*6||24;
+  ctx.font='bold '+sz+'px Segoe UI, sans-serif';
+  ctx.fillStyle=$('mkColor').value||'#ff0000';
+  ctx.fillText(text,p.x,p.y);
+  saveMkState();
+}
+
+function openStickerPanel(e){
+  S._stkEvent=e;
+  var panel=$('stickerPanel');if(panel)panel.classList.add('on');
+  var grid=$('stkGrid');if(!grid)return;
+  var html='';
+  for(var i=0;i<STICKERS.length;i++){
+    html+='<button onclick="placeSticker(\''+STICKERS[i]+'\')">'+STICKERS[i]+'</button>';
+  }
+  grid.innerHTML=html;
+}
+
+function closeStickerPanel(){
+  var p=$('stickerPanel');if(p)p.classList.remove('on');
+}
+
+function placeSticker(emoji){
+  closeStickerPanel();
+  var mc=$('mkCanvas');if(!mc)return;
+  var ctx=mc.getContext('2d');
+  var p=S._stkEvent?mkGetPos(S._stkEvent):{x:mc.width/2,y:mc.height/2};
+  var sz=parseInt($('mkSize').value)*8||48;
+  ctx.font=sz+'px serif';
+  ctx.fillText(emoji,p.x-sz/2,p.y+sz/3);
+  saveMkState();
+}
+
+function saveMkState(){
+  var mc=$('mkCanvas');if(!mc)return;
+  S.mkHistory.push(mc.getContext('2d').getImageData(0,0,mc.width,mc.height));
+  if(S.mkHistory.length>30)S.mkHistory.shift();
+}
+
+function mkUndo(){
+  if(S.mkHistory.length<=1)return;
+  S.mkHistory.pop();
+  var mc=$('mkCanvas');if(!mc)return;
+  mc.getContext('2d').putImageData(S.mkHistory[S.mkHistory.length-1],0,0);
+}
+
+function mkClear(){
+  if(S.mkHistory.length<=1)return;
+  var mc=$('mkCanvas');if(!mc)return;
+  mc.getContext('2d').putImageData(S.mkHistory[0],0,0);
+  S.mkHistory=[S.mkHistory[0]];
+}
+
+function setMkTool(btn){
+  S.mkTool=btn.getAttribute('data-tool');
+  var btns=document.querySelectorAll('#mkToolbar .mk-btn[data-tool]');
+  for(var i=0;i<btns.length;i++){btns[i].classList.remove('active')}
+  btn.classList.add('active');
+}
+
+function finishMarkup(){
+  var mc=$('mkCanvas'),pc=$('prevCanvas');
+  if(!mc||!pc)return;
+  pc.width=mc.width;pc.height=mc.height;
+  pc.getContext('2d').drawImage(mc,0,0);
+  S.currentDataUrl=pc.toDataURL('image/'+CFG.format,parseFloat(CFG.quality)||0.85);
+  pc.toBlob(function(blob){S.currentBlob=blob},'image/'+CFG.format,parseFloat(CFG.quality)||0.85);
+  showScreen('preview');
+}
+
+function cancelMarkup(){
+  showScreen('preview');
+}
+
+/* === SETTINGS SAVE/LOAD === */
+function saveSettings(){
+  try{
+    CFG.name=($('sName')||{}).value||'Grinzy';
+    CFG.pri=($('cPri')||{}).value||'#6c5ce7';
+    CFG.acc=($('cAcc')||{}).value||'#fd79a8';
+    CFG.bg=($('cBg')||{}).value||'#1a1a2e';
+    CFG.bg2=($('cBg2')||{}).value||'#16213e';
+    CFG.tx=($('cTx')||{}).value||'#ffffff';
+    CFG.camSrc=($('sCamSrc')||{}).value||'user';
+    CFG.countdown=parseInt(($('sCntDown')||{}).value)||5;
+    CFG.mirror=($('sMirror')||{}).checked!==false;
+    CFG.tiles=parseInt(($('sTiles')||{}).value)||4;
+    CFG.layout=($('sLayout')||{}).value||'vertical';
+    CFG.tplBg=($('sTplBg')||{}).value||'#1a1a2e';
+    CFG.rBizName=($('rBizName')||{}).value||'';
+    CFG.rTagline=($('rTagline')||{}).value||'';
+    CFG.rL1L=($('rL1L')||{}).value||'';
+    CFG.rL1R=($('rL1R')||{}).value||'';
+    CFG.rL2L=($('rL2L')||{}).value||'';
+    CFG.rL2R=($('rL2R')||{}).value||'';
+    CFG.rMsg=($('rMsg')||{}).value||'';
+    CFG.rFooter=($('rFooter')||{}).value||'';
+    CFG.rOrder=($('rOrder')||{}).checked!==false;
+    CFG.rDate=($('rDate')||{}).checked!==false;
+    CFG.askName=!!($('sAskName')||{}).checked;
+    CFG.printName=!!($('sPrintName')||{}).checked;
+    CFG.kiosk=!!($('sKiosk')||{}).checked;
+    CFG.restart=parseInt(($('sRestart')||{}).value)||15;
+    CFG.cloudName=($('sCloudName')||{}).value||'';
+    CFG.cloudPreset=($('sCloudPreset')||{}).value||'';
+    CFG.tplPreset=(($('sTplPreset')||{}).value||'').trim();
+    CFG.prefix=($('sPrefix')||{}).value||'snapbooth';
+    CFG.naming=($('sNaming')||{}).value||'prefix_seq';
+    CFG.autoDL=!!($('sAutoDL')||{}).checked;
+    CFG.quality=($('sQuality')||{}).value||'0.85';
+    CFG.format=($('sFormat')||{}).value||'jpeg';
+    CFG.autoGal=($('sAutoGal')||{}).checked!==false;
+    CFG.guestMode=($('sGuestMode')||{}).checked!==false;
+    CFG.adminPin=(($('sAdminPin')||{}).value||'').trim()||'1234';
+    CFG.hashtag=(($('sHashtag')||{}).value||'').trim();
+    CFG.footDate=($('sFootDate')||{}).checked!==false;
+    CFG.bw=($('sBW')||{}).value||'receipt';
+    CFG.paper=($('sPaper')||{}).value||'58mm';
+    CFG.printMode=($('sPrintMode')||{}).value||'rawbt';
+    CFG.pw=parseFloat(($('sPW')||{}).value)||76;
+    CFG.ph=parseFloat(($('sPH')||{}).value)||0;
+    CFG.dpi=parseInt(($('sDPI')||{}).value)||203;
+    CFG.fit=($('sFit')||{}).value||'auto';
+    CFG.guestText=($('sGuestText')||{}).checked!==false;
+    CFG.voucherOn=!!($('sVoucherOn')||{}).checked;
+    if(!CFG.voucherOn){try{vTimerStop()}catch(e){}}
+    CFG.vPrice=(($('sVPrice')||{}).value||'').trim();
+    CFG.vMsg=(($('sVTicketMsg')||{}).value||'').trim();
+    CFG.vCut=($('sVCut')||{}).checked!==false;
+    CFG.vCutType=(($('sVCutType')||{}).value)||'partial';
+    CFG.vCopies=Math.max(1,Math.min(10,parseInt(($('sVCopies')||{}).value)||1));
+    CFG.vMin=Math.max(2,Math.min(120,parseInt(($('sVMin')||{}).value)||10));
+    CFG.thermal=($('sThermal')||{}).value||'atkinson';
+    CFG.thBri=parseInt(($('sThBri')||{}).value);if(isNaN(CFG.thBri))CFG.thBri=5;
+    CFG.thCon=parseInt(($('sThCon')||{}).value);if(isNaN(CFG.thCon))CFG.thCon=15;
+    applyBranding();
+    localStorage.setItem('snapbooth_cfg',JSON.stringify(CFG));
+    try{syncMark()}catch(e){}
+  }catch(e){}
+}
+
+function loadSettings(){
+  try{
+    var raw=localStorage.getItem('snapbooth_cfg');
+    if(raw){
+      var c=JSON.parse(raw);
+      for(var k in c){if(c.hasOwnProperty(k))CFG[k]=c[k]}
+    }
+  }catch(e){}
+  populateSettingsUI();
+  applyBranding();
+  try{vRenderAdmin()}catch(e){}
+  try{populateCamDevices()}catch(e){}
+  try{accRenderSettings()}catch(e){}
+}
+
+function populateSettingsUI(){
+  try{
+    var map={
+      'sName':'name','cPri':'pri','cAcc':'acc','cBg':'bg','cBg2':'bg2','cTx':'tx',
+      'sCamSrc':'camSrc','sTplBg':'tplBg',
+      'rBizName':'rBizName','rTagline':'rTagline',
+      'rL1L':'rL1L','rL1R':'rL1R','rL2L':'rL2L','rL2R':'rL2R',
+      'rMsg':'rMsg','rFooter':'rFooter',
+      'sCloudName':'cloudName','sCloudPreset':'cloudPreset','sTplPreset':'tplPreset','sPrefix':'prefix','sNaming':'naming',
+      'sQuality':'quality','sFormat':'format',
+      'sAdminPin':'adminPin','sHashtag':'hashtag','sBW':'bw','sPaper':'paper','sPrintMode':'printMode','sDPI':'dpi','sFit':'fit','sThermal':'thermal','sVPrice':'vPrice','sVTicketMsg':'vMsg','sVCutType':'vCutType','sThBri':'thBri','sThCon':'thCon','sPW':'pw','sPH':'ph'
+    };
+    for(var id in map){
+      var el=$(id);if(el)el.value=CFG[map[id]]||el.value;
+    }
+    var numMap={'sVCopies':'vCopies','sVMin':'vMin','sCntDown':'countdown','sTiles':'tiles','sRestart':'restart'};
+    for(var nid in numMap){
+      var nel=$(nid);if(nel)nel.value=CFG[numMap[nid]];
+    }
+    try{var vcEl=$('sVCut');if(vcEl)vcEl.checked=CFG.vCut!==false}catch(e){}
+    var chkMap={'sMirror':'mirror','rOrder':'rOrder','rDate':'rDate',
+      'sAskName':'askName','sPrintName':'printName','sKiosk':'kiosk',
+      'sAutoDL':'autoDL','sAutoGal':'autoGal','sGuestMode':'guestMode','sVoucherOn':'voucherOn','sGuestText':'guestText','sFootDate':'footDate'};
+    for(var cid in chkMap){
+      var cel=$(cid);if(cel)cel.checked=!!CFG[chkMap[cid]];
+    }
+    if(CFG.logoData){
+      S.logoData=CFG.logoData;
+      var lp=$('logoPreview'),li=$('logoPrvImg'),hl=$('homeLogo');
+      if(lp)lp.style.display='inline-block';
+      if(li)li.src=CFG.logoData;
+      if(hl){hl.src=CFG.logoData;hl.style.display='block'}
+    }
+    if(CFG.overlayData){
+      var tp=$('tplPreview'),ti=$('tplPrvImg');
+      if(tp)tp.style.display='inline-block';
+      if(ti)ti.src=CFG.overlayData;
+      S.overlayImg=new Image();
+      S.overlayImg.src=CFG.overlayData;
+    }
+  }catch(e){}
+}
+
+function applyBranding(){
+  var r=document.documentElement.style;
+  r.setProperty('--pri',CFG.pri);
+  r.setProperty('--pri-d',darken(CFG.pri,15));
+  r.setProperty('--pri-l',lighten(CFG.pri,30));
+  r.setProperty('--acc',CFG.acc);
+  r.setProperty('--acc-d',darken(CFG.acc,15));
+  r.setProperty('--bg',CFG.bg);
+  r.setProperty('--bg2',CFG.bg2);
+  r.setProperty('--bg3',lighten(CFG.bg2,10));
+  r.setProperty('--tx',CFG.tx);
+  r.setProperty('--tx2',mixColor(CFG.tx,CFG.bg,0.7));
+  r.setProperty('--txm',mixColor(CFG.tx,CFG.bg,0.45));
+  r.setProperty('--brd',lighten(CFG.bg,15));
+  var t=$('boothTitle');if(t)t.textContent=CFG.name||'Grinzy';
+  document.title=CFG.name||'Grinzy';
+  try{gSyncIdle()}catch(e){}
+}
+
+function applyTheme(name){
+  var t=THEMES[name];if(!t)return;
+  CFG.pri=t.pri;CFG.acc=t.acc;CFG.bg=t.bg;CFG.bg2=t.bg2;CFG.tx=t.tx;
+  $('cPri').value=t.pri;$('cAcc').value=t.acc;
+  $('cBg').value=t.bg;$('cBg2').value=t.bg2;$('cTx').value=t.tx;
+  saveSettings();
+  var btns=document.querySelectorAll('.theme-btn');
+  for(var i=0;i<btns.length;i++){btns[i].classList.remove('active')}
+  if(event&&event.target)event.target.classList.add('active');
+}
+
+/* === COLOR HELPERS === */
+function hexToRgb(h){
+  h=h.replace('#','');
+  if(h.length===3)h=h[0]+h[0]+h[1]+h[1]+h[2]+h[2];
+  return{r:parseInt(h.substr(0,2),16),g:parseInt(h.substr(2,2),16),b:parseInt(h.substr(4,2),16)};
+}
+function rgbToHex(r,g,b){
+  return '#'+[r,g,b].map(function(v){v=Math.max(0,Math.min(255,Math.round(v)));return v.toString(16).padStart(2,'0')}).join('');
+}
+function darken(hex,pct){var c=hexToRgb(hex);return rgbToHex(c.r*(1-pct/100),c.g*(1-pct/100),c.b*(1-pct/100))}
+function lighten(hex,pct){var c=hexToRgb(hex);return rgbToHex(c.r+(255-c.r)*pct/100,c.g+(255-c.g)*pct/100,c.b+(255-c.b)*pct/100)}
+function mixColor(h1,h2,t){var a=hexToRgb(h1),b=hexToRgb(h2);return rgbToHex(a.r*t+b.r*(1-t),a.g*t+b.g*(1-t),a.b*t+b.b*(1-t))}
+
+/* === LOGO UPLOAD === */
+function handleLogo(input){
+  if(!input.files||!input.files[0])return;
+  var reader=new FileReader();
+  reader.onload=function(e){
+    CFG.logoData=e.target.result;
+    S.logoData=e.target.result;
+    var lp=$('logoPreview'),li=$('logoPrvImg'),hl=$('homeLogo');
+    if(lp)lp.style.display='inline-block';
+    if(li)li.src=e.target.result;
+    if(hl){hl.src=e.target.result;hl.style.display='block'}
+    saveSettings();
+  };
+  reader.readAsDataURL(input.files[0]);
+}
+
+function removeLogo(){
+  CFG.logoData=null;S.logoData=null;
+  var lp=$('logoPreview'),hl=$('homeLogo');
+  if(lp)lp.style.display='none';
+  if(hl)hl.style.display='none';
+  saveSettings();
+}
+
+/* === OVERLAY UPLOAD === */
+function handleOverlay(input){
+  if(!input.files||!input.files[0])return;
+  var reader=new FileReader();
+  reader.onload=function(e){
+    CFG.overlayData=e.target.result;
+    S.overlayImg=new Image();
+    S.overlayImg.src=e.target.result;
+    var tp=$('tplPreview'),ti=$('tplPrvImg');
+    if(tp)tp.style.display='inline-block';
+    if(ti)ti.src=e.target.result;
+    saveSettings();
+  };
+  reader.readAsDataURL(input.files[0]);
+}
+
+function removeOverlay(){
+  CFG.overlayData=null;S.overlayImg=null;
+  var tp=$('tplPreview');if(tp)tp.style.display='none';
+  saveSettings();
+}
+
+/* === PWA / SERVICE WORKER === */
+function regSW(){
+  try{
+    if(window.self!==window.top)return;
+    if('serviceWorker' in navigator){
+      navigator.serviceWorker.getRegistrations().then(function(regs){
+        for(var i=0;i<regs.length;i++){regs[i].update()}
+      }).catch(function(){});
+      navigator.serviceWorker.register('sw.js').catch(function(){});
+      /* When the new SW tells us it's active, reload once to load fresh code */
+      try{
+        navigator.serviceWorker.addEventListener('message',function(e){
+          if(e.data&&e.data.type==='SW_UPDATED'&&!window.__swReloaded){
+            window.__swReloaded=true;
+            window.location.reload();
+          }
+        });
+      }catch(e){}
+    }
+  }catch(e){}
+}
+
+
+/* =====================================================
+   GUEST KIOSK FLOW (idle -> layouts -> auto multi-shot -> review/print)
+   ===================================================== */
+var G_LAYOUTS={
+  single:{n:1,type:'grid',cols:1,cw:1200,ch:900,label:'1 Photo'},
+  strip2:{n:2,type:'grid',cols:1,cw:600,ch:450,label:'2 Strip'},
+  strip3:{n:3,type:'grid',cols:1,cw:600,ch:450,label:'3 Strip'},
+  strip4:{n:4,type:'grid',cols:1,cw:600,ch:450,label:'4 Strip'},
+  grid4:{n:4,type:'grid',cols:2,cw:600,ch:450,label:'2x2 Grid'},
+  receipt4:{n:4,type:'receipt',cw:516,ch:387,label:'Receipt'}
+};
+S.gActive=false;S.gLayout='strip4';S.gShots=[];S.gImgs=null;S.gFlip=false;S.gCopies=1;
+S.gBusy=false;S.gSeq=0;S.gIdleT=null;S.gReviewing=false;S.gTapN=0;S.gTapT=null;S.gQrExt=0;
+S.gTime=null;S.gOrder=null;
+
+function gPad2(n){n=String(n);return n.length<2?'0'+n:n}
+function gDateStr(d){d=d||new Date();return gPad2(d.getMonth()+1)+'-'+gPad2(d.getDate())+'-'+String(d.getFullYear()).slice(2)}
+function gIsDark(hex){
+  try{var c=hexToRgb(hex||'#000');return (c.r*299+c.g*587+c.b*114)/1000<140}catch(e){return true}
+}
+
+/* --- Boot / mode switching --- */
+function gBoot(){
+  try{
+    gInitAdminHot();
+    document.addEventListener('pointerdown',function(){
+      try{if(S.gReviewing)gClearIdle()}catch(e){}
+    },true);
+    var resume=null;try{resume=gReadResume()}catch(e){}
+    if(CFG.guestMode){gEnterGuest()}
+    if(resume){S.gPendingResume=resume;if(gTryResume()){try{var cp=$('capture');if(cp)cp.classList.add('gflow')}catch(e){}}}
+  }catch(e){}
+}
+function gEnterGuest(){
+  try{
+    document.body.classList.add('guest');
+    gToIdle();
+  }catch(e){}
+}
+function gSyncIdle(){
+  try{
+    var t=$('idleTitle');if(t)t.textContent=CFG.name||'Grinzy';
+    var tg=$('idleTag');if(tg)tg.textContent=CFG.hashtag||'';
+    var lg=$('idleLogo'),em=$('idleEmoji');
+    var src=CFG.logoData||S.logoData;
+    if(lg){
+      if(src){lg.src=src;lg.style.display='block';if(em)em.style.display='none'}
+      else{lg.style.display='none';if(em)em.style.display='block'}
+    }
+  }catch(e){}
+}
+function gClearIdle(){try{if(S.gIdleT){clearTimeout(S.gIdleT);S.gIdleT=null}}catch(e){}}
+function gArmIdle(ms){
+  try{
+    gClearIdle();
+    var t=ms||((parseInt(CFG.restart)||15)*1000);
+    S.gIdleT=setTimeout(gIdleFire,t);
+  }catch(e){}
+}
+function gIdleFire(){
+  try{
+    try{var gm=$('gtMod');if(gm&&gm.classList.contains('on')){gArmIdle();return}}catch(e){}
+    try{var vm=$('vMod');if(vm&&vm.classList.contains('on')){vClose();gToIdle();return}}catch(e){}
+    if(S.gReviewing)return;
+    var q=$('qrMod');
+    if(q&&q.classList.contains('on')&&S.gQrExt<2){S.gQrExt++;gArmIdle();return}
+    gToIdle();
+  }catch(e){}
+}
+function gToIdle(){
+  try{
+    S.gSeq++;S.gBusy=false;S.gReviewing=false;S.gActive=false;S.gQrExt=0;
+    try{vClose()}catch(e){}
+    try{gtClose();gtReset()}catch(e){}
+    S.gReLayout=null;S.gKeepShots=false;S.gOrigShots=null;try{var hd1=$('layHdr');if(hd1)hd1.textContent='Choose your layout'}catch(e){}
+    try{sessionStorage.removeItem(G_RESUME_KEY)}catch(e){}
+    try{gResetFilter()}catch(e){}
+    gClearIdle();
+    stopCam();
+    try{closeQR()}catch(e){}
+    var ovl=$('cntOvl');if(ovl)ovl.classList.remove('on');
+    gShotInfo('');
+    var cp=$('capture');if(cp)cp.classList.remove('gflow');
+    var pv=$('preview');if(pv)pv.classList.remove('gflow');
+    gSyncIdle();
+    showScreen('idle');
+  }catch(e){}
+}
+
+/* --- Change layout after capture (reuse photos, shoot only the extra ones) --- */
+function gChangeLayout(){
+  try{
+    if(S.gBusy)return;
+    try{closeQR()}catch(e){}
+    if(!S.gOrigShots||!S.gOrigShots.length)S.gOrigShots=(S.gShots||[]).slice();
+    S.gReLayout={layout:S.gLayout,shots:S.gOrigShots.slice(),flip:S.gFlip,filter:S.gFilter};
+    S.gReviewing=false;
+    var hd=$('layHdr');if(hd)hd.textContent='Pick another layout \u2014 same photos, no retake';
+    gShowLayouts();
+    gClearIdle();
+  }catch(e){}
+}
+function gLayoutBack(){
+  try{
+    var r=S.gReLayout;
+    if(r&&r.shots&&r.shots.length){
+      S.gReLayout=null;
+      var hd=$('layHdr');if(hd)hd.textContent='Choose your layout';
+      S.gLayout=r.layout;S.gShots=r.shots;S.gImgs=null;S.gFiltCache=null;S.gFlip=r.flip;
+      gCompose(true);
+      return;
+    }
+  }catch(e){}
+  gToIdle();
+}
+
+function capClose(){
+  try{
+    if(S.gActive&&S.gKeepShots&&S.gShots&&S.gShots.length&&!S.gBusy){S.gKeepShots=false;stopCam();gShowLayouts();S.gReLayout={layout:S.gLayout,shots:S.gShots.slice(),flip:S.gFlip,filter:S.gFilter};var hd=$('layHdr');if(hd)hd.textContent='Pick another layout \u2014 same photos, no retake';return}
+    if(S.gActive){gToIdle();return}
+    stopCam();showScreen('home');
+  }catch(e){}
+}
+
+/* --- Idle screen tap (logo x5 = admin) --- */
+
+
+
+
+
+/* ================= PLANS / TIERS (v40) ================= */
+var PLAN_TIERS=['basic','pro','business'];
+var PLAN_NAMES={basic:'Basic',pro:'Pro',business:'Business'};
+var PLAN_FEAT_MIN={qr:'pro',ownTemplates:'pro',vouchers:'business',sync:'basic'};
+function planTier(){
+  try{
+    if(!accOn())return 'business';                 /* no licence server = everything on */
+    var A=accGet();
+    return (A&&A.tier&&PLAN_TIERS.indexOf(A.tier)>=0)?A.tier:'';
+  }catch(e){return ''}
+}
+function planHas(f){
+  try{
+    if(!accOn())return true;
+    var A=accGet();
+    if(!A||!A.features)return true;               /* not known yet: allow; the server still enforces uploads */
+    return A.features[f]===true;
+  }catch(e){return true}
+}
+function planName(t){return PLAN_NAMES[t]||'\u2014'}
+function planLockText(f){return '\ud83d\udd12 Available on '+planName(PLAN_FEAT_MIN[f]||'pro')+'. Ask your provider to upgrade your plan.'}
+/* store tier + features from a login / check response */
+function planStore(r){
+  try{
+    var A=accGet();if(!A||!r)return;
+    if(r.tier)A.tier=r.tier;
+    if(r.features&&typeof r.features==='object')A.features=r.features;
+    accSet(A);
+  }catch(e){}
+}
+/* GitHub template allowed for this tier? (no "tiers" list = all tiers) */
+function planTplAllowed(item){
+  try{
+    if(!accOn())return true;
+    var t=planTier();if(!t)return true;
+    var ts=item&&item.tiers;
+    if(!ts||!ts.length)return true;
+    for(var i=0;i<ts.length;i++){if(String(ts[i]).toLowerCase()===t)return true}
+    return false;
+  }catch(e){return true}
+}
+function planTplMin(item){
+  try{
+    var ts=(item&&item.tiers)||[],best=null;
+    for(var i=0;i<ts.length;i++){var ix=PLAN_TIERS.indexOf(String(ts[i]).toLowerCase());if(ix>=0&&(best===null||ix<best))best=ix}
+    return best===null?'pro':PLAN_TIERS[best];
+  }catch(e){return 'pro'}
+}
+/* show/hide everything that depends on the plan */
+function planApply(){
+  try{
+    var els=document.querySelectorAll('[data-feat]'),i,f;
+    for(i=0;i<els.length;i++){
+      f=els[i].getAttribute('data-feat');
+      if(planHas(f))els[i].classList.remove('plan-off');else els[i].classList.add('plan-off');
+    }
+    var locks=document.querySelectorAll('[data-lock]');
+    for(i=0;i<locks.length;i++){
+      f=locks[i].getAttribute('data-lock');
+      if(planHas(f)){locks[i].classList.remove('on');locks[i].textContent=''}
+      else{locks[i].classList.add('on');locks[i].textContent=planLockText(f)}
+    }
+    var p=$('accPlan');if(p)p.textContent=accOn()?(planTier()?planName(planTier()):'Checking\u2026'):'\u2014';
+    /* plan changed: reload GitHub templates so tier-restricted ones appear / disappear */
+    var t=planTier();
+    if(S.planLast!==undefined&&S.planLast!==t){try{ctplReloadGithub()}catch(e){}}
+    S.planLast=t;
+    if(!planHas('vouchers')){try{vClose()}catch(e){}try{vTimerStop()}catch(e){}}
+    try{if($('tgal')&&$('tgal').classList.contains('active'))tgRender()}catch(e){}
+  }catch(e){}
+}
+function ctplReloadGithub(){
+  try{
+    var cur=(S.ctpls||[]).slice();
+    for(var i=0;i<cur.length;i++){if(cur[i].source==='github')ctplUnregister(cur[i].key)}
+    S.ctplLocked=[];
+    ctplLoadGithub();
+  }catch(e){}
+}
+
+/* ================= TEMPLATE GALLERY (v36) ================= */
+var TG_BUILT=[['single','1 Photo','l1',1],['strip2','2 Strip','ls',2],['strip3','3 Strip','ls',3],['strip4','4 Strip','ls',4],['grid4','2\u00d72 Grid','lg',4],['receipt4','Receipt (4)','lr',4]];
+function tgHidden(){if(!CFG.hiddenLayouts||typeof CFG.hiddenLayouts!=='object')CFG.hiddenLayouts={};return CFG.hiddenLayouts}
+function tgVisible(key){return !tgHidden()[key]}
+function tgSaveCfg(){try{localStorage.setItem('snapbooth_cfg',JSON.stringify(CFG))}catch(e){}try{syncMark()}catch(e){}}
+function tgToggle(key){
+  try{
+    var hd=tgHidden();
+    if(hd[key])delete hd[key];else hd[key]=1;
+    /* never allow zero visible layouts */
+    if(tgVisibleCount()===0){delete hd[key];gToast('At least one layout must stay visible.')}
+    tgSaveCfg();tgRender();tgApplyPicker();
+  }catch(e){}
+}
+function tgAllKeys(){
+  var k=[],i;
+  for(i=0;i<TG_BUILT.length;i++)k.push(TG_BUILT[i][0]);
+  for(i=0;i<(S.ctpls||[]).length;i++)k.push(S.ctpls[i].key);
+  return k;
+}
+function tgVisibleCount(){var k=tgAllKeys(),n=0;for(var i=0;i<k.length;i++){if(tgVisible(k[i]))n++}return n}
+function tgAll(on){
+  try{
+    var hd=tgHidden(),k=tgAllKeys();
+    for(var i=0;i<k.length;i++){if(on)delete hd[k[i]];else hd[k[i]]=1}
+    if(!on){delete hd[k[0]];gToast('All hidden except one \u2014 tap cards to choose which to show.')}
+    tgSaveCfg();tgRender();tgApplyPicker();
+  }catch(e){}
+}
+function tgCard(key,title,sub,imgHtml,src,extra){
+  var on=tgVisible(key);
+  return '<div class="tg-card '+(on?'on':'off')+'" onclick="tgToggle(\''+key.replace(/'/g,'')+'\')">'+
+    '<div class="tg-chk">'+(on?'\u2713':'')+'</div>'+imgHtml+'<b>'+ctplEsc(title)+'</b><small>'+sub+'</small>'+
+    (src?'<br><span class="tg-src">'+src+'</span>':'')+(extra||'')+'</div>';
+}
+function tgRender(){
+  try{
+    var g='',d='',b='',i,t,n;
+    for(i=0;i<(S.ctpls||[]).length;i++){
+      t=S.ctpls[i];n=t.slots.length;
+      var img='<img src="'+ctplEsc(t.src)+'" alt="">';
+      var sub=n+(n>1?' photos':' photo');
+      if(t.source==='account'){
+        d+=tgCard(t.key,t.name,sub,img,'Your account','<br><button class="btn bo" style="margin-top:6px;padding:4px 10px;font-size:12px" onclick="event.stopPropagation();ctplDeleteAcc(\''+String(t.uid).replace(/[^0-9a-f]/g,'')+'\')">&#x1f5d1;&#xfe0f; Delete</button>');
+      }else if(t.source==='tablet'){
+        d+=tgCard(t.key,t.name,sub,img,'This device','<br><button class="btn bo" style="margin-top:6px;padding:4px 10px;font-size:12px" onclick="event.stopPropagation();ctplDelete('+Number(t.id)+');setTimeout(tgRender,400)">&#x1f5d1;&#xfe0f; Delete</button>');
+      }else{
+        g+=tgCard(t.key,t.name,sub,img,'GitHub');
+      }
+    }
+    var lk=(S.ctplLocked||[]).slice().sort(function(a,b2){return (a.ord||0)-(b2.ord||0)});
+    for(i=0;i<lk.length;i++){
+      g+='<div class="tg-card locked" onclick="gToast(\''+planLockText('ownTemplates').replace(/'/g,'').replace('Available on Pro','This template is on '+planName(lk[i].min))+'\')">'+
+        '<div class="tg-chk">\ud83d\udd12</div><img src="'+ctplEsc(lk[i].src)+'" alt=""><b>'+ctplEsc(lk[i].name)+'</b>'+
+        '<small>Not in your plan</small><br><span class="tg-lockbadge">\ud83d\udd12 '+planName(lk[i].min)+'</span></div>';
+    }
+    for(i=0;i<TG_BUILT.length;i++){
+      var x=TG_BUILT[i],cells='';
+      for(var q=0;q<x[3];q++)cells+='<i></i>';
+      b+=tgCard(x[0],x[1],x[3]+(x[3]>1?' photos':' photo'),'<div class="lp '+x[2]+'">'+(x[2]==='lr'?'<b class="hd"></b>':'')+cells+'<b></b></div>','Built-in');
+    }
+    var eg=$('tgGit'),ed=$('tgDev'),eb=$('tgBuilt');
+    if(eg)eg.innerHTML=g||'<div class="s-note">None yet. Upload PNGs to photobooth/templates/ on GitHub and list them in templates.json.</div>';
+    if(ed)ed.innerHTML=d||'<div class="s-note">None yet. Add one below.</div>';
+    if(eb)eb.innerHTML=b;
+    var ct=$('tgCount');if(ct)ct.textContent=tgVisibleCount()+' of '+tgAllKeys().length+' shown to guests';
+  }catch(e){}
+}
+function tgApplyPicker(){
+  try{
+    var tiles=document.querySelectorAll('#layouts .lay-grid .ltile');
+    for(var i=0;i<tiles.length;i++){
+      var k=tiles[i].getAttribute('data-key');
+      if(k)tiles[i].style.display=tgVisible(k)?'':'none';
+    }
+  }catch(e){}
+}
+function tgOpen(){try{showScreen('tgal');tgRender();if(!(S.ctpls||[]).length){ctplBoot();setTimeout(tgRender,1200)}}catch(e){}}
+function tgAdd(){
+  try{
+    if(!planHas('ownTemplates')){var mm=$('tgMsg');if(mm)mm.textContent='This feature isn\'t included in your plan.';return}
+    /* reuse the existing tablet-template upload */
+    var a=$('ctplName'),b=$('ctplFile'),na=$('tgName'),fb=$('tgFile');
+    if(!fb||!fb.files||!fb.files[0]){var m=$('tgMsg');if(m)m.textContent='Choose a PNG file first.';return}
+    if(a&&na)a.value=na.value;
+    if(b){try{var dt=new DataTransfer();dt.items.add(fb.files[0]);b.files=dt.files}catch(e){}}
+    S.tgFile=fb.files[0];
+    ctplAdd();
+    setTimeout(function(){var m=$('tgMsg'),cm=$('ctplMsg');if(m&&cm)m.innerHTML=cm.innerHTML;tgRender();tgApplyPicker()},900);
+    if(na)na.value='';fb.value='';
+  }catch(e){}
+}
+
+/* ================= LICENCE (v33) ================= */
+/* Set this to your Cloudflare Worker URL to turn licensing on. Empty = no licence needed. */
+var LIC_SERVER='';
+var LIC_GRACE_DAYS=3;   /* keep working offline this many days after the last successful check */
+var LIC_KEY='snapbooth_licence';
+function licDevId(){
+  try{
+    var id=localStorage.getItem('snapbooth_devid');
+    if(!id){
+      var a=new Uint8Array(12);try{crypto.getRandomValues(a)}catch(e){for(var i=0;i<12;i++)a[i]=Math.floor(Math.random()*256)}
+      id='';for(var j=0;j<a.length;j++){id+=('0'+a[j].toString(16)).slice(-2)}
+      localStorage.setItem('snapbooth_devid',id);
+    }
+    return id;
+  }catch(e){return 'nodev'}
+}
+var ACC_KEY='snapbooth_account';
+function accGet(){try{return JSON.parse(localStorage.getItem(ACC_KEY)||'null')}catch(e){return null}}
+function accSet(o){try{if(o)localStorage.setItem(ACC_KEY,JSON.stringify(o));else localStorage.removeItem(ACC_KEY)}catch(e){}}
+function accOn(){return !!LIC_SERVER}
+function accEmail(){var a=accGet();return (a&&a.token&&a.email)?a.email:''}
+function licLock(msg,sub){
+  try{
+    var l=$('licLock');if(l)l.classList.add('on');
+    var m=$('licMsg');if(m){m.style.color='';m.textContent=msg||''}
+    var s=$('licSub');if(s)s.textContent=sub||(S.accMode==='up'?'Create your account with the licence key from your provider.':'Sign in with your Grinzy account to use this booth.');
+    var A=accGet(),e=$('accEmail');if(e&&!e.value&&A&&A.email)e.value=A.email;
+    var dn=$('licDevName');if(dn&&!dn.value){try{dn.value=localStorage.getItem('snapbooth_devname')||''}catch(x){}}
+  }catch(e){}
+}
+function licUnlock(){try{var l=$('licLock');if(l)l.classList.remove('on')}catch(e){}}
+function licBanner(t){try{var b=$('licBanner');if(!b)return;if(t){b.textContent=t;b.classList.add('on')}else b.classList.remove('on')}catch(e){}}
+function licPost(path,body){
+  return fetch(LIC_SERVER.replace(/\/+$/,'')+path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})
+    .then(function(r){return r.json()});
+}
+function licReason(st,max){
+  if(st==='invalid')return 'That licence key was not found. Check it and try again.';
+  if(st==='expired')return 'This licence has expired. Please renew with your provider.';
+  if(st==='revoked')return 'This licence has been turned off. Please contact your provider.';
+  if(st==='device_limit')return 'This account is already signed in on '+(max||1)+' device(s). Ask your provider to free a slot.';
+  if(st==='not_activated')return 'This device was removed from your account. Please sign in again.';
+  if(st==='bad_login')return 'Wrong email or password.';
+  if(st==='bad_email')return 'Please enter a valid email address.';
+  if(st==='weak_password')return 'Password must be at least 8 characters.';
+  if(st==='email_taken')return 'An account with this email already exists. Sign in instead.';
+  if(st==='key_taken')return 'This licence key already belongs to another account.';
+  if(st==='invalid_session')return 'Your sign-in has ended. Please sign in again.';
+  return 'Something went wrong. Please try again.';
+}
+function accMsg(t,info){try{var m=$('licMsg');if(m){m.style.color=info?'var(--tx2)':'';m.textContent=t||''}}catch(e){}}
+function accMode(md){
+  try{
+    S.accMode=md;
+    var l=$('licLock');if(l){if(md==='up')l.classList.add('up');else l.classList.remove('up')}
+    var a=$('accTabIn'),b=$('accTabUp');if(a)a.className=md==='up'?'':'on';if(b)b.className=md==='up'?'on':'';
+    var t=$('accTitle');if(t)t.textContent=md==='up'?'Create your Grinzy account':'Sign in to Grinzy';
+    var g=$('accGo');if(g)g.textContent=md==='up'?'Create account':'Sign in';
+    var p=$('accPass');if(p){p.setAttribute('autocomplete',md==='up'?'new-password':'current-password');p.placeholder=md==='up'?'Password (8+ characters)':'Password'}
+    var s=$('licSub');if(s)s.textContent=md==='up'?'Create your account with the licence key from your provider.':'Sign in with your Grinzy account to use this booth.';
+    accMsg('');
+  }catch(e){}
+}
+function accSubmit(){
+  try{
+    var em=String(($('accEmail')||{}).value||'').trim().toLowerCase();
+    var pw=String(($('accPass')||{}).value||'');
+    var nm=String(($('licDevName')||{}).value||'').trim()||'Device';
+    try{localStorage.setItem('snapbooth_devname',nm)}catch(e){}
+    if(!em||!pw){accMsg('Please enter your email and password.');return}
+    if(S.accMode==='up'){
+      var pw2=String(($('accPass2')||{}).value||'');
+      var k=String(($('licKey')||{}).value||'').toUpperCase().replace(/\s/g,'');
+      if(pw.length<8){accMsg(licReason('weak_password'));return}
+      if(pw!==pw2){accMsg('The two passwords don\'t match.');return}
+      if(!k){accMsg('Please enter the licence key from your provider.');return}
+      accMsg('Creating your account\u2026',true);
+      var rb={email:em,licenceKey:k};rb['pass'+'word']=pw;
+      licPost('/auth/register',rb).then(function(r){
+        if(r&&r.ok){accLogin(em,pw,nm);return}
+        accMsg(licReason(r&&r.status));
+      }).catch(function(){accMsg('No internet connection. Connect to Wi-Fi to create your account.')});
+      return;
+    }
+    accLogin(em,pw,nm);
+  }catch(e){}
+}
+function accLogin(em,pw,nm){
+  try{
+    accMsg('Signing in\u2026',true);
+    var lb={email:em,device:licDevId(),name:nm};lb['pass'+'word']=pw;
+    licPost('/auth/login',lb).then(function(r){
+      try{
+        if(!(r&&r.ok)){accMsg(licReason(r&&r.status,r&&r.max));return}
+        var prev='';try{prev=localStorage.getItem('snapbooth_acct_owner')||''}catch(e){}
+        if(prev&&prev!==r.email)accSwitchReset();
+        try{localStorage.setItem('snapbooth_acct_owner',r.email)}catch(e){}
+        accSet({token:r.token,email:r.email,lastOk:Date.now(),expires:r.expires||0,customer:r.customer||'',tier:r.tier||'',features:r.features||null});
+        try{planApply()}catch(e){}
+        var p1=$('accPass'),p2=$('accPass2'),lk=$('licKey');if(p1)p1.value='';if(p2)p2.value='';if(lk)lk.value='';
+        accMode('in');licUnlock();licBanner('');licExpiryNote(r.expires);
+        gToast('Signed in as '+r.email);
+        ctplReloadAccount();
+        accRenderSettings();
+        syncPull();
+      }catch(e){}
+    }).catch(function(){accMsg('No internet connection. Connect to Wi-Fi to sign in.')});
+  }catch(e){}
+}
+/* A different account signs in on this device: drop the previous account's data */
+function accSwitchReset(){
+  try{
+    try{localStorage.removeItem(V_KEY)}catch(e){}
+    syncStateSet({});
+    var keep={};
+    var def=window.CFG_DEF||{};
+    for(var k in def){if(def.hasOwnProperty(k)&&!SYNC_SKIP[k])CFG[k]=JSON.parse(JSON.stringify(def[k]))}
+    CFG.hiddenLayouts={};
+    try{localStorage.setItem('snapbooth_cfg',JSON.stringify(CFG))}catch(e){}
+    try{populateSettingsUI();applyBranding()}catch(e){}
+  }catch(e){}
+}
+function accSignOut(){
+  try{
+    var st=syncState(),msg='Sign out of Grinzy on this device?';
+    if(st.dirty)msg='Some changes have not synced yet and will be lost. Sign out anyway?';
+    var ok=true;try{ok=window.confirm(msg)}catch(e){ok=true}
+    if(!ok)return;
+    var A=accGet();
+    if(A&&A.token){licPost('/auth/logout',{token:A.token}).then(function(){}).catch(function(){})}
+    accSet(A&&A.email?{email:A.email}:null);
+    var s2=syncState();s2.dirty=false;syncStateSet(s2);
+    accRenderSettings();
+    accMode('in');
+    licLock('','Signed out. Sign in to use this booth again.');
+  }catch(e){}
+}
+function accSyncNow(){
+  try{
+    if(!accEmail()){gToast('Sign in first.');return}
+    if(navigator.onLine===false){gToast('Offline \u2014 changes will sync when you reconnect.');return}
+    gToast('Syncing\u2026');syncPull();
+  }catch(e){}
+}
+function accFmt(t){try{return t?new Date(t).toLocaleString():'\u2014'}catch(e){return '\u2014'}}
+function accRenderSettings(){
+  try{
+    try{planApply()}catch(e){}
+    try{var cm=$('cldManaged'),cf=$('cldFields');if(cm)cm.style.display=cldSignedOn()?'':'none';if(cf)cf.style.display=cldSignedOn()?'none':''}catch(e){}
+    var sec=$('accSec');if(sec)sec.style.display=accOn()?'':'none';
+    if(!accOn())return;
+    var A=accGet()||{},st=syncState();
+    var w=$('accWho');if(w)w.textContent=A.token?(A.email+(A.customer?' ('+A.customer+')':'')):'Not signed in';
+    var x=$('accExp');if(x)x.textContent=A.token?(A.expires?accFmt(A.expires):'No expiry'):'\u2014';
+    var y=$('accSync');if(y)y.textContent=(st.dirty?'Waiting to sync \u2022 ':'')+(st.lastSync?accFmt(st.lastSync):'Not yet');
+  }catch(e){}
+}
+function licExpiryNote(exp){
+  try{
+    if(!exp)return;
+    var d=Math.ceil((exp-Date.now())/86400000);
+    if(d<=3&&d>=0)licBanner('Licence ends in '+d+' day'+(d===1?'':'s')+' \u2014 renew with your provider.');
+  }catch(e){}
+}
+function licBoot(){
+  try{
+    if(!LIC_SERVER)return;               /* accounts off */
+    accInitListeners();
+    var A=accGet();
+    if(!A||!A.token){if(!S.accMode)accMode('in');licLock('');return}
+    /* offline grace: stay signed in if the last good check is recent */
+    var fresh=A.lastOk&&(Date.now()-A.lastOk)<LIC_GRACE_DAYS*86400000;
+    if(A.expires&&Date.now()>A.expires){licLock(licReason('expired'))}
+    else if(!fresh){licLock('Please connect to the internet to confirm your sign-in.')}
+    licExpiryNote(A.expires);
+    licPost('/auth/check',{token:A.token,device:licDevId()}).then(function(r){
+      try{
+        if(r&&r.ok){
+          A.lastOk=Date.now();A.expires=r.expires||0;A.customer=r.customer||A.customer||'';
+          if(r.tier)A.tier=r.tier;if(r.features)A.features=r.features;accSet(A);
+          try{planApply()}catch(e){}
+          licUnlock();licExpiryNote(A.expires);
+          if(!(A.expires&&A.expires-Date.now()<3*86400000))licBanner('');
+          accRenderSettings();syncPull();return;
+        }
+        var st=r&&r.status;
+        if(st==='invalid_session'||st==='not_activated'){accSet({email:A.email});accMode('in')}
+        if(st)licLock(licReason(st,r&&r.max));
+        accRenderSettings();
+      }catch(e){}
+    }).catch(function(){
+      if(!fresh)licLock('No internet connection. Connect to Wi-Fi to confirm your sign-in.');
+      else licBanner('Offline \u2014 sign-in will be checked again when online.');
+    });
+  }catch(e){}
+}
+function accInitListeners(){
+  try{
+    if(S.accLis)return;S.accLis=true;
+    window.addEventListener('online',function(){
+      try{
+        var l=$('licLock'),A=accGet();
+        if(l&&l.classList.contains('on')&&A&&A.token)licBoot();
+        syncPush();
+      }catch(e){}
+    });
+    setInterval(function(){try{syncPush()}catch(e){}},300000);
+  }catch(e){}
+}
+
+/* ================= SETTINGS SYNC (v37) ================= */
+var SYNC_KEY='snapbooth_sync';
+/* device-specific settings that stay on each device */
+var SYNC_SKIP={cloudName:1,cloudPreset:1,tplPreset:1,camSrc:1,logoData:1,overlayData:1,printMode:1,paper:1,pw:1,ph:1,dpi:1,fit:1,thermal:1,thBri:1,thCon:1};
+function syncState(){try{return JSON.parse(localStorage.getItem(SYNC_KEY)||'{}')||{}}catch(e){return {}}}
+function syncStateSet(o){try{localStorage.setItem(SYNC_KEY,JSON.stringify(o||{}))}catch(e){}}
+function syncCollect(){
+  var cfg={};
+  for(var k in CFG){if(CFG.hasOwnProperty(k)&&!SYNC_SKIP[k])cfg[k]=CFG[k]}
+  return {v:1,cfg:cfg,vouchers:vLoad(),tpls:syncState().tpls||[]};
+}
+/* called whenever a synced setting changes */
+function syncMark(){
+  try{
+    if(!accOn()||S.syncApplying||!accEmail())return;
+    var st=syncState();st.updatedAt=Date.now();st.dirty=true;syncStateSet(st);
+    if(S.syncT)clearTimeout(S.syncT);
+    S.syncT=setTimeout(function(){S.syncT=null;syncPush()},3000);
+    accRenderSettings();
+  }catch(e){}
+}
+/* booth codes merge instead of overwrite: a code used on any device stays used */
+function vMerge(a,b){
+  var map={},out=[],i,x;
+  a=a||[];b=b||[];
+  for(i=0;i<a.length;i++){x=a[i];if(!x||!x.c)continue;if(!map[x.c]){map[x.c]={c:x.c,used:x.used||0,made:x.made||0};out.push(map[x.c])}}
+  for(i=0;i<b.length;i++){x=b[i];if(!x||!x.c)continue;
+    if(map[x.c]){if((x.used||0)&&(!map[x.c].used||x.used<map[x.c].used))map[x.c].used=x.used}
+    else{map[x.c]={c:x.c,used:x.used||0,made:x.made||0};out.push(map[x.c])}}
+  return out;
+}
+function syncApply(data,updatedAt){
+  S.syncApplying=true;
+  try{
+    if(data&&data.cfg){
+      for(var k in data.cfg){if(data.cfg.hasOwnProperty(k)&&!SYNC_SKIP[k])CFG[k]=data.cfg[k]}
+      try{localStorage.setItem('snapbooth_cfg',JSON.stringify(CFG))}catch(e){}
+      try{populateSettingsUI()}catch(e){}
+      try{applyBranding()}catch(e){}
+    }
+    var st=syncState();
+    st.tpls=(data&&data.tpls)||[];st.updatedAt=updatedAt||st.updatedAt||0;st.dirty=false;syncStateSet(st);
+    try{ctplLoadAccount()}catch(e){}
+    try{tgApplyPicker()}catch(e){}
+    try{var tg=$('tgal');if(tg&&tg.classList.contains('active'))tgRender()}catch(e){}
+  }catch(e){}
+  S.syncApplying=false;
+}
+function syncPull(){
+  try{
+    var A=accGet();if(!LIC_SERVER||!A||!A.token)return;
+    licPost('/sync/get',{token:A.token,device:licDevId()}).then(function(r){
+      try{
+        if(!r||!r.ok){if(r&&r.status==='invalid_session')licBoot();return}
+        var st=syncState(),server=r.data,sAt=r.updatedAt||0;
+        var sv=(server&&server.vouchers)||[];
+        var merged=vMerge(vLoad(),sv);
+        var vKeyOf=function(list){var o=[];for(var z=0;z<list.length;z++)o.push(list[z].c+':'+(list[z].used||0));o.sort();return o.join(',')};
+        var vDiff=vKeyOf(merged)!==vKeyOf(vMerge(sv,[]));
+        if(server&&sAt>(st.updatedAt||0))syncApply(server,sAt);
+        S.syncApplying=true;try{vSave(merged);vRenderAdmin()}catch(e){}S.syncApplying=false;
+        st=syncState();
+        if(!server||vDiff){st.updatedAt=Math.max(Date.now(),sAt+1);st.dirty=true}
+        st.lastSync=Date.now();syncStateSet(st);
+        if(st.dirty)syncPush();
+        accRenderSettings();
+      }catch(e){S.syncApplying=false}
+    }).catch(function(){accRenderSettings()});
+  }catch(e){}
+}
+function syncPush(){
+  try{
+    var A=accGet();if(!LIC_SERVER||!A||!A.token)return;
+    if(!planHas('sync'))return;
+    var st=syncState();if(!st.dirty)return;
+    if(navigator.onLine===false){accRenderSettings();return}
+    if(S.syncBusy){S.syncAgain=true;return}
+    S.syncBusy=true;
+    var sentAt=st.updatedAt||Date.now();
+    licPost('/sync/put',{token:A.token,device:licDevId(),data:syncCollect(),updatedAt:sentAt}).then(function(r){
+      S.syncBusy=false;
+      try{
+        var s2=syncState();
+        if(r&&r.ok){
+          if((s2.updatedAt||0)<=sentAt)s2.dirty=false;
+          s2.lastSync=Date.now();syncStateSet(s2);S.syncStale=0;
+        }else if(r&&r.status==='stale'){
+          /* another device saved newer settings: take theirs (booth codes are merged) */
+          S.syncStale=(S.syncStale||0)+1;
+          if(S.syncStale<3){s2.dirty=false;syncStateSet(s2);syncPull()}
+        }else if(r&&r.status==='too_large'){
+          gToast('Too much to sync (200 KB limit). Remove used booth codes or unused templates.');
+        }else if(r&&r.status==='invalid_session'){licBoot()}
+        else if(r&&r.status==='tier_locked'){s2.dirty=false;syncStateSet(s2);gToast('Settings sync isn\'t included in your plan.')}
+        accRenderSettings();
+        if(S.syncAgain){S.syncAgain=false;syncPush()}
+      }catch(e){}
+    }).catch(function(){S.syncBusy=false;accRenderSettings()});
+  }catch(e){S.syncBusy=false}
+}
+
+/* ================= GUEST CUSTOM TEXT ================= */
+function gtSel(group,v){
+  try{var bs=document.querySelectorAll('#gt'+group+' button');
+    for(var i=0;i<bs.length;i++){if(bs[i].getAttribute('data-v')===v)bs[i].classList.add('on');else bs[i].classList.remove('on')}}catch(e){}
+}
+function gtCount(){try{var i=$('gtInput'),c=$('gtCount');if(i&&c)c.textContent=i.value.length+' / 30'}catch(e){}}
+function gtOpen(){
+  try{
+    if(CFG.guestText===false)return;
+    var t=S.gText||{text:'',pos:'bottom',size:'m',color:'#ffffff'};
+    S.gtDraft={text:t.text,pos:t.pos,size:t.size,color:t.color};
+    var i=$('gtInput');if(i)i.value=t.text||'';
+    gtCount();
+    gtSel('Pos',t.pos);gtSel('Size',t.size);gtSel('Color',t.color);
+    var m=$('gtMod');if(m)m.classList.add('on');
+    if(i)setTimeout(function(){try{i.focus()}catch(e){}},150);
+  }catch(e){}
+}
+function gtPick(k,v){
+  try{
+    if(!S.gtDraft)S.gtDraft={text:'',pos:'bottom',size:'m',color:'#ffffff'};
+    S.gtDraft[k]=v;
+    gtSel(k==='pos'?'Pos':(k==='size'?'Size':'Color'),v);
+  }catch(e){}
+}
+function gtClose(){try{var m=$('gtMod');if(m)m.classList.remove('on')}catch(e){}}
+function gtApply(){
+  try{
+    var i=$('gtInput');var d=S.gtDraft||{pos:'bottom',size:'m',color:'#ffffff'};
+    var txt=String(i?i.value:'').replace(/\s+/g,' ').trim().slice(0,30);
+    S.gText=txt?{text:txt,pos:d.pos||'bottom',size:d.size||'m',color:d.color||'#ffffff'}:null;
+    gtClose();gtBtnLabel();
+    gCompose(true);
+  }catch(e){}
+}
+function gtRemove(){try{S.gText=null;gtClose();gtBtnLabel();gCompose(true)}catch(e){}}
+function gtBtnLabel(){
+  try{var b=$('gTextBtn');if(b)b.innerHTML=S.gText?'&#x270f;&#xfe0f; Edit text':'&#x270f;&#xfe0f; Add text';
+    if(CFG.guestText===false)document.body.classList.add('notext');else document.body.classList.remove('notext')}catch(e){}
+}
+function gtReset(){S.gText=null;S.gtDraft=null;gtBtnLabel()}
+/* Draw the guest text on the finished photo (all layouts, incl. custom templates) */
+function gtDraw(pc){
+  try{
+    var t=S.gText;if(!t||!t.text||CFG.guestText===false)return;
+    var ctx=pc.getContext('2d'),W=pc.width,H=pc.height;
+    var base=Math.min(W,H*0.75);
+    var f=t.size==='s'?0.055:(t.size==='l'?0.11:0.08);
+    var fs=Math.max(14,Math.round(base*f));
+    ctx.save();
+    ctx.font='800 '+fs+'px "Segoe UI",system-ui,sans-serif';
+    /* shrink to fit width */
+    var maxW=W*0.9,mw=ctx.measureText(t.text).width;
+    if(mw>maxW){fs=Math.max(12,Math.floor(fs*maxW/mw));ctx.font='800 '+fs+'px "Segoe UI",system-ui,sans-serif'}
+    var y=t.pos==='top'?(H*0.07+fs*0.5):(t.pos==='middle'?H/2:(H-H*0.07-fs*0.2));
+    ctx.textAlign='center';ctx.textBaseline='middle';
+    var light=/^#(f|e|d)/i.test(t.color);
+    ctx.lineJoin='round';ctx.lineWidth=Math.max(3,fs*0.14);
+    ctx.strokeStyle=light?'rgba(0,0,0,.75)':'rgba(255,255,255,.85)';
+    ctx.strokeText(t.text,W/2,y);
+    ctx.fillStyle=t.color||'#ffffff';
+    ctx.fillText(t.text,W/2,y);
+    ctx.restore();
+  }catch(e){}
+}
+
+/* ================= BOOTH CODES (pay at counter) ================= */
+var V_KEY='snapbooth_vouchers';
+function vLoad(){try{var a=JSON.parse(localStorage.getItem(V_KEY)||'[]');return Array.isArray(a)?a:[]}catch(e){return[]}}
+function vSave(a){try{localStorage.setItem(V_KEY,JSON.stringify(a))}catch(e){gToast('Could not save codes on this device.')}try{syncMark()}catch(e){}}
+function vOn(){return !!CFG.voucherOn&&planHas('vouchers')}
+function vSessionValid(){
+  if(!S.vOk)return false;
+  var mins=CFG.vMin||10;
+  if(S.vAt&&Date.now()-S.vAt>mins*60000){S.vOk=false;return false}
+  return true;
+}
+function gToast(msg){
+  try{var t=$('gToast');if(!t)return;t.textContent=msg;t.classList.add('on');
+    if(S.gToastT)clearTimeout(S.gToastT);S.gToastT=setTimeout(function(){t.classList.remove('on')},3500)}catch(e){}
+}
+function gStartGate(){
+  try{
+    if(!vOn()||vSessionValid()){gShowLayouts();return}
+    var m=$('vMod');if(!m){gShowLayouts();return}
+    var i=$('vInput');if(i)i.value='';
+    var pr=$('vPrice');if(pr)pr.textContent=CFG.vPrice||'';
+    var msg=$('vMsg');if(msg)msg.textContent='';
+    m.classList.add('on');
+    try{if(!/Android|iPhone|iPad/i.test(navigator.userAgent||''))setTimeout(function(){try{i.focus()}catch(e){}},150)}catch(e){}
+    gArmIdle(90000);
+  }catch(e){gShowLayouts()}
+}
+function vKey(k){
+  try{
+    var i=$('vInput');if(!i)return;
+    if(k==='del')i.value=i.value.slice(0,-1);
+    else if(k==='clr')i.value='';
+    else if(i.value.length<8)i.value+=k;
+    var msg=$('vMsg');if(msg)msg.textContent='';
+    gArmIdle(90000);
+  }catch(e){}
+}
+
+/* ================= CAMERA CODE SCAN (v43) ================= */
+var JSQR_URL='https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js';
+function vScanLoadLib(cb){
+  try{
+    if(window.jsQR){cb(true);return}
+    var s=document.createElement('script');s.src=JSQR_URL;s.async=true;
+    s.onload=function(){cb(!!window.jsQR)};s.onerror=function(){cb(false)};
+    document.head.appendChild(s);
+  }catch(e){cb(false)}
+}
+function vScanToggle(){if(S.vScanOn)vScanStop();else vScanStart()}
+function vScanStart(){
+  try{
+    var box=$('vScanBox'),v=$('vScanVid'),b=$('vScanBtn'),msg=$('vMsg');
+    if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){if(msg)msg.textContent='Camera not available on this device.';return}
+    S.vScanOn=true;if(box)box.classList.add('on');if(b)b.innerHTML='&#x2715; Stop scanning';
+    if(msg)msg.textContent='';
+    gArmIdle(90000);
+    /* stop the booth camera while scanning so both don't fight over it */
+    try{stopCam()}catch(e){}
+    var vc={width:{ideal:1280},height:{ideal:720}};
+    var src=CFG.camSrc||'user';
+    if(src!=='user'&&src!=='environment')vc.deviceId={exact:src};else vc.facingMode=src;
+    navigator.mediaDevices.getUserMedia({video:vc,audio:false}).catch(function(){
+      return navigator.mediaDevices.getUserMedia({video:true,audio:false});
+    }).then(function(st){
+      if(!S.vScanOn){try{st.getTracks().forEach(function(t){t.stop()})}catch(e){}return}
+      S.vScanStream=st;
+      if(v){v.setAttribute('playsinline','');v.muted=true;v.srcObject=st;v.play().catch(function(){})}
+      vScanBegin();
+    }).catch(function(){
+      vScanStop();if(msg)msg.textContent='Camera permission was denied. Type the code instead.';
+    });
+  }catch(e){vScanStop()}
+}
+function vScanBegin(){
+  try{
+    var v=$('vScanVid');
+    /* Option A: built-in detector - Chrome/Edge on Android and PC */
+    if('BarcodeDetector' in window){
+      try{
+        var det=new window.BarcodeDetector({formats:['qr_code']});
+        var tick=function(){
+          if(!S.vScanOn)return;
+          if(!v||v.readyState<2){S.vScanT=setTimeout(tick,250);return}
+          det.detect(v).then(function(r){
+            if(r&&r.length&&r[0].rawValue){vScanFound(r[0].rawValue);return}
+            S.vScanT=setTimeout(tick,250);
+          }).catch(function(){S.vScanT=setTimeout(tick,400)});
+        };
+        tick();return;
+      }catch(e){}
+    }
+    /* Option B: fallback library - iPhone Safari, Firefox */
+    vScanLoadLib(function(ok){
+      if(!ok){var m=$('vMsg');if(m)m.textContent='Scanner needs internet the first time. Type the code instead.';vScanStop();return}
+      var c=document.createElement('canvas'),x=c.getContext('2d',{willReadFrequently:true});
+      var tick2=function(){
+        if(!S.vScanOn)return;
+        try{
+          if(v&&v.readyState>=2&&v.videoWidth){
+            var w=Math.min(640,v.videoWidth),hh=Math.round(v.videoHeight*w/v.videoWidth);
+            c.width=w;c.height=hh;x.drawImage(v,0,0,w,hh);
+            var d=x.getImageData(0,0,w,hh),q=window.jsQR(d.data,w,hh,{inversionAttempts:'dontInvert'});
+            if(q&&q.data){vScanFound(q.data);return}
+          }
+        }catch(e){}
+        S.vScanT=setTimeout(tick2,250);
+      };
+      tick2();
+    });
+  }catch(e){}
+}
+function vScanFound(txt){
+  try{
+    var code=String(txt||'').replace(/[^0-9A-Za-z]/g,'');
+    var m=String(txt||'').match(/\d{6}/);if(m)code=m[0];
+    vScanStop();
+    try{if(navigator.vibrate)navigator.vibrate(80)}catch(e){}
+    try{playBeep(1200,0.12)}catch(e){}
+    var i=$('vInput');if(i)i.value=code;
+    vSubmit();
+  }catch(e){}
+}
+function vScanStop(){
+  try{
+    S.vScanOn=false;
+    if(S.vScanT){clearTimeout(S.vScanT);S.vScanT=null}
+    if(S.vScanStream){try{S.vScanStream.getTracks().forEach(function(t){t.stop()})}catch(e){}S.vScanStream=null}
+    var v=$('vScanVid');if(v)v.srcObject=null;
+    var box=$('vScanBox');if(box)box.classList.remove('on');
+    var b=$('vScanBtn');if(b)b.innerHTML='&#x1f4f7; Scan code from ticket';
+  }catch(e){}
+}
+
+function vClose(){try{vScanStop()}catch(e){}try{var m=$('vMod');if(m)m.classList.remove('on')}catch(e){}}
+function vSubmit(){
+  try{
+    var i=$('vInput'),msg=$('vMsg');
+    var code=String(i?i.value:'').replace(/\s/g,'');
+    if(!code){if(msg)msg.textContent='Please enter your code.';return}
+    var a=vLoad(),hit=-1;
+    for(var k=0;k<a.length;k++){if(String(a[k].c)===code){hit=k;break}}
+    if(hit<0){if(msg)msg.textContent='Code not found. Please check with the counter.';if(i)i.value='';return}
+    if(a[hit].used){if(msg)msg.textContent='This code was already used.';if(i)i.value='';return}
+    a[hit].used=Date.now();vSave(a);
+    S.vOk=true;S.vAt=Date.now();S.vCode=code;S.vLeft=CFG.vCopies||1;
+    vTimerStart();
+    vClose();
+    try{vRenderAdmin()}catch(e){}
+    gShowLayouts();
+  }catch(e){}
+}
+
+/* --- Session countdown --- */
+function vTimerStart(){
+  try{
+    vTimerStop(true);
+    S.vWarned=false;
+    S.vTick=setInterval(vTimerTick,1000);
+    vTimerTick();
+  }catch(e){}
+}
+function vTimerStop(keepHidden){
+  try{if(S.vTick){clearInterval(S.vTick);S.vTick=null}
+    var t=$('vTimer');if(t){t.classList.remove('on');t.classList.remove('warn')}}catch(e){}
+}
+function vTimerTick(){
+  try{
+    var t=$('vTimer'),tt=$('vTimerT');
+    if(!vOn()||!S.vOk||!S.vAt){vTimerStop();return}
+    var left=Math.ceil(((CFG.vMin||10)*60000-(Date.now()-S.vAt))/1000);
+    if(left<0)left=0;
+    var m=Math.floor(left/60),s=left%60;
+    if(tt)tt.textContent=m+':'+(s<10?'0':'')+s;
+    if(t){t.classList.add('on');if(left<=60)t.classList.add('warn');else t.classList.remove('warn')}
+    if(left<=60&&!S.vWarned){S.vWarned=true;gToast('1 minute left on this session.')}
+    if(left<=0){
+      /* let a photo sequence in progress finish first */
+      if(S.gBusy)return;
+      vTimerStop();
+      S.vOk=false;S.vLeft=0;S.vCode='';
+      gToast('Time is up. Thank you! Get a new code at the counter for another session.');
+      gToIdle();
+    }
+  }catch(e){}
+}
+
+
+/* --- Done: press and hold 1.2s so it can't be tapped by accident --- */
+function gInitDone(){
+  try{
+    var b=$('gDoneBtn');if(!b||b._init)return;b._init=true;
+    var t=null,txt=b.querySelector('.g-done-t');
+    var label='\u2705 Hold to finish \u2014 next guest';
+    var start=function(ev){
+      try{if(ev&&ev.preventDefault)ev.preventDefault()}catch(e){}
+      if(t)clearTimeout(t);
+      b.classList.add('holding');if(txt)txt.textContent='Keep holding\u2026';
+      t=setTimeout(function(){t=null;b.classList.remove('holding');if(txt)txt.textContent=label;gDone()},1200);
+    };
+    var cancel=function(){
+      if(t){clearTimeout(t);t=null;if(txt)txt.textContent=label;gToast('Press and hold to finish your session.')}
+      b.classList.remove('holding');
+    };
+    b.addEventListener('pointerdown',start);
+    b.addEventListener('pointerup',cancel);
+    b.addEventListener('pointerleave',cancel);
+    b.addEventListener('pointercancel',cancel);
+    b.addEventListener('contextmenu',function(ev){try{ev.preventDefault()}catch(e){}});
+  }catch(e){}
+}
+
+function gDone(){
+  try{S.vOk=false;S.vLeft=0;S.vCode='';vTimerStop();}catch(e){}
+  gToIdle();
+}
+/* print gate: called at the start of gPrint */
+function vPrintGate(){
+  if(!vOn())return true;
+  if((S.vLeft||0)<=0){gToast('No prints left on this code. Get a new code at the counter.');return false}
+  var n=S.gCopies||1;
+  if(n>S.vLeft){S.gCopies=S.vLeft;try{gUpdateRevUI()}catch(e){}}
+  S.vLeft-=S.gCopies;
+  try{gUpdateRevUI()}catch(e){}
+  return true;
+}
+/* ---- admin: generate / list / export ---- */
+function vNewCode(existing){
+  var c='';
+  for(var t=0;t<50;t++){
+    var arr=new Uint32Array(1);
+    try{crypto.getRandomValues(arr)}catch(e){arr[0]=Math.floor(Math.random()*4294967295)}
+    c=String(100000+(arr[0]%900000));
+    if(!existing[c])return c;
+  }
+  return c;
+}
+function vGenerate(){
+  try{
+    var n=Math.max(1,Math.min(500,parseInt(($('sVGenN')||{}).value)||50));
+    var a=vLoad(),seen={};
+    for(var i=0;i<a.length;i++)seen[a[i].c]=1;
+    for(var j=0;j<n;j++){var c=vNewCode(seen);seen[c]=1;a.push({c:c,used:0,made:Date.now()})}
+    vSave(a);vRenderAdmin();
+    gToast(n+' new codes created. Print the code sheet for the counter.');
+  }catch(e){}
+}
+function vAddPasted(){
+  try{
+    var t=$('sVAdd');if(!t)return;
+    var lines=String(t.value||'').split(/[\s,;]+/),a=vLoad(),seen={},added=0;
+    for(var i=0;i<a.length;i++)seen[a[i].c]=1;
+    for(var j=0;j<lines.length;j++){
+      var c=lines[j].replace(/[^0-9A-Za-z]/g,'');
+      if(c.length<4||seen[c])continue;
+      seen[c]=1;a.push({c:c,used:0,made:Date.now()});added++;
+    }
+    vSave(a);t.value='';vRenderAdmin();
+    gToast(added+' code(s) added.');
+  }catch(e){}
+}
+function vClearUsed(){
+  try{var a=vLoad(),k=[];for(var i=0;i<a.length;i++){if(!a[i].used)k.push(a[i])}
+    vSave(k);vRenderAdmin();gToast((a.length-k.length)+' used code(s) removed.')}catch(e){}
+}
+function vDeleteAll(){
+  try{if(!confirm('Delete ALL booth codes on this device?'))return;vSave([]);vRenderAdmin()}catch(e){}
+}
+function vRenderAdmin(){
+  try{
+    var a=vLoad(),u=0;for(var i=0;i<a.length;i++){if(a[i].used)u++}
+    var st=$('vStats');if(st)st.textContent=a.length+' codes \u2022 '+(a.length-u)+' unused \u2022 '+u+' used';
+    var l=$('vList');
+    if(l){
+      var html='',show=a.slice(-120).reverse();
+      for(var j=0;j<show.length;j++){
+        var x=show[j];
+        html+='<div class="'+(x.used?'u':'')+'">'+x.c+(x.used?'  (used '+new Date(x.used).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})+')':'')+'</div>';
+      }
+      l.innerHTML=html||'<div style="opacity:.6">No codes yet.</div>';
+    }
+  }catch(e){}
+}
+function vExportCSV(){
+  try{
+    var a=vLoad(),csv='code,status,used_at\n';
+    for(var i=0;i<a.length;i++){csv+=a[i].c+','+(a[i].used?'used':'unused')+','+(a[i].used?new Date(a[i].used).toISOString():'')+'\n'}
+    var b=new Blob([csv],{type:'text/csv'}),u=URL.createObjectURL(b),el=document.createElement('a');
+    el.href=u;el.download='booth_codes.csv';document.body.appendChild(el);el.click();
+    setTimeout(function(){try{document.body.removeChild(el);URL.revokeObjectURL(u)}catch(e){}},800);
+  }catch(e){}
+}
+function vPrintSheet(){
+  try{
+    var a=vLoad(),cells='',n=0;
+    for(var i=0;i<a.length;i++){
+      if(a[i].used)continue;n++;
+      cells+='<div class="t"><div class="b">'+ctplEsc(CFG.name||'Grinzy')+'</div><div class="c">'+a[i].c+'</div><div class="p">'+ctplEsc(CFG.vPrice||'')+'</div><div class="s">One-time booth code</div></div>';
+    }
+    if(!n){gToast('No unused codes to print. Generate some first.');return}
+    var doc='<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Booth codes</title><style>'+
+      '@page{margin:8mm}body{font-family:system-ui,sans-serif;margin:0}'+
+      '.g{display:grid;grid-template-columns:repeat(4,1fr);gap:0}'+
+      '.t{border:1px dashed #999;padding:10px 6px;text-align:center;break-inside:avoid}'+
+      '.b{font-size:11px;color:#555}.c{font-size:26px;font-weight:800;letter-spacing:4px;margin:4px 0}'+
+      '.p{font-size:12px;font-weight:700}.s{font-size:10px;color:#777}'+
+      '</style></head><body onload="setTimeout(function(){window.print()},400)"><div class="g">'+cells+'</div></body></html>';
+    var w=null;try{w=window.open('','_blank')}catch(e){}
+    if(w&&w.document){w.document.open();w.document.write(doc);w.document.close()}
+    else{gToast('Pop-up blocked. Use Download list (CSV) instead.')}
+  }catch(e){}
+}
+
+/* --- Booth codes on a thermal printer: one long receipt, a ticket per code with a cut line --- */
+function vQrCanvas(text,size){
+  try{
+    var q=qrcode(0,'M');q.addData(String(text));q.make();
+    var n=q.getModuleCount(),cell=Math.max(1,Math.floor(size/(n+2))),s=cell*(n+2);
+    var c=document.createElement('canvas');c.width=s;c.height=s;var x=c.getContext('2d');
+    x.fillStyle='#fff';x.fillRect(0,0,s,s);x.fillStyle='#000';
+    for(var r=0;r<n;r++)for(var k=0;k<n;k++){if(q.isDark(r,k))x.fillRect((k+1)*cell,(r+1)*cell,cell,cell)}
+    return c;
+  }catch(e){return null}
+}
+function vLogoImg(cb){
+  try{
+    var src=CFG.logoData||S.logoData;if(!src){cb(null);return}
+    var im=new Image();im.onload=function(){cb(im)};im.onerror=function(){cb(null)};im.src=src;
+  }catch(e){cb(null)}
+}
+function vFitText(x,t,maxW,px,weight,family){
+  var f=px;x.font=(weight||'')+' '+f+'px '+family;
+  while(f>10&&x.measureText(t).width>maxW){f--;x.font=(weight||'')+' '+f+'px '+family}
+}
+function vThermalRoll(list,logo,single){
+  var mm=gPaperMM(),wmm=mm[0];
+  /* receipt rolls only; for label/photo paper sizes fall back to 72mm (80mm roll) */
+  if(mm[1]||gIsInkjet())wmm=72;
+  var W=Math.round(wmm/25.4*(CFG.dpi||203));
+  var tickH=Math.round(W*0.44),pad=Math.round(W*0.05);
+  var head=single?Math.round(W*0.02):Math.round(W*0.18),foot=single?Math.round(W*0.02):Math.round(W*0.16);
+  var c=document.createElement('canvas');c.width=W;c.height=head+list.length*tickH+foot;
+  var x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);
+  x.fillStyle='#000';x.textBaseline='middle';
+  var SANS='"Segoe UI",system-ui,sans-serif',MONO='ui-monospace,Consolas,"Courier New",monospace';
+  var nm=CFG.name||'Grinzy',pr=CFG.vPrice||'',tag=CFG.hashtag||'',msg=CFG.vMsg||'';
+  /* roll header */
+  x.textAlign='center';
+  if(!single){
+  vFitText(x,nm.toUpperCase(),W-pad*2,Math.round(W*0.075),'800',SANS);x.fillText(nm.toUpperCase(),W/2,head*0.45);
+  x.font=Math.round(W*0.04)+'px '+SANS;
+  x.fillText(list.length+' booth code'+(list.length>1?'s':'')+' - '+new Date().toLocaleDateString(),W/2,head*0.82);
+  }
+  var dash=function(y){x.save();x.strokeStyle='#000';x.lineWidth=Math.max(2,Math.round(W/190));x.setLineDash([Math.round(W/40),Math.round(W/55)]);
+    x.beginPath();x.moveTo(pad,y);x.lineTo(W-pad,y);x.stroke();x.restore()};
+  var qs=Math.round(tickH*0.78);                 /* QR size */
+  var tx=pad+qs+Math.round(W*0.04),tw=W-tx-pad;   /* text column */
+  for(var i=0;i<list.length;i++){
+    var y=head+i*tickH;if(!single)dash(y);
+    /* QR of the code, left */
+    var qc=vQrCanvas(list[i],qs);
+    if(qc)x.drawImage(qc,pad,y+(tickH-qs)/2,qs,qs);
+    /* logo + name line */
+    x.textAlign='left';
+    var lineY=y+tickH*0.15,lx=tx;
+    if(logo){var lh=Math.round(tickH*0.16),lw=Math.round(lh*logo.width/logo.height);if(lw>tw*0.4){lw=Math.round(tw*0.4);lh=Math.round(lw*logo.height/logo.width)}
+      try{x.drawImage(logo,tx,lineY-lh/2,lw,lh)}catch(e){}lx=tx+lw+Math.round(W*0.015)}
+    vFitText(x,nm,W-pad-lx,Math.round(W*0.042),'700',SANS);x.fillText(nm,lx,lineY);
+    /* code */
+    var code=String(list[i]).split('').join(' ');
+    vFitText(x,code,tw,Math.round(W*0.1),'900',MONO);x.fillText(code,tx,y+tickH*0.38);
+    /* price, hashtag, message, instruction */
+    var ly=y+tickH*0.56,step=tickH*0.12;
+    if(pr){vFitText(x,pr,tw,Math.round(W*0.042),'700',SANS);x.fillText(pr,tx,ly);ly+=step}
+    if(tag){vFitText(x,tag,tw,Math.round(W*0.036),'600',SANS);x.fillText(tag,tx,ly);ly+=step}
+    if(msg){vFitText(x,msg,tw,Math.round(W*0.034),'',SANS);x.fillText(msg,tx,ly);ly+=step}
+    if(ly<y+tickH*0.95){vFitText(x,'Scan or enter this code on the booth',tw,Math.round(W*0.028),'',SANS);x.fillText('Scan or enter this code on the booth',tx,Math.min(ly,y+tickH*0.9))}
+  }
+  if(!single)dash(head+list.length*tickH);
+  return c;
+}
+
+/* ===== Thermal auto-cut (Beta 1.1) ===== */
+function vEscRaster(cv){
+  /* canvas -> ESC/POS GS v 0 raster bytes (black = dot) */
+  var w=cv.width,h=cv.height,bw=Math.ceil(w/8);
+  var d=cv.getContext('2d').getImageData(0,0,w,h).data;
+  var out=[0x1D,0x76,0x30,0x00,bw&255,(bw>>8)&255,h&255,(h>>8)&255];
+  for(var y=0;y<h;y++){
+    for(var b=0;b<bw;b++){
+      var v=0;
+      for(var k=0;k<8;k++){
+        var xx=b*8+k;
+        if(xx<w){var o=(y*w+xx)*4;var lum=d[o]*0.299+d[o+1]*0.587+d[o+2]*0.114;if(d[o+3]>100&&lum<140)v|=(128>>k)}
+      }
+      out.push(v);
+    }
+  }
+  return out;
+}
+function vBytesToB64(arr){
+  var s='',CH=8192;
+  for(var i=0;i<arr.length;i+=CH){s+=String.fromCharCode.apply(null,arr.slice(i,i+CH))}
+  return btoa(s);
+}
+function vBuildEscJob(list,logo){
+  var bytes=[0x1B,0x40];                       /* init */
+  var full=(CFG.vCutType==='full');
+  /* roll header ticket */
+  for(var i=0;i<list.length;i++){
+    var cv=vThermalRoll([list[i]],logo,true);
+    bytes=bytes.concat(vEscRaster(cv));
+    bytes.push(0x1B,0x64,0x04);                 /* feed 4 lines so the cut clears the ticket */
+    bytes.push(0x1D,0x56,full?0x00:0x01);       /* GS V cut */
+  }
+  return bytes;
+}
+function vPrintTicketsPaged(list,logo){
+  /* system print fallback: one ticket per page -> drivers with 'cut per page' cut each */
+  try{
+    var mm=gPaperMM(),wmm=mm[0];if(mm[1]||gIsInkjet())wmm=72;
+    var imgs='',hmm=0;
+    for(var i=0;i<list.length;i++){
+      var cv=vThermalRoll([list[i]],logo,true);
+      hmm=Math.ceil(wmm*cv.height/cv.width)+4;
+      imgs+='<div class="t"><img src="'+cv.toDataURL('image/png')+'"></div>';
+    }
+    var w=null;try{w=window.open('','_blank')}catch(e){}
+    var doc='<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Booth codes</title><style>@page{size:'+wmm+'mm '+hmm+'mm;margin:0}body{margin:0}.t{page-break-after:always;break-after:page}img{width:100%;display:block}</style></head>'+
+      '<body onload="setTimeout(function(){window.print()},400)">'+imgs+'</body></html>';
+    if(w&&w.document){w.document.open();w.document.write(doc);w.document.close()}
+    else{gToast('Pop-up blocked. Allow pop-ups to print.')}
+  }catch(e){gToast('Could not print codes.')}
+}
+
+
+/* ===== Tickets PDF: one page per code (Beta 1.2) ===== */
+function vB64ToBin(b64){try{return atob(b64)}catch(e){return ''}}
+function vMakePDF(pages){
+  /* pages: [{jpg:binaryString,w:px,h:px,pw:pt,ph:pt}] */
+  var objs=[],n=pages.length,i;
+  var kids='';for(i=0;i<n;i++)kids+=(3+i*3)+' 0 R ';
+  objs[1]='<< /Type /Catalog /Pages 2 0 R >>';
+  objs[2]='<< /Type /Pages /Kids ['+kids+'] /Count '+n+' >>';
+  for(i=0;i<n;i++){
+    var pg=pages[i],po=3+i*3,co=po+1,io=po+2;
+    var pw=pg.pw.toFixed(2),ph=pg.ph.toFixed(2);
+    var cs='q '+pw+' 0 0 '+ph+' 0 0 cm /Im0 Do Q';
+    objs[po]='<< /Type /Page /Parent 2 0 R /MediaBox [0 0 '+pw+' '+ph+'] /Resources << /XObject << /Im0 '+io+' 0 R >> >> /Contents '+co+' 0 R >>';
+    objs[co]='<< /Length '+cs.length+' >>\nstream\n'+cs+'\nendstream';
+    objs[io]='<< /Type /XObject /Subtype /Image /Width '+pg.w+' /Height '+pg.h+' /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length '+pg.jpg.length+' >>\nstream\n'+pg.jpg+'\nendstream';
+  }
+  var out='%PDF-1.4\n%\xE2\xE3\xCF\xD3\n',off=[];
+  for(i=1;i<objs.length;i++){off[i]=out.length;out+=i+' 0 obj\n'+objs[i]+'\nendobj\n'}
+  var xref=out.length;
+  out+='xref\n0 '+objs.length+'\n0000000000 65535 f \n';
+  for(i=1;i<objs.length;i++){out+=('0000000000'+off[i]).slice(-10)+' 00000 n \n'}
+  out+='trailer\n<< /Size '+objs.length+' /Root 1 0 R >>\nstartxref\n'+xref+'\n%%EOF';
+  var u=new Uint8Array(out.length);for(i=0;i<out.length;i++)u[i]=out.charCodeAt(i)&255;
+  return new Blob([u],{type:'application/pdf'});
+}
+function vTicketsPDF(){
+  try{
+    var a=vLoad(),list=[];
+    for(var i=0;i<a.length;i++){if(!a[i].used)list.push(a[i].c)}
+    if(!list.length){gToast('No unused codes. Generate some first.');return}
+    vLogoImg(function(logo){
+      try{
+        var mm=gPaperMM(),wmm=mm[0];if(mm[1]||gIsInkjet())wmm=72;
+        var pages=[];
+        for(var k=0;k<list.length;k++){
+          var cv=vThermalRoll([list[k]],logo,true);
+          var jpg=vB64ToBin(cv.toDataURL('image/jpeg',0.95).split(',')[1]||'');
+          var pw=wmm*72/25.4;
+          pages.push({jpg:jpg,w:cv.width,h:cv.height,pw:pw,ph:pw*cv.height/cv.width});
+        }
+        var blob=vMakePDF(pages);
+        var name='booth_codes_'+new Date().toISOString().slice(0,10)+'.pdf';
+        /* Android: offer share sheet -> RawBT */
+        if(gIsAndroid()&&navigator.share&&navigator.canShare){
+          try{
+            var f=new File([blob],name,{type:'application/pdf'});
+            if(navigator.canShare({files:[f]})){navigator.share({files:[f],title:'Booth codes'}).catch(function(){vSaveBlob(blob,name)});return}
+          }catch(e){}
+        }
+        vSaveBlob(blob,name);
+      }catch(e){gToast('Could not make the PDF.')}
+    });
+  }catch(e){gToast('Could not make the PDF.')}
+}
+function vSaveBlob(blob,name){
+  try{
+    var u=URL.createObjectURL(blob),l=document.createElement('a');
+    l.href=u;l.download=name;document.body.appendChild(l);l.click();
+    setTimeout(function(){try{document.body.removeChild(l);URL.revokeObjectURL(u)}catch(e){}},3000);
+    gToast('Saved '+name);
+  }catch(e){gToast('Could not save the PDF.')}
+}
+
+function vPrintThermal(){
+  try{
+    var a=vLoad(),list=[];
+    for(var i=0;i<a.length;i++){if(!a[i].used)list.push(a[i].c)}
+    if(!list.length){gToast('No unused codes to print. Generate some first.');return}
+    if(list.length>200&&!confirm('Print '+list.length+' codes in one long receipt? This uses a lot of paper.'))return;
+    vLogoImg(function(logo){
+    try{
+    var m=CFG.printMode||'rawbt';
+    if(CFG.vCut!==false){
+      if(m==='rawbt'&&gIsAndroid()){
+        try{var b64=vBytesToB64(vBuildEscJob(list,logo));window.location.href='intent:base64,'+b64+'#Intent;scheme=rawbt;package=ru.a402d.rawbtprinter;end;';return}catch(e){}
+      }
+      if(m!=='share'){vPrintTicketsPaged(list,logo);return}
+    }
+    var du=vThermalRoll(list,logo).toDataURL('image/png');
+    if(m==='rawbt'&&gIsAndroid()){
+      try{window.location.href='intent:'+du+'#Intent;scheme=rawbt;package=ru.a402d.rawbtprinter;end;';return}catch(e){}
+    }
+    if(navigator.share){
+      try{
+        var f=new File([gDataUrlToBlob(du)],'booth_codes.png',{type:'image/png'});
+        if(!navigator.canShare||navigator.canShare({files:[f]})){navigator.share({files:[f],title:'Booth codes'}).catch(function(){});return}
+      }catch(e){}
+    }
+    var w=null;try{w=window.open('','_blank')}catch(e){}
+    var doc='<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Booth codes</title><style>@page{margin:0}body{margin:0}img{width:100%;display:block}</style></head>'+
+      '<body onload="setTimeout(function(){window.print()},400)"><img src="'+du+'"></body></html>';
+    if(w&&w.document){w.document.open();w.document.write(doc);w.document.close()}
+    else{gToast('Pop-up blocked. Allow pop-ups to print.')}
+    }catch(e){gToast('Could not print codes.')}
+    });
+  }catch(e){gToast('Could not print codes.')}
+}
+
+function gIdleTap(e){
+  try{
+    var brand=$('idleBrand');
+    var onLogo=!!(brand&&e&&e.target&&brand.contains(e.target));
+    if(S.gTapT){clearTimeout(S.gTapT);S.gTapT=null}
+    if(onLogo){
+      S.gTapN++;
+      if(S.gTapN>=5){S.gTapN=0;gAskPin();return}
+      S.gTapT=setTimeout(function(){S.gTapN=0;gStartGate()},700);
+    }else{
+      S.gTapN=0;gStartGate();
+    }
+  }catch(err){}
+}
+function gShowLayouts(){
+  try{
+    getAudioCtx();
+    /* Make sure template tiles are present every time the picker opens */
+    try{
+      if(!S.ctpls)S.ctpls=[];
+      if(!S.ctpls.length)ctplBoot();
+      ctplRenderTiles();
+    }catch(e){}
+    try{tgApplyPicker()}catch(e){}
+    showScreen('layouts');
+    gArmIdle(60000);
+  }catch(e){}
+}
+
+/* --- Admin exit --- */
+function gInitAdminHot(){
+  try{
+    var el=$('adminHot');if(!el)return;
+    var t=null;
+    var start=function(ev){
+      try{if(ev&&ev.preventDefault)ev.preventDefault()}catch(e){}
+      if(t)clearTimeout(t);
+      t=setTimeout(function(){t=null;gAskPin()},2000);
+    };
+    var cancel=function(){if(t){clearTimeout(t);t=null}};
+    el.addEventListener('pointerdown',start);
+    el.addEventListener('pointerup',cancel);
+    el.addEventListener('pointerleave',cancel);
+    el.addEventListener('pointercancel',cancel);
+    el.addEventListener('contextmenu',function(ev){try{ev.preventDefault()}catch(e){}});
+    el.addEventListener('click',function(ev){try{ev.stopPropagation()}catch(e){}});
+  }catch(e){}
+}
+function gAskPin(){
+  try{
+    var m=$('pinMod');if(!m)return;
+    var i=$('pinInput');if(i)i.value='';
+    var msg=$('pinMsg');if(msg)msg.textContent='';
+    m.classList.add('on');
+    if(i)setTimeout(function(){try{i.focus()}catch(e){}},100);
+  }catch(e){}
+}
+function gPinCancel(){try{var m=$('pinMod');if(m)m.classList.remove('on')}catch(e){}}
+function gPinOk(){
+  try{
+    var i=$('pinInput');var v=i?String(i.value).trim():'';
+    var pin=String(CFG.adminPin||'1234');
+    if(v===pin){
+      gPinCancel();
+      S.gSeq++;S.gBusy=false;S.gReviewing=false;S.gActive=false;
+      gClearIdle();stopCam();
+      document.body.classList.remove('guest');
+      var cp=$('capture');if(cp)cp.classList.remove('gflow');
+      var pv=$('preview');if(pv)pv.classList.remove('gflow');
+      showScreen('home');
+    }else{
+      var msg=$('pinMsg');if(msg)msg.textContent='Wrong PIN. Try again.';
+      if(i)i.value='';
+    }
+  }catch(e){}
+}
+
+/* --- Layout pick & capture --- */
+function gPickLayout(key){
+  try{
+    if(S.gReLayout){
+      var rl=S.gReLayout;S.gReLayout=null;
+      var hd0=$('layHdr');if(hd0)hd0.textContent='Choose your layout';
+      if(!G_LAYOUTS[key])key='strip4';
+      S.gLayout=key;S.gActive=true;S.gImgs=null;S.gFiltCache=null;
+      S.gShots=rl.shots.slice();S.gFlip=rl.flip;
+      S.mode=(key==='receipt4')?'receipt':(key==='single'?'classic':'strip');
+      gClearIdle();
+      var need=G_LAYOUTS[key].n||1,have=S.gShots.length;
+      /* reuse the photos already taken: cycle them into any extra slots (no retake) */
+      var src=S.gShots.slice(),fill=[];
+      for(var q=0;q<need;q++){fill.push(src[q%have])}
+      S.gShots=fill;
+      if(need>have)gToast('Your '+have+' photo'+(have>1?'s were':' was')+' reused to fill '+need+' spots. Tap Retake for new photos.');
+      gCompose(true);return;
+    }
+    if(!G_LAYOUTS[key])key='strip4';
+    S.gLayout=key;S.gActive=true;S.gShots=[];S.gImgs=null;S.gFlip=false;S.gCopies=1;
+    S.gTime=null;S.gOrder=null;S.guestName='';
+    S.mode=(key==='receipt4')?'receipt':(key==='single'?'classic':'strip');
+    gClearIdle();
+    if(CFG.askName){showGuestModal(function(){gStartCap()})}
+    else{gStartCap()}
+  }catch(e){}
+}
+function gStartCap(){
+  try{
+    var def=G_LAYOUTS[S.gLayout];
+    var cp=$('capture');if(cp)cp.classList.add('gflow');
+    try{var vv=$('vid');if(vv)vv.style.filter=''}catch(e){}
+    var have=S.gKeepShots?(S.gShots||[]).length:0;
+    var info=$('capInfo');if(info)info.textContent=def.label+' \u2022 '+(have?((def.n-have)+' more photo'+((def.n-have)>1?'s':'')):(def.n+(def.n>1?' photos':' photo')));
+    var b=$('gTakeBtn');if(b){b.disabled=false;b.style.display=''}
+    try{var tl=document.querySelector('.g-takelbl');if(tl)tl.style.visibility=''}catch(e){}
+    gShotInfo('');
+    showScreen('capture');
+    startCam();
+    try{gLiveStart()}catch(e){}
+    gArmIdle(90000);
+  }catch(e){}
+}
+function gShotInfo(t){
+  try{var el=$('gShotInfo');if(!el)return;el.textContent=t||'';if(t)el.classList.add('on');else el.classList.remove('on')}catch(e){}
+}
+function gWaitCam(token,cb,tries){
+  try{
+    if(token!==S.gSeq)return;
+    var v=$('vid');tries=tries||0;
+    if(v&&v.videoWidth>0&&v.readyState>=2){cb();return}
+    if(tries>40){cb();return}
+    setTimeout(function(){gWaitCam(token,cb,tries+1)},250);
+  }catch(e){}
+}
+
+/* --- Live template preview on the capture screen --- */
+function gLiveStart(){
+  try{
+    var def=G_LAYOUTS[S.gLayout];
+    if(!def||def.type!=='tpl'||!def.tpl||!def.tpl.img){gLiveStop();return}
+    S.gLiveOn=true;S.gLiveShots=[];S.gCurSlot=0;try{for(var ks=0;ks<S.gShots.length;ks++){var kim=new Image();kim.src=S.gShots[ks];S.gLiveShots.push(kim)}S.gCurSlot=S.gShots.length}catch(e){}
+    try{var cpz=$('capture');if(cpz)cpz.classList.add('tplmode')}catch(e){}
+    try{
+      var tt=def.tpl,tw=tt.w||tt.img.naturalWidth,th=tt.h||tt.img.naturalHeight,vb=$('vidBox');
+      if(vb&&tw&&th){
+        var land=window.innerWidth>window.innerHeight;
+        var maxH=window.innerHeight-(land?140:330),maxW=window.innerWidth*(land?0.68:0.92);
+        var sc=Math.min(maxW/tw,maxH/th);
+        vb.style.width=Math.round(tw*sc)+'px';vb.style.height=Math.round(th*sc)+'px';vb.style.aspectRatio='auto';vb.style.maxHeight='none';
+      }
+    }catch(e){}
+    var c=$('tplLive');if(c)c.classList.add('on');
+    if(S.gLiveRaf)cancelAnimationFrame(S.gLiveRaf);
+    var loop=function(){
+      if(!S.gLiveOn)return;
+      try{gLiveDraw()}catch(e){}
+      S.gLiveRaf=requestAnimationFrame(loop);
+    };
+    S.gLiveRaf=requestAnimationFrame(loop);
+  }catch(e){}
+}
+function gLiveStop(){
+  try{
+    S.gLiveOn=false;
+    try{var cpy=$('capture');if(cpy)cpy.classList.remove('tplmode')}catch(e){}
+    try{var vb2=$('vidBox');if(vb2){vb2.style.width='';vb2.style.height='';vb2.style.aspectRatio='';vb2.style.maxHeight=''}}catch(e){}
+    if(S.gLiveRaf){cancelAnimationFrame(S.gLiveRaf);S.gLiveRaf=null}
+    var c=$('tplLive');if(c)c.classList.remove('on');
+  }catch(e){}
+}
+function gLiveVideoCover(ctx,v,x,y,w,h,flip){
+  var vw=v.videoWidth,vh=v.videoHeight;if(!vw||!vh)return false;
+  var ir=vw/vh,cr=w/h,sx,sy,sw,sh;
+  if(ir>cr){sh=vh;sw=sh*cr;sx=(vw-sw)/2;sy=0}else{sw=vw;sh=sw/cr;sx=0;sy=(vh-sh)/2}
+  ctx.save();ctx.beginPath();ctx.rect(x,y,w,h);ctx.clip();
+  if(flip){ctx.translate(x+w,y);ctx.scale(-1,1);ctx.drawImage(v,sx,sy,sw,sh,0,0,w,h)}
+  else{ctx.drawImage(v,sx,sy,sw,sh,x,y,w,h)}
+  ctx.restore();return true;
+}
+function gLiveDraw(){
+  var c=$('tplLive'),v=$('vid');if(!c||!v)return;
+  var def=G_LAYOUTS[S.gLayout];if(!def||!def.tpl)return;
+  var t=def.tpl,TW=t.w||t.img.naturalWidth,TH=t.h||t.img.naturalHeight;
+  var dpr=Math.min(2,window.devicePixelRatio||1);
+  var cw=c.clientWidth,ch=c.clientHeight;if(!cw||!ch)return;
+  if(c.width!==Math.round(cw*dpr)||c.height!==Math.round(ch*dpr)){c.width=Math.round(cw*dpr);c.height=Math.round(ch*dpr)}
+  var x=c.getContext('2d');x.setTransform(dpr,0,0,dpr,0,0);
+  x.clearRect(0,0,cw,ch);
+  /* leave room for the header and the Take Photo button */
+  var top=0,bot=0,aw=cw,ah=ch;
+  var s=Math.min(aw/TW,ah/TH),dw=TW*s,dh=TH*s,ox=(cw-dw)/2,oy=top+(ah-dh)/2;
+  x.fillStyle='#fff';x.fillRect(ox,oy,dw,dh);
+  var cur=S.gCurSlot||0,shots=S.gLiveShots||[];
+  for(var i=0;i<t.slots.length;i++){
+    var sl=t.slots[i],rx=ox+sl.x*s,ry=oy+sl.y*s,rw=sl.w*s,rh=sl.h*s;
+    var im=shots[i];
+    if(im&&im.complete&&im.naturalWidth){ctplDrawCoverRect(x,im,rx,ry,rw,rh,false)}
+    else if(i===cur||(i>=shots.length&&i===shots.length)){
+      if(!gLiveVideoCover(x,v,rx,ry,rw,rh,!!CFG.mirror)){x.fillStyle='#222';x.fillRect(rx,ry,rw,rh)}
+    }else{
+      x.fillStyle='#2a2a3a';x.fillRect(rx,ry,rw,rh);
+      x.fillStyle='rgba(255,255,255,.55)';x.font='bold '+Math.max(14,Math.min(rw,rh)*0.3)+'px system-ui,sans-serif';
+      x.textAlign='center';x.textBaseline='middle';x.fillText(String(i+1),rx+rw/2,ry+rh/2);
+    }
+  }
+  try{x.drawImage(t.img,ox,oy,dw,dh)}catch(e){}
+  /* highlight the slot being shot */
+  if(t.slots[cur]&&shots.length<t.slots.length){
+    var q=t.slots[cur];x.lineWidth=3;x.strokeStyle='#fd79a8';
+    x.strokeRect(ox+q.x*s+1.5,oy+q.y*s+1.5,q.w*s-3,q.h*s-3);
+  }
+}
+
+function gStartSeq(){
+  try{
+    if(S.gBusy)return;
+    gClearIdle();
+    getAudioCtx();
+    S.gBusy=true;S.gOrigShots=null;if(!S.gKeepShots){S.gShots=[];S.gLiveShots=[];S.gCurSlot=0}S.gKeepShots=false;S.gImgs=null;
+    S.gSeq++;var token=S.gSeq;
+    var def=G_LAYOUTS[S.gLayout]||G_LAYOUTS.strip4;
+    var n=def.n,i=S.gShots.length||0;
+    var b=$('gTakeBtn');if(b){b.disabled=true;b.style.display='none'}
+    try{var tl=document.querySelector('.g-takelbl');if(tl)tl.style.visibility='hidden'}catch(e){}
+    var cd=parseInt(CFG.countdown);if(isNaN(cd)||cd<0)cd=5;
+    var next=function(){
+      if(token!==S.gSeq)return;
+      S.gCurSlot=i;
+      gShotInfo(n>1?('Photo '+(i+1)+' of '+n):'Get ready!');
+      var go=function(){
+        if(token!==S.gSeq)return;
+        var d=gGrab();
+        if(d){S.gShots.push(d);try{var li=new Image();li.src=d;(S.gLiveShots=S.gLiveShots||[]).push(li)}catch(e){}}
+        i++;
+        if(i<n){
+          gShotInfo('Nice! Next one\u2026');
+          setTimeout(next,1300);
+        }else{
+          gShotInfo('Processing\u2026');
+          setTimeout(function(){
+            if(token!==S.gSeq)return;
+            S.gBusy=false;gShotInfo('');
+            if(S.gShots.length){gCompose(false)}
+            else{gStartCap()}
+          },500);
+        }
+      };
+      if(cd>0)runCountdown(cd,go);else go();
+    };
+    gWaitCam(token,next,0);
+  }catch(e){S.gBusy=false}
+}
+function gGrab(){
+  try{
+    playShutter();doFlash();
+    var v=$('vid'),c=$('tmpCanvas');
+    if(!v||!c)return null;
+    var vw=v.videoWidth||1280,vh=v.videoHeight||720;
+    var sc=Math.min(1,1280/vw);
+    var w=Math.round(vw*sc),hh=Math.round(vh*sc);
+    c.width=w;c.height=hh;
+    var ctx=c.getContext('2d');
+    ctx.save();
+    if(CFG.mirror){ctx.translate(w,0);ctx.scale(-1,1)}
+    ctx.drawImage(v,0,0,w,hh);
+    ctx.restore();
+    try{ctx.filter='none'}catch(e){}
+    return c.toDataURL('image/jpeg',0.92);
+  }catch(e){return null}
+}
+
+
+/* --- Post-capture filters (pixel based, works on iPhone) --- */
+var G_FILT={
+  none:null,
+  bw:{gray:1,con:1.12},
+  sepia:{sep:1},
+  vintage:{sep:0.5,con:1.1,bri:1.05},
+  warm:{sep:0.3,sat:1.4,bri:1.1},
+  cool:{sat:0.85,tint:[-12,4,22],bri:1.05},
+  contrast:{con:1.5,sat:1.2},
+  bright:{bri:1.25,sat:1.1},
+  vivid:{sat:1.8,con:1.1},
+  dreamy:{bri:1.12,con:0.88,sat:1.2,glow:1}
+};
+function gFilterCanvas(img,key){
+  var f=G_FILT[key];
+  var c=document.createElement('canvas');c.width=img.width;c.height=img.height;
+  var x=c.getContext('2d');x.drawImage(img,0,0);
+  if(!f)return c;
+  try{
+    var d=x.getImageData(0,0,c.width,c.height),p=d.data;
+    var bri=f.bri||1,con=f.con||1,sat=(f.sat==null?1:f.sat),sep=f.sep||0,gray=f.gray||0,t=f.tint||[0,0,0];
+    for(var i=0;i<p.length;i+=4){
+      var r=p[i],g=p[i+1],b=p[i+2];
+      if(sep){
+        var sr=0.393*r+0.769*g+0.189*b,sg=0.349*r+0.686*g+0.168*b,sb=0.272*r+0.534*g+0.131*b;
+        r=r+(sr-r)*sep;g=g+(sg-g)*sep;b=b+(sb-b)*sep;
+      }
+      var l=0.299*r+0.587*g+0.114*b;
+      if(gray){r=g=b=l}
+      else if(sat!==1){r=l+(r-l)*sat;g=l+(g-l)*sat;b=l+(b-l)*sat}
+      r=r*bri+t[0];g=g*bri+t[1];b=b*bri+t[2];
+      if(con!==1){r=(r-128)*con+128;g=(g-128)*con+128;b=(b-128)*con+128}
+      p[i]=r<0?0:r>255?255:r;p[i+1]=g<0?0:g>255?255:g;p[i+2]=b<0?0:b>255?255:b;
+    }
+    x.putImageData(d,0,0);
+    if(f.glow){x.globalAlpha=0.25;x.globalCompositeOperation='screen';x.drawImage(c,-2,-2,c.width+4,c.height+4);x.globalAlpha=1;x.globalCompositeOperation='source-over'}
+  }catch(e){}
+  return c;
+}
+function gFiltered(imgs){
+  try{
+    var k=S.gFilter||'none';
+    if(k==='none'||!G_FILT[k])return imgs;
+    if(!S.gFiltCache)S.gFiltCache={};
+    if(S.gFiltCache[k])return S.gFiltCache[k];
+    var out=[];
+    for(var i=0;i<imgs.length;i++){out[i]=imgs[i]?gFilterCanvas(imgs[i],k):imgs[i]}
+    S.gFiltCache[k]=out;
+    return out;
+  }catch(e){return imgs}
+}
+function gSetFilter(k){
+  try{
+    S.gFilter=k;
+    var bs=document.querySelectorAll('#gFilters button');
+    for(var i=0;i<bs.length;i++){
+      if(bs[i].getAttribute('data-gf')===k)bs[i].classList.add('on');else bs[i].classList.remove('on');
+    }
+    gCompose(true);
+  }catch(e){}
+}
+function gResetFilter(){
+  S.gFilter='none';S.gFiltCache=null;
+  try{var bs=document.querySelectorAll('#gFilters button');
+    for(var i=0;i<bs.length;i++){if(bs[i].getAttribute('data-gf')==='none')bs[i].classList.add('on');else bs[i].classList.remove('on')}}catch(e){}
+}
+
+/* --- Compose --- */
+function gCompose(isRe){
+  try{
+    if(S.gImgs&&S.gImgs.length===S.gShots.length){gRender(gFiltered(S.gImgs),isRe);return}
+    var need=S.gShots.length,loaded=0,imgs=[];
+    for(var i=0;i<need;i++){
+      (function(idx){
+        var im=new Image();
+        im.onload=function(){imgs[idx]=im;loaded++;if(loaded>=need){S.gImgs=imgs;S.gFiltCache=null;gRender(gFiltered(imgs),isRe)}};
+        im.onerror=function(){loaded++;if(loaded>=need){S.gImgs=imgs;S.gFiltCache=null;gRender(gFiltered(imgs),isRe)}};
+        im.src=S.gShots[idx];
+      })(i);
+    }
+  }catch(e){}
+}
+function gDrawCover(ctx,img,x,y,w,h,flip){
+  try{
+    if(!img)return;
+    var ir=img.width/img.height,cr=w/h,sx,sy,sw,sh;
+    if(ir>cr){sh=img.height;sw=sh*cr;sx=(img.width-sw)/2;sy=0}
+    else{sw=img.width;sh=sw/cr;sx=0;sy=(img.height-sh)/2}
+    ctx.save();
+    roundRect(ctx,x,y,w,h,6);ctx.clip();
+    if(flip){ctx.translate(x+w,y);ctx.scale(-1,1);ctx.drawImage(img,sx,sy,sw,sh,0,0,w,h)}
+    else{ctx.drawImage(img,sx,sy,sw,sh,x,y,w,h)}
+    ctx.restore();
+  }catch(e){}
+}
+function gGray(ctx,w,h){
+  try{
+    var d=ctx.getImageData(0,0,w,h),p=d.data;
+    for(var i=0;i<p.length;i+=4){
+      var l=0.299*p[i]+0.587*p[i+1]+0.114*p[i+2];
+      l=(l-128)*1.12+128;if(l<0)l=0;if(l>255)l=255;
+      p[i]=p[i+1]=p[i+2]=l;
+    }
+    ctx.putImageData(d,0,0);
+  }catch(e){}
+}
+function gUseBW(){
+  var m=CFG.bw||'receipt';
+  if(m==='always')return true;
+  if(m==='receipt')return S.gLayout==='receipt4';
+  return false;
+}
+function gRender(imgs,isRe){
+  try{
+    var pc=$('prevCanvas');if(!pc)return;
+    var def=G_LAYOUTS[S.gLayout]||G_LAYOUTS.strip4;
+    if(!S.gTime)S.gTime=new Date();
+    if(def.type==='receipt'){gRenderReceipt(pc,imgs,def)}
+    else if(def.type==='tpl'){gRenderTpl(pc,imgs,def)}
+    else{gRenderGrid(pc,imgs,def)}
+    try{gtDraw(pc)}catch(e){}
+    if(gUseBW()){gGray(pc.getContext('2d'),pc.width,pc.height)}
+    gFinish(pc,isRe);
+  }catch(e){}
+}
+function gRenderGrid(pc,imgs,def){
+  var n=imgs.length||1,cols=def.cols||1,rows=Math.ceil(n/cols);
+  var cw=def.cw,ch=def.ch;
+  var pad=(S.gLayout==='single')?40:30,gap=20;
+  var hasFoot=!!(CFG.hashtag||CFG.footDate);
+  var footH=hasFoot?(S.gLayout==='single'?130:(cols>1?120:130)):pad;
+  var W=pad*2+cols*cw+(cols-1)*gap;
+  var Hh=pad+rows*ch+(rows-1)*gap+footH;
+  pc.width=W;pc.height=Hh;
+  var ctx=pc.getContext('2d');
+  var bg=CFG.tplBg||'#1a1a2e';
+  ctx.fillStyle=bg;ctx.fillRect(0,0,W,Hh);
+  for(var i=0;i<n;i++){
+    var x=pad+(i%cols)*(cw+gap),y=pad+Math.floor(i/cols)*(ch+gap);
+    gDrawCover(ctx,imgs[i],x,y,cw,ch,S.gFlip);
+  }
+  if(S.overlayImg){try{ctx.drawImage(S.overlayImg,0,0,W,Hh)}catch(e){}}
+  var tc=gIsDark(bg)?'#ffffff':'#111111';
+  var fy=pad+rows*ch+(rows-1)*gap;
+  if(CFG.printName&&S.guestName){
+    ctx.font='bold 26px Segoe UI, sans-serif';ctx.fillStyle=tc;ctx.textAlign='center';
+    ctx.fillText(S.guestName,W/2,fy+(hasFoot?34:pad-6));
+    fy+=30;
+  }
+  if(hasFoot){
+    ctx.textAlign='center';ctx.fillStyle=tc;
+    var big=Math.max(28,Math.min(52,Math.round(W*0.06)));
+    if(CFG.hashtag){
+      ctx.font='900 '+big+'px Segoe UI, Arial, sans-serif';
+      ctx.fillText(CFG.hashtag,W/2,fy+big+14);
+    }
+    if(CFG.footDate){
+      ctx.font='600 '+Math.round(big*0.55)+'px Segoe UI, Arial, sans-serif';
+      ctx.fillText(gDateStr(S.gTime),W/2,fy+(CFG.hashtag?big*1.9+14:big+10));
+    }
+  }
+}
+function gReceiptLayout(ctx,rw,imgs,def){
+  /* ctx may be null (measure pass). Returns total height. */
+  var pad=30,gap=14,yy=52,n=imgs.length||1;
+  var cw=rw-pad*2,ch=Math.round(cw*def.ch/def.cw);
+  var d=S.gTime||new Date();
+  if(ctx){
+    ctx.fillStyle='#ffffff';ctx.fillRect(0,0,rw,ctx.canvas.height);
+    ctx.fillStyle='#111';ctx.textAlign='center';ctx.font='bold 30px Courier New,monospace';
+    ctx.fillText(CFG.rBizName||CFG.name||'Grinzy',rw/2,yy);
+  }
+  yy+=28;
+  if(CFG.rTagline){
+    if(ctx){ctx.font='16px Courier New,monospace';ctx.fillStyle='#333';ctx.fillText(CFG.rTagline,rw/2,yy)}
+    yy+=22;
+  }
+  if(ctx)drawDash(ctx,pad,yy,rw-pad);
+  yy+=24;
+  if(CFG.rDate){
+    if(ctx){
+      ctx.font='16px Courier New,monospace';ctx.fillStyle='#222';
+      ctx.textAlign='left';ctx.fillText('DATE: '+gDateStr(d),pad,yy);
+      ctx.textAlign='right';ctx.fillText(gPad2(d.getHours())+':'+gPad2(d.getMinutes()),rw-pad,yy);
+    }
+    yy+=22;
+  }
+  if(CFG.rOrder){
+    if(ctx){ctx.textAlign='left';ctx.font='16px Courier New,monospace';ctx.fillStyle='#222';ctx.fillText('ORDER #'+S.gOrder,pad,yy)}
+    yy+=22;
+  }
+  if(CFG.printName&&S.guestName){
+    if(ctx){ctx.textAlign='left';ctx.font='16px Courier New,monospace';ctx.fillText('GUEST: '+S.guestName,pad,yy)}
+    yy+=22;
+  }
+  if(ctx)drawDash(ctx,pad,yy,rw-pad);
+  yy+=18;
+  for(var i=0;i<n;i++){
+    if(ctx)gDrawCover(ctx,imgs[i],pad,yy,cw,ch,S.gFlip);
+    yy+=ch+(i<n-1?gap:0);
+  }
+  yy+=22;
+  if(ctx)drawDash(ctx,pad,yy,rw-pad);
+  yy+=14;
+  if(CFG.hashtag){
+    yy+=34;
+    if(ctx){ctx.textAlign='center';ctx.fillStyle='#000';ctx.font='900 32px Arial, sans-serif';ctx.fillText(CFG.hashtag,rw/2,yy)}
+  }
+  if(CFG.footDate){
+    yy+=28;
+    if(ctx){ctx.textAlign='center';ctx.fillStyle='#000';ctx.font='bold 20px Courier New,monospace';ctx.fillText(gDateStr(d),rw/2,yy)}
+  }
+  if(CFG.rFooter){
+    yy+=24;
+    if(ctx){ctx.textAlign='center';ctx.fillStyle='#444';ctx.font='13px Courier New,monospace';ctx.fillText(CFG.rFooter,rw/2,yy)}
+  }
+  yy+=36;
+  return yy;
+}
+function gRenderReceipt(pc,imgs,def){
+  if(S.gOrder===null){S.gOrder=S.orderNum;S.orderNum++}
+  var rw=576;
+  var hh=gReceiptLayout(null,rw,imgs,def);
+  pc.width=rw;pc.height=hh;
+  gReceiptLayout(pc.getContext('2d'),rw,imgs,def);
+}
+function gFinish(pc,isRe){
+  try{
+    stopCam();
+    var fmt=CFG.format||'jpeg',q=parseFloat(CFG.quality)||0.85;
+    S.currentDataUrl=pc.toDataURL('image/'+fmt,q);
+    try{pc.toBlob(function(blob){S.currentBlob=blob},'image/'+fmt,q)}catch(e){}
+    var pv=$('preview');if(pv)pv.classList.add('gflow');
+    gUpdateRevUI();
+    try{gtBtnLabel()}catch(e){}
+    try{gPrepPrint()}catch(e){}
+    showScreen('preview');
+    S.gReviewing=true;S.gQrExt=0;
+    if(!isRe){
+      if(CFG.autoGal)saveToGallery(S.currentDataUrl);
+      if(CFG.autoDL)downloadPhotoBlob(S.currentDataUrl);
+    }
+    gClearIdle(); /* review stays until guest taps Done */
+  }catch(e){}
+}
+
+/* --- Review controls --- */
+function gUpdateRevUI(){
+  try{
+    var n=$('gCopyN');if(n)n.textContent=S.gCopies;
+    try{
+      if(vOn())document.body.classList.add('vmode');else document.body.classList.remove('vmode');
+      var vl=$('gVLeft');if(vl)vl.textContent=vOn()?('Prints left on this code: '+(S.vLeft||0)):'';
+    }catch(e){}
+    var m=$('gMirBtn');if(m){if(S.gFlip)m.classList.add('on');else m.classList.remove('on')}
+  }catch(e){}
+}
+function gCopies(d){
+  try{
+    var mx=vOn()?Math.max(1,S.vLeft||1):10;
+    S.gCopies=Math.max(1,Math.min(mx,(S.gCopies||1)+d));
+    gUpdateRevUI();
+    try{gPrepPrint()}catch(e){}
+  }catch(e){}
+}
+function gToggleMirror(){
+  try{
+    S.gFlip=!S.gFlip;
+    gCompose(true);
+  }catch(e){}
+}
+function gRetake(){
+  try{
+    S.gReLayout=null;S.gKeepShots=false;S.gOrigShots=null;
+    S.gReviewing=false;gClearIdle();
+    S.gShots=[];S.gImgs=null;S.gFlip=false;S.gTime=null;gResetFilter();
+    try{closeQR()}catch(e){}
+    gStartCap();
+  }catch(e){}
+}
+function gPrintCSS(){
+  var mm=gPaperMM(),w=mm[0],ht=mm[1];
+  var size=ht?(w+'mm '+ht+'mm'):(w+'mm auto');
+  return '@page{size:'+size+';margin:0}html,body{margin:0;padding:0;background:#fff}'+
+    '.pg{width:'+w+'mm;'+(ht?'height:'+ht+'mm;':'')+'page-break-after:always;break-after:page;overflow:hidden}'+
+    '.pg:last-child{page-break-after:auto;break-after:auto}'+
+    '.pg img{width:100%;'+(ht?'height:100%;object-fit:contain;':'height:auto;')+'display:block}';
+}
+/* Print via Android share sheet so the user can pick RawBT (or any printer app) */
+function gDataUrlToBlob(du){
+  var parts=du.split(',');var mime=(parts[0].match(/:(.*?);/)||[])[1]||'image/png';
+  var b=atob(parts[1]);var a=new Uint8Array(b.length);
+  for(var i=0;i<b.length;i++){a[i]=b.charCodeAt(i)}
+  return new Blob([a],{type:mime});
+}
+function gBuildCopies(n,cb){gBuildCopiesFrom(S.currentDataUrl,n,cb)}
+function gBuildCopiesFrom(src,n,cb){
+  try{
+    if(n<=1){cb(src);return}
+    var img=new Image();
+    img.onload=function(){
+      try{
+        var gap=Math.round(img.width*0.08);
+        var c=document.createElement('canvas');c.width=img.width;c.height=img.height*n+gap*(n-1);
+        var x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);
+        for(var i=0;i<n;i++){x.drawImage(img,0,i*(img.height+gap))}
+        cb(c.toDataURL('image/png'));
+      }catch(e){cb(src)}
+    };
+    img.onerror=function(){cb(src)};
+    img.src=src;
+  }catch(e){cb(src)}
+}
+/* Printer paper geometry in mm: [width, height(0=continuous)] */
+var G_PAPERS={'ij_wallet':[64,89,1],'ij_2x3':[51,76,1],'ij_3r':[89,127,1],'ij_kg':[102,152,1],'ij_4x6x2':[102,152,2],'ij_4x7':[102,178,1],'ij_5r':[127,178,1],'ij_6r':[152,203,1],'ij_8r':[203,254,1],'ij_sq4':[102,102,1],'ij_sq5':[127,127,1],'ij_sq6':[152,152,1],'ij_hagaki':[100,148,1],'ij_a6':[105,148,1],'ij_a5':[148,210,1],'ij_a4':[210,297,1],'ij_letter':[216,279,1],'48mm':[40,0],'57mm':[48,0],'58mm':[48,0],'76mm':[64,0],'80mm':[72,0],'110mm':[104,0],'wb4x6':[100,150],'wb100x100':[100,100],'wb4x4':[102,102],'wb4x3':[102,76],'wb4x2':[102,51],'wb76x130':[76,130],'wb3x2':[76,51],'wb60x40':[60,40],'wb50x30':[50,30],'wb2x1':[51,25],'ph2x6':[51,152],'ph3r':[89,127],'ph4r':[102,152],'ph5r':[127,178],'ph6r':[152,203],'ph8r':[203,254],'phsq':[102,102],'phwallet':[64,89],'phinstaxm':[54,86],'phinstaxs':[72,86],'phinstaxw':[108,86],'phpost':[100,148],'a4':[190,277],'a5':[138,200],'a6':[97,140],'letter':[196,260]};
+function gPaperMM(){
+  var p=CFG.paper||'58mm';
+  if(p==='custom')return [CFG.pw||76,CFG.ph||0];
+  return G_PAPERS[p]||[48,0];
+}
+/* Render the photo at the printer's exact dot size so it prints full size */
+
+/* --- Thermal photo rendering: grayscale + tone curve + 1-bit dithering --- */
+function gThermalOn(){return !gIsInkjet()&&(CFG.thermal||'atkinson')!=='off'}
+function gThermal(ctx,W,H){
+  try{
+    var mode=CFG.thermal||'atkinson';
+    var bri=(CFG.thBri==null?5:CFG.thBri)/100,con=(CFG.thCon==null?15:CFG.thCon)/100;
+    var d=ctx.getImageData(0,0,W,H),p=d.data,n=W*H,g=new Float32Array(n),i,k;
+    /* thermal heads print dark: lift shadows with a gamma curve, then brightness/contrast */
+    for(i=0,k=0;i<n;i++,k+=4){
+      var a=p[k+3]/255;
+      var l=(0.299*p[k]+0.587*p[k+1]+0.114*p[k+2])*a+255*(1-a);
+      l=255*Math.pow(l/255,0.72);
+      l=(l-128)*(1+con)+128+bri*255;
+      g[i]=l<0?0:l>255?255:l;
+    }
+    var out=new Uint8Array(n),x,y,v,e,idx;
+    if(mode==='halftone'){
+      var cell=4,M=[[0,8,2,10],[12,4,14,6],[3,11,1,9],[15,7,13,5]];
+      for(y=0;y<H;y++)for(x=0;x<W;x++){idx=y*W+x;out[idx]=g[idx]>((M[y%cell][x%cell]+0.5)*16)?255:0}
+    }else if(mode==='floyd'){
+      for(y=0;y<H;y++)for(x=0;x<W;x++){
+        idx=y*W+x;v=g[idx]<128?0:255;e=g[idx]-v;out[idx]=v;
+        if(x+1<W)g[idx+1]+=e*7/16;
+        if(y+1<H){if(x>0)g[idx+W-1]+=e*3/16;g[idx+W]+=e*5/16;if(x+1<W)g[idx+W+1]+=e/16}
+      }
+    }else{ /* Atkinson: spreads only 3/4 of the error, so midtones stay light */
+      for(y=0;y<H;y++)for(x=0;x<W;x++){
+        idx=y*W+x;v=g[idx]<128?0:255;e=(g[idx]-v)/8;out[idx]=v;
+        if(x+1<W)g[idx+1]+=e;if(x+2<W)g[idx+2]+=e;
+        if(y+1<H){if(x>0)g[idx+W-1]+=e;g[idx+W]+=e;if(x+1<W)g[idx+W+1]+=e}
+        if(y+2<H)g[idx+2*W]+=e;
+      }
+    }
+    for(i=0,k=0;i<n;i++,k+=4){p[k]=p[k+1]=p[k+2]=out[i];p[k+3]=255}
+    ctx.putImageData(d,0,0);
+  }catch(e){}
+}
+
+function gIsInkjet(){return /^ij_/.test(CFG.paper||'')}
+function gPrinterImage(src,cb){
+  try{
+    var mm=gPaperMM(),dpi=CFG.dpi||203;
+    var ink=gIsInkjet();
+    if(ink&&dpi<300)dpi=300;
+    var W=Math.round(mm[0]/25.4*dpi),H=mm[1]?Math.round(mm[1]/25.4*dpi):0;
+    var across=(mm[2]&&mm[2]>1)?mm[2]:1;
+    var fit=CFG.fit||'auto';if(fit==='auto')fit=ink?'cover':(H?'page':'width');
+    var img=new Image();
+    img.onload=function(){
+      try{
+        var c=document.createElement('canvas'),x;
+        if(H&&(fit==='page'||fit==='cover')){
+          c.width=W;c.height=H;x=c.getContext('2d');
+          x.fillStyle='#fff';x.fillRect(0,0,W,H);
+          var cw=W/across;
+          for(var k=0;k<across;k++){
+            var s=fit==='cover'?Math.max(cw/img.width,H/img.height):Math.min(cw/img.width,H/img.height);
+            var dw=img.width*s,dh=img.height*s,ox=k*cw;
+            x.save();x.beginPath();x.rect(ox,0,cw,H);x.clip();
+            x.drawImage(img,ox+(cw-dw)/2,(H-dh)/2,dw,dh);
+            x.restore();
+          }
+          if(across>1){x.strokeStyle='#bbb';x.lineWidth=1;x.setLineDash([8,8]);
+            for(var q=1;q<across;q++){x.beginPath();x.moveTo(q*cw,0);x.lineTo(q*cw,H);x.stroke()}}
+        }else{
+          var ch=Math.round(img.height*W/img.width);
+          c.width=W;c.height=ch;x=c.getContext('2d');
+          x.fillStyle='#fff';x.fillRect(0,0,W,ch);
+          x.drawImage(img,0,0,W,ch);
+        }
+        if(gThermalOn()){try{gThermal(x,c.width,c.height)}catch(e){}}
+        cb(c.toDataURL(ink?'image/jpeg':'image/png',0.95));
+      }catch(e){cb(src)}
+    };
+    img.onerror=function(){cb(src)};
+    img.src=src;
+  }catch(e){cb(src)}
+}
+function gPrintShare(){
+  try{
+    var n=Math.max(1,Math.min(10,S.gCopies||1));
+    gPrinterImage(S.currentDataUrl,function(one){
+     gBuildCopiesFrom(one,gIsInkjet()?1:n,function(du){
+      try{
+        var blob=gDataUrlToBlob(du);
+        var f=new File([blob],'snapbooth_print.png',{type:'image/png'});
+        if(navigator.canShare&&navigator.canShare({files:[f]})){
+          navigator.share({files:[f],title:'Print photo'}).catch(function(){});
+        }else{
+          gPrintSystem();
+        }
+      }catch(e){gPrintSystem()}
+     });
+    });
+  }catch(e){gPrintSystem()}
+}
+function gIsAndroid(){try{return /Android/i.test(navigator.userAgent)}catch(e){return false}}
+/* Send the print image straight to RawBT via an Android intent link (skips the app picker) */
+function gPrintRawBT(){
+  try{
+    var n=Math.max(1,Math.min(10,S.gCopies||1));
+    gPrinterImage(S.currentDataUrl,function(one){
+      gBuildCopiesFrom(one,n,function(du){
+        try{
+          var url='intent:'+du+'#Intent;scheme=rawbt;package=ru.a402d.rawbtprinter;end;';
+          window.location.href=url;
+        }catch(e){gPrintShare()}
       });
-    }).catch(function(){})
-  );
-});
+    });
+  }catch(e){gPrintShare()}
+}
+
+/* --- Recover the page after a print/share pop-up closes (iPhone can leave it stuck) --- */
+function gIsIOS(){try{return /iPhone|iPad|iPod/i.test(navigator.userAgent||'')||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1)}catch(e){return false}}
+function gRecover(){
+  try{
+    S.gPrinting=false;
+    var a=$('gPrintArea');if(a&&a.parentNode)a.parentNode.removeChild(a);
+    var st=$('gPrintStyle');if(st&&st.parentNode)st.parentNode.removeChild(st);
+    var o=$('cntOvl');if(o&&!S.gBusy)o.classList.remove('on');
+    document.body.style.pointerEvents='';document.body.style.overflow='';
+    document.documentElement.style.pointerEvents='';
+    if(S.gReviewing){
+      var pv=$('preview');
+      if(pv&&!pv.classList.contains('active'))showScreen('preview');
+    }
+  }catch(e){}
+}
+try{
+  window.addEventListener('afterprint',function(){setTimeout(gRecover,50)});
+  window.addEventListener('focus',function(){setTimeout(gRecover,50)});
+  window.addEventListener('pageshow',function(){setTimeout(gRecover,50)});
+  document.addEventListener('visibilitychange',function(){if(!document.hidden)setTimeout(gRecover,50)});
+}catch(e){}
+
+
+/* --- iPhone: save the review state before handing off to a printer app, reload on return --- */
+var G_RESUME_KEY='snapbooth_resume';
+function gSaveResume(){
+  try{
+    var st={t:Date.now(),layout:S.gLayout,shots:S.gShots,flip:!!S.gFlip,copies:S.gCopies||1,
+      filter:S.gFilter||'none',time:S.gTime?S.gTime.getTime():null,order:S.gOrder||null,guest:S.guestName||'',vOk:!!S.vOk,vLeft:S.vLeft||0,vAt:S.vAt||0,gText:S.gText||null};
+    try{sessionStorage.setItem(G_RESUME_KEY,JSON.stringify(st))}
+    catch(e){try{localStorage.setItem(G_RESUME_KEY,JSON.stringify(st))}catch(e2){}}
+  }catch(e){}
+}
+function gReadResume(){
+  var raw=null;
+  try{raw=sessionStorage.getItem(G_RESUME_KEY)}catch(e){}
+  if(!raw){try{raw=localStorage.getItem(G_RESUME_KEY)}catch(e){}}
+  try{sessionStorage.removeItem(G_RESUME_KEY)}catch(e){}
+  try{localStorage.removeItem(G_RESUME_KEY)}catch(e){}
+  if(!raw)return null;
+  try{var st=JSON.parse(raw);if(!st||Date.now()-st.t>30*60*1000)return null;return st}catch(e){return null}
+}
+function gTryResume(){
+  try{
+    var st=S.gPendingResume||gReadResume();S.gPendingResume=null;
+    if(!st||!st.shots||!st.shots.length||!G_LAYOUTS[st.layout])return false;
+    S.gLayout=st.layout;S.gActive=true;S.gShots=st.shots;S.gImgs=null;S.gFiltCache=null;
+    S.gFlip=st.flip;S.gCopies=st.copies;S.gFilter=st.filter;S.gOrder=st.order;S.guestName=st.guest;S.vOk=!!st.vOk;S.vLeft=st.vLeft||0;S.vAt=st.vAt||0;S.gText=st.gText||null;if(S.vOk){try{vTimerStart()}catch(e){}}
+    S.gTime=st.time?new Date(st.time):null;
+    S.mode=(st.layout==='receipt4')?'receipt':(st.layout==='single'?'classic':'strip');
+    try{
+      var bs=document.querySelectorAll('#gFilters button');
+      for(var i=0;i<bs.length;i++){if(bs[i].getAttribute('data-gf')===S.gFilter)bs[i].classList.add('on');else bs[i].classList.remove('on')}
+    }catch(e){}
+    gCompose(true);
+    return true;
+  }catch(e){return false}
+}
+/* After handing off on iPhone, reload once when the page becomes visible again */
+function gArmReturnReload(){
+  try{
+    S.gAwaitReturn=true;S.gLeftAt=0;
+    var onHide=function(){if(document.hidden&&S.gAwaitReturn)S.gLeftAt=Date.now()};
+    var onBack=function(){
+      try{
+        if(!S.gAwaitReturn||document.hidden)return;
+        if(!S.gLeftAt)return; /* page never actually left */
+        S.gAwaitReturn=false;
+        document.removeEventListener('visibilitychange',onHide);
+        document.removeEventListener('visibilitychange',onBack);
+        window.removeEventListener('pageshow',onBack);
+        window.removeEventListener('focus',onBack);
+        setTimeout(function(){try{window.location.reload()}catch(e){}},150);
+      }catch(e){}
+    };
+    document.addEventListener('visibilitychange',onHide);
+    document.addEventListener('visibilitychange',onBack);
+    window.addEventListener('pageshow',onBack);
+    window.addEventListener('focus',onBack);
+    /* stop waiting if nothing happened (guest cancelled before leaving) */
+    setTimeout(function(){if(!S.gLeftAt)S.gAwaitReturn=false},60000);
+  }catch(e){}
+}
+
+/* Prepare the print file ahead of time so iPhone can open the share sheet instantly
+   (iOS blocks share/print if they start after a delay from the tap). */
+function gPrepPrint(){
+  try{
+    S.gPrintFile=null;
+    if(!S.currentDataUrl)return;
+    var n=Math.max(1,Math.min(10,S.gCopies||1));
+    var tok=(S.gPrepTok=(S.gPrepTok||0)+1);
+    gPrinterImage(S.currentDataUrl,function(one){
+      gBuildCopiesFrom(one,gIsInkjet()?1:n,function(du){
+        try{
+          if(tok!==S.gPrepTok)return;
+          var blob=gDataUrlToBlob(du);
+          S.gPrintFile=new File([blob],'snapbooth_print.'+(/jpeg/.test(blob.type)?'jpg':'png'),{type:blob.type});
+          S.gPrintUrl=du;
+          try{
+            var ti=new Image();ti.onload=function(){try{var c=document.createElement('canvas');c.width=ti.width;c.height=ti.height;var x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);x.drawImage(ti,0,0);S.gPrintFileJpg=c.toDataURL('image/jpeg',0.9)}catch(e){}};ti.src=du;
+          }catch(e){}
+        }catch(e){}
+      });
+    });
+  }catch(e){}
+}
+/* iPhone print: share sheet (has "Print" built in), called directly from the tap */
+function gPrintIOS(){
+  try{
+    /* iPhone: use the built-in print screen (AirPrint). No third-party app = no freeze. */
+    var src=S.gPrintUrl||S.currentDataUrl;if(!src)return;
+    var n=Math.max(1,Math.min(10,S.gCopies||1)),pages='';
+    for(var i=0;i<(gIsInkjet()?n:1);i++){pages+='<div class="pg"><img src="'+src+'"></div>'}
+    var old=$('gPrintArea');if(old&&old.parentNode)old.parentNode.removeChild(old);
+    var st=$('gPrintStyle');if(st&&st.parentNode)st.parentNode.removeChild(st);
+    var area=document.createElement('div');area.id='gPrintArea';area.innerHTML=pages;area.style.display='none';
+    document.body.appendChild(area);
+    var s=document.createElement('style');s.id='gPrintStyle';
+    s.textContent='@media print{body>*{display:none!important}#gPrintArea{display:block!important}'+gPrintCSS()+'}';
+    document.head.appendChild(s);
+    /* Call print during the tap itself; iOS can ignore it if delayed */
+    try{window.print()}catch(e){}
+    setTimeout(gRecover,1000);
+  }catch(e){gRecover()}
+}
+
+function gPrint(){
+  if(!vPrintGate())return;
+  var m=CFG.printMode||'rawbt';
+  if(gIsIOS()){gPrintIOS();return}
+  if(!gIsAndroid())m='system'; /* PC: always use the print dialog */
+  if(m==='rawbt'&&gIsInkjet())m='share'; /* RawBT is for thermal printers */
+  if(m==='rawbt'&&gIsAndroid()){gPrintRawBT();return}
+  if((m==='share'||m==='rawbt')&&navigator.share){gPrintShare();return}
+  gPrintSystem();
+}
+function gPrintSystem(){
+  try{
+    if(!S.currentDataUrl)return;
+    var w=null;
+    try{w=window.open('','_blank')}catch(e){w=null}
+    gPrinterImage(S.currentDataUrl,function(du){
+      try{
+        var n=Math.max(1,Math.min(10,S.gCopies||1));
+        var pages='';
+        for(var i=0;i<n;i++){pages+='<div class="pg"><img src="'+du+'"></div>'}
+        var doc='<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Print</title><style>'+gPrintCSS()+'</style></head>'+
+          '<body onload="setTimeout(function(){try{window.print()}catch(e){}},500)">'+pages+
+          '<scr'+'ipt>window.onafterprint=function(){try{window.close()}catch(e){}};</scr'+'ipt></body></html>';
+        if(w&&w.document){w.document.open();w.document.write(doc);w.document.close()}
+        else{gPrintInline(pages)}
+      }catch(e){try{printPhoto()}catch(e2){}}
+    });
+  }catch(e){
+    try{printPhoto()}catch(e2){}
+  }
+}
+function gPrintInline(pages){
+  try{
+    var old=$('gPrintArea');if(old&&old.parentNode)old.parentNode.removeChild(old);
+    var st=$('gPrintStyle');if(st&&st.parentNode)st.parentNode.removeChild(st);
+    var area=document.createElement('div');area.id='gPrintArea';area.innerHTML=pages;
+    area.style.display='none';
+    document.body.appendChild(area);
+    var s=document.createElement('style');s.id='gPrintStyle';
+    s.textContent='@media print{body>*{display:none!important}#gPrintArea{display:block!important}'+gPrintCSS()+'}';
+    document.head.appendChild(s);
+    setTimeout(function(){try{window.print()}catch(e){}setTimeout(gRecover,800)},400);
+  }catch(e){gRecover()}
+}
+
+
+/* ================= CUSTOM TEMPLATES ================= */
+S.ctpls=[];S.ctplSeq=0;
+
+function ctplEsc(s){
+  return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+function ctplMsgSet(t,isErr){
+  try{var m=$('ctplMsg');if(!m)return;m.textContent=t||'';m.className=t?(isErr?'err':'ok'):''}catch(e){}
+}
+
+/* Find transparent photo windows: alpha<40, connected components (iterative), >=1.5% of area */
+function ctplDetect(img){
+  var res={w:0,h:0,slots:[]};
+  try{
+    var W=img.naturalWidth||img.width,H=img.naturalHeight||img.height;
+    res.w=W;res.h=H;
+    if(!W||!H)return res;
+    var sc=Math.min(1,600/W);
+    var w=Math.max(1,Math.round(W*sc)),h=Math.max(1,Math.round(H*sc));
+    var c=document.createElement('canvas');c.width=w;c.height=h;
+    var x=c.getContext('2d');x.clearRect(0,0,w,h);x.drawImage(img,0,0,w,h);
+    var d=x.getImageData(0,0,w,h).data;
+    var N=w*h,mask=new Uint8Array(N),i;
+    for(i=0;i<N;i++){if(d[i*4+3]<40)mask[i]=1}
+    var seen=new Uint8Array(N),stack=new Int32Array(N),boxes=[],minA=N*0.015,maxA=N*0.97;
+    for(var s=0;s<N;s++){
+      if(!mask[s]||seen[s])continue;
+      var sp=0;stack[sp++]=s;seen[s]=1;
+      var cnt=0,x0=w,y0=h,x1=0,y1=0;
+      while(sp>0){
+        var q=stack[--sp];var qx=q%w,qy=(q-qx)/w;cnt++;
+        if(qx<x0)x0=qx;if(qx>x1)x1=qx;if(qy<y0)y0=qy;if(qy>y1)y1=qy;
+        var nb;
+        if(qx>0){nb=q-1;if(mask[nb]&&!seen[nb]){seen[nb]=1;stack[sp++]=nb}}
+        if(qx<w-1){nb=q+1;if(mask[nb]&&!seen[nb]){seen[nb]=1;stack[sp++]=nb}}
+        if(qy>0){nb=q-w;if(mask[nb]&&!seen[nb]){seen[nb]=1;stack[sp++]=nb}}
+        if(qy<h-1){nb=q+w;if(mask[nb]&&!seen[nb]){seen[nb]=1;stack[sp++]=nb}}
+      }
+      if(cnt>=minA&&cnt<=maxA)boxes.push({x:x0,y:y0,w:x1-x0+1,h:y1-y0+1});
+    }
+    /* Scale back to full resolution, pad slightly so no hairline gaps */
+    var inv=1/sc,pad=Math.ceil(inv),out=[];
+    for(i=0;i<boxes.length;i++){
+      var b=boxes[i];
+      var bx=Math.max(0,Math.floor(b.x*inv)-pad),by=Math.max(0,Math.floor(b.y*inv)-pad);
+      var bx2=Math.min(W,Math.ceil((b.x+b.w)*inv)+pad),by2=Math.min(H,Math.ceil((b.y+b.h)*inv)+pad);
+      out.push({x:bx,y:by,w:bx2-bx,h:by2-by});
+    }
+    /* Sort top-to-bottom, then left-to-right within a row */
+    out.sort(function(a,b){return a.y-b.y});
+    var rows=[],cur=null;
+    for(i=0;i<out.length;i++){
+      var r=out[i];
+      if(cur&&Math.abs(r.y-cur.y)<Math.min(r.h,cur.h)*0.5){cur.items.push(r)}
+      else{cur={y:r.y,h:r.h,items:[r]};rows.push(cur)}
+    }
+    var sorted=[];
+    for(i=0;i<rows.length;i++){
+      rows[i].items.sort(function(a,b){return a.x-b.x});
+      for(var k=0;k<rows[i].items.length;k++)sorted.push(rows[i].items[k]);
+    }
+    res.slots=sorted;
+  }catch(e){}
+  return res;
+}
+
+/* Register a template so the guest flow can use it */
+function ctplRegister(t){
+  try{
+    for(var i=0;i<S.ctpls.length;i++){if(S.ctpls[i].key===t.key){S.ctpls.splice(i,1);break}}
+    S.ctpls.push(t);
+    S.ctpls.sort(function(a,b){
+      if(a.source!==b.source)return a.source==='github'?-1:1;
+      return (a.ord||0)-(b.ord||0);
+    });
+    G_LAYOUTS[t.key]={n:t.slots.length,type:'tpl',label:t.name,tpl:t};
+    ctplRenderTiles();ctplRenderList();
+    try{if($('tgal')&&$('tgal').classList.contains('active'))tgRender()}catch(e){}
+  }catch(e){}
+}
+function ctplUnregister(key){
+  try{
+    for(var i=0;i<S.ctpls.length;i++){if(S.ctpls[i].key===key){S.ctpls.splice(i,1);break}}
+    try{delete G_LAYOUTS[key]}catch(e){}
+    ctplRenderTiles();ctplRenderList();
+  }catch(e){}
+}
+
+/* --- IndexedDB (tablet templates) --- */
+function ctplDbAll(){
+  return openDB().then(function(db){
+    if(!db)return[];
+    return new Promise(function(resolve){
+      try{
+        if(!db.objectStoreNames.contains('templates')){resolve([]);return}
+        var req=db.transaction('templates','readonly').objectStore('templates').getAll();
+        req.onsuccess=function(){resolve(req.result||[])};
+        req.onerror=function(){resolve([])};
+      }catch(e){resolve([])}
+    });
+  }).catch(function(){return[]});
+}
+function ctplDbAdd(rec){
+  return openDB().then(function(db){
+    if(!db)return null;
+    return new Promise(function(resolve){
+      try{
+        if(!db.objectStoreNames.contains('templates')){resolve(null);return}
+        var req=db.transaction('templates','readwrite').objectStore('templates').add(rec);
+        req.onsuccess=function(){resolve(req.result)};
+        req.onerror=function(){resolve(null)};
+      }catch(e){resolve(null)}
+    });
+  }).catch(function(){return null});
+}
+function ctplDbPut(rec){
+  return openDB().then(function(db){
+    if(!db)return null;
+    return new Promise(function(resolve){
+      try{
+        if(!db.objectStoreNames.contains('templates')){resolve(null);return}
+        var req=db.transaction('templates','readwrite').objectStore('templates').put(rec);
+        req.onsuccess=function(){resolve(req.result)};
+        req.onerror=function(){resolve(null)};
+      }catch(e){resolve(null)}
+    });
+  }).catch(function(){return null});
+}
+function ctplDbDel(id){
+  return openDB().then(function(db){
+    if(!db)return;
+    return new Promise(function(resolve){
+      try{
+        var tx=db.transaction('templates','readwrite');
+        tx.objectStore('templates').delete(id);
+        tx.oncomplete=function(){resolve()};
+        tx.onerror=function(){resolve()};
+      }catch(e){resolve()}
+    });
+  }).catch(function(){});
+}
+
+
+/* ---------- Account templates (synced through your account, v37) ---------- */
+function ctplUid(){var a=new Uint8Array(8),s='';try{crypto.getRandomValues(a)}catch(e){for(var i=0;i<8;i++)a[i]=Math.floor(Math.random()*256)}for(var j=0;j<8;j++){s+=('0'+a[j].toString(16)).slice(-2)}return s}
+function ctplUploadCloud(dataUrl,cb){
+  try{
+    if(cldSignedOn()){cldSignedUpload(dataUrl,'template',cb);return}
+    var pre=String(CFG.tplPreset||'').trim(),cn=String(CFG.cloudName||'').trim();
+    if(!pre||!cn){cb(null,'nopreset');return}
+    var xhr=new XMLHttpRequest();
+    xhr.open('POST','https://api.cloudinary.com/v1_1/'+encodeURIComponent(cn)+'/image/upload');
+    xhr.onload=function(){
+      try{var r=JSON.parse(xhr.responseText);if(r&&r.secure_url)cb(r.secure_url);else cb(null,(r&&r.error&&r.error.message)||('HTTP '+xhr.status))}
+      catch(e){cb(null,'Could not read Cloudinary response')}
+    };
+    xhr.onerror=function(){cb(null,'No internet connection')};
+    xhr.timeout=45000;xhr.ontimeout=function(){cb(null,'Upload timed out')};
+    var fd=new FormData();fd.append('file',dataUrl);fd.append('upload_preset',pre);fd.append('folder','snapbooth_templates');
+    xhr.send(fd);
+  }catch(e){cb(null,'Upload error')}
+}
+/* after a template is saved on this device: share it with the account if possible */
+function ctplShare(rec,id,img){
+  try{
+    if(!accOn()||!accEmail())return;
+    if(!cldSignedOn()&&(!String(CFG.tplPreset||'').trim()||!String(CFG.cloudName||'').trim())){
+      ctplMsgSet('\u2705 Added on this device only. To use it on your other devices, set Cloudinary + a Template upload preset in Settings \u2192 Output.',false);
+      return;
+    }
+    ctplMsgSet('Sharing template with your account\u2026',false);
+    ctplUploadCloud(rec.data,function(url,err){
+      try{
+        if(!url){ctplMsgSet('Saved on this device, but could not share it: '+err+'. It stays on this device only.',true);return}
+        var uid=ctplUid();
+        rec.id=id;rec.uid=uid;rec.url=url;ctplDbPut(rec).then(function(){}).catch(function(){});
+        var st=syncState();st.tpls=st.tpls||[];
+        st.tpls.push({uid:uid,name:rec.name,url:url,w:rec.w,h:rec.h,slots:rec.slots,added:rec.added});
+        syncStateSet(st);
+        ctplUnregister('tpl_t'+id);
+        ctplRegister({key:'tpl_a'+uid,uid:uid,id:id,name:rec.name,src:rec.data,w:rec.w,h:rec.h,slots:rec.slots,source:'account',ord:rec.added,img:img});
+        syncMark();
+        ctplMsgSet('\u2705 "'+rec.name+'" added and shared with your other devices.',false);
+      }catch(e){}
+    });
+  }catch(e){}
+}
+/* load templates listed in the account's synced data */
+function ctplLoadAccount(){
+  try{
+    if(!accOn())return;
+    var me=accEmail(),list=me?(syncState().tpls||[]):[],want={},i;
+    for(i=0;i<list.length;i++)want[list[i].uid]=1;
+    var cur=(S.ctpls||[]).slice();
+    for(i=0;i<cur.length;i++){if(cur[i].source==='account'&&!want[cur[i].uid])ctplUnregister(cur[i].key)}
+    ctplDbAll().then(function(recs){
+      var local={},j;
+      for(j=0;j<recs.length;j++){
+        if(!recs[j].uid)continue;
+        /* removed from the account on another device: drop the offline copy */
+        if(me&&recs[j].owner===me&&!want[recs[j].uid]){ctplDbDel(recs[j].id).then(function(){}).catch(function(){});continue}
+        local[recs[j].uid]=recs[j];
+      }
+      for(j=0;j<list.length;j++){
+        (function(t){
+          try{
+            for(var q=0;q<(S.ctpls||[]).length;q++){if(S.ctpls[q].key==='tpl_a'+t.uid)return}
+            var rec=local[t.uid];
+            var img=new Image();
+            if(!rec)img.crossOrigin='anonymous';
+            img.onload=function(){
+              try{
+                ctplRegister({key:'tpl_a'+t.uid,uid:t.uid,id:rec?rec.id:null,name:t.name||'Template',src:rec?rec.data:t.url,
+                  w:t.w||img.naturalWidth,h:t.h||img.naturalHeight,slots:t.slots||[],source:'account',ord:t.added||0,img:img});
+                if(!rec)ctplCacheLocal(t,img,me);
+              }catch(e){}
+            };
+            img.onerror=function(){};
+            img.src=rec?rec.data:t.url;
+          }catch(e){}
+        })(list[j]);
+      }
+    }).catch(function(){});
+  }catch(e){}
+}
+/* keep an offline copy of a downloaded account template */
+function ctplCacheLocal(t,img,me){
+  try{
+    var c=document.createElement('canvas');c.width=img.naturalWidth;c.height=img.naturalHeight;
+    c.getContext('2d').drawImage(img,0,0);
+    var du=c.toDataURL('image/png');
+    ctplDbAdd({name:t.name,data:du,w:t.w,h:t.h,slots:t.slots,added:t.added||Date.now(),uid:t.uid,url:t.url,owner:me}).then(function(){}).catch(function(){});
+  }catch(e){}
+}
+function ctplDeleteAcc(uid){
+  try{
+    var t=null;for(var i=0;i<(S.ctpls||[]).length;i++){if(S.ctpls[i].uid===uid){t=S.ctpls[i];break}}
+    var ok=true;try{ok=window.confirm('Delete template "'+(t?t.name:'')+'" from your account? It will disappear from all your devices.')}catch(e){ok=true}
+    if(!ok)return;
+    var st=syncState(),keep=[];
+    for(var j=0;j<(st.tpls||[]).length;j++){if(st.tpls[j].uid!==uid)keep.push(st.tpls[j])}
+    st.tpls=keep;syncStateSet(st);
+    ctplUnregister('tpl_a'+uid);
+    ctplDbAll().then(function(recs){
+      for(var k=0;k<recs.length;k++){if(recs[k].uid===uid){ctplDbDel(recs[k].id).then(function(){}).catch(function(){})}}
+    }).catch(function(){});
+    syncMark();
+    ctplMsgSet('Template deleted from your account.',false);
+    try{tgRender()}catch(e){}
+  }catch(e){}
+}
+/* reload this device's and this account's templates (after sign-in / account switch) */
+function ctplReloadAccount(){
+  try{
+    var cur=(S.ctpls||[]).slice();
+    for(var i=0;i<cur.length;i++){if(cur[i].source==='tablet'||cur[i].source==='account')ctplUnregister(cur[i].key)}
+    ctplLoadTablet();ctplLoadAccount();
+  }catch(e){}
+}
+
+/* --- Boot: load GitHub + tablet + account templates --- */
+function ctplBoot(){
+  try{ctplLoadGithub()}catch(e){}
+  try{ctplLoadTablet()}catch(e){}
+  try{ctplLoadAccount()}catch(e){}
+}
+function ctplLoadGithub(){
+  try{
+    if(!window.fetch)return;
+    S.ctplLocked=[];
+    fetch('templates/templates.json',{cache:'no-cache'}).then(function(r){
+      if(!r||!r.ok)return null;
+      return r.json();
+    }).then(function(js){
+      var arr=(js&&js.templates)||[];
+      for(var i=0;i<arr.length;i++){
+        (function(item,idx){
+          try{
+            if(!item||!item.file)return;
+            var src='templates/'+encodeURI(String(item.file));
+            if(!planTplAllowed(item)){
+              /* not on this plan: show greyed in Template Gallery only */
+              if(!S.ctplLocked)S.ctplLocked=[];
+              S.ctplLocked.push({name:item.name||String(item.file).replace(/\.[^.]+$/,''),src:src,min:planTplMin(item),ord:idx});
+              try{if($('tgal')&&$('tgal').classList.contains('active'))tgRender()}catch(e){}
+              return;
+            }
+            var img=new Image();
+            img.onload=function(){
+              try{
+                var r=ctplDetect(img);
+                if(!r.slots.length)return;
+                ctplRegister({
+                  key:'tpl_g'+idx+'_'+String(item.file).replace(/[^a-zA-Z0-9]/g,'_'),
+                  name:item.name||String(item.file).replace(/\.[^.]+$/,''),
+                  src:src,w:r.w,h:r.h,slots:r.slots,source:'github',ord:idx,img:img
+                });
+              }catch(e){}
+            };
+            img.onerror=function(){};
+            img.src=src;
+          }catch(e){}
+        })(arr[i],i);
+      }
+    }).catch(function(){});
+  }catch(e){}
+}
+function ctplLoadTablet(){
+  try{
+    ctplDbAll().then(function(list){
+      for(var i=0;i<list.length;i++){
+        (function(rec){
+          try{
+            if(accOn()){
+              var me=accEmail();
+              if(rec.uid)return;                         /* synced template: ctplLoadAccount handles it */
+              if(rec.owner&&rec.owner!==me)return;       /* belongs to another account */
+              if(!rec.owner&&me){rec.owner=me;ctplDbPut(rec).then(function(){}).catch(function(){})}
+            }
+            var img=new Image();
+            img.onload=function(){
+              try{
+                var slots=rec.slots&&rec.slots.length?rec.slots:ctplDetect(img).slots;
+                if(!slots.length)return;
+                ctplRegister({
+                  key:'tpl_t'+rec.id,id:rec.id,name:rec.name||'Template',src:rec.data,
+                  w:rec.w||img.naturalWidth,h:rec.h||img.naturalHeight,slots:slots,
+                  source:'tablet',ord:rec.added||rec.id,img:img
+                });
+              }catch(e){}
+            };
+            img.onerror=function(){};
+            img.src=rec.data;
+          }catch(e){}
+        })(list[i]);
+      }
+    }).catch(function(){});
+  }catch(e){}
+}
+
+/* --- Settings: add / list / delete --- */
+function ctplAdd(){
+  try{
+    if(!planHas('ownTemplates')){ctplMsgSet('This feature isn\'t included in your plan. '+planLockText('ownTemplates'),true);return}
+    var f=$('ctplFile'),nm=$('ctplName');
+    var file=(S.tgFile)||(f&&f.files&&f.files[0]);S.tgFile=null;
+    if(!file){ctplMsgSet('Choose a PNG file first.',true);return}
+    if(file.type&&file.type!=='image/png'){ctplMsgSet('Please use a PNG file (JPG has no transparency).',true);return}
+    var name=((nm&&nm.value)||'').trim()||String(file.name||'Template').replace(/\.[^.]+$/,'');
+    ctplMsgSet('Reading template\u2026',false);
+    var rd=new FileReader();
+    rd.onload=function(){
+      try{
+        var src=rd.result;
+        var img=new Image();
+        img.onload=function(){
+          try{
+            var r=ctplDetect(img);
+            if(!r.slots.length){ctplMsgSet('No transparent photo windows found \u2014 save PNG with transparent areas',true);return}
+            var rec={name:name,data:src,w:r.w,h:r.h,slots:r.slots,added:Date.now(),owner:(accOn()?accEmail():'')};
+            ctplDbAdd(rec).then(function(id){
+              try{
+                if(id==null){ctplMsgSet('Could not save on this tablet (browser storage unavailable).',true);return}
+                ctplRegister({key:'tpl_t'+id,id:id,name:name,src:src,w:r.w,h:r.h,slots:r.slots,source:'tablet',ord:rec.added,img:img});
+                ctplMsgSet('\u2705 Added "'+name+'" \u2014 '+r.slots.length+(r.slots.length>1?' photos':' photo')+'.',false);
+                try{f.value=''}catch(e){}
+                try{if(nm)nm.value=''}catch(e){}
+                try{ctplShare(rec,id,img)}catch(e){}
+              }catch(e){}
+            }).catch(function(){ctplMsgSet('Could not save the template.',true)});
+          }catch(e){ctplMsgSet('Could not read that image.',true)}
+        };
+        img.onerror=function(){ctplMsgSet('Could not open that file as an image.',true)};
+        img.src=src;
+      }catch(e){ctplMsgSet('Could not read that file.',true)}
+    };
+    rd.onerror=function(){ctplMsgSet('Could not read that file.',true)};
+    rd.readAsDataURL(file);
+  }catch(e){ctplMsgSet('Something went wrong adding the template.',true)}
+}
+function ctplDelete(id){
+  try{
+    var t=null;
+    for(var i=0;i<S.ctpls.length;i++){if(S.ctpls[i].source==='tablet'&&S.ctpls[i].id===id){t=S.ctpls[i];break}}
+    if(!t)return;
+    var ok=true;try{ok=window.confirm('Delete template "'+t.name+'"?')}catch(e){ok=true}
+    if(!ok)return;
+    ctplDbDel(id).then(function(){ctplUnregister(t.key);ctplMsgSet('Template deleted.',false)}).catch(function(){});
+  }catch(e){}
+}
+function ctplRenderList(){
+  try{
+    var el=$('ctplList');if(!el)return;
+    if(!S.ctpls.length){el.innerHTML='<div class="s-note">No custom templates yet.</div>';return}
+    var html='';
+    for(var i=0;i<S.ctpls.length;i++){
+      var t=S.ctpls[i],n=t.slots.length;
+      html+='<div class="ctpl-item"><img src="'+ctplEsc(t.src)+'" alt="">'+
+        '<div class="ctpl-meta"><b>'+ctplEsc(t.name)+'</b><small>'+n+(n>1?' photos':' photo')+' \u2022 '+t.w+'\u00d7'+t.h+'px</small></div>';
+      if(t.source==='tablet'){
+        html+='<span class="ctpl-src">Tablet</span><button class="ctpl-del" onclick="ctplDelete('+Number(t.id)+')">&#x1f5d1;&#xfe0f;</button>';
+      }else if(t.source==='account'){
+        html+='<span class="ctpl-src">Account</span><button class="ctpl-del" onclick="ctplDeleteAcc(\''+String(t.uid).replace(/[^0-9a-f]/g,'')+'\')">&#x1f5d1;&#xfe0f;</button>';
+      }else{
+        html+='<span class="ctpl-src">GitHub</span>';
+      }
+      html+='</div>';
+    }
+    el.innerHTML=html;
+  }catch(e){}
+}
+function ctplRenderTiles(){
+  try{
+    var grid=document.querySelector('#layouts .lay-grid');if(!grid)return;
+    var old=grid.querySelectorAll('.ctpl-tile');
+    for(var i=0;i<old.length;i++){try{grid.removeChild(old[i])}catch(e){}}
+    for(var j=0;j<S.ctpls.length;j++){
+      (function(t){
+        try{
+          var d=document.createElement('div');
+          d.className='ltile ctpl-tile';
+          d.setAttribute('data-key',t.key);
+          var n=t.slots.length;
+          d.innerHTML='<img class="ctpl-th" src="'+ctplEsc(t.src)+'" alt=""><h4>'+ctplEsc(t.name)+'</h4><small>'+n+(n>1?' photos':' photo')+'</small>';
+          d.addEventListener('click',function(){gPickLayout(t.key)});
+          grid.appendChild(d);
+        }catch(e){}
+      })(S.ctpls[j]);
+    }
+  }catch(e){}
+
+  try{tgApplyPicker()}catch(e){}
+}
+
+/* --- Compose: photos into windows, design on top --- */
+function ctplDrawCoverRect(ctx,img,x,y,w,h,flip){
+  try{
+    if(!img||!w||!h)return;
+    var ir=img.width/img.height,cr=w/h,sx,sy,sw,sh;
+    if(ir>cr){sh=img.height;sw=sh*cr;sx=(img.width-sw)/2;sy=0}
+    else{sw=img.width;sh=sw/cr;sx=0;sy=(img.height-sh)/2}
+    ctx.save();
+    ctx.beginPath();ctx.rect(x,y,w,h);ctx.clip();
+    if(flip){ctx.translate(x+w,y);ctx.scale(-1,1);ctx.drawImage(img,sx,sy,sw,sh,0,0,w,h)}
+    else{ctx.drawImage(img,sx,sy,sw,sh,x,y,w,h)}
+    ctx.restore();
+  }catch(e){}
+}
+function gRenderTpl(pc,imgs,def){
+  try{
+    var t=def.tpl;if(!t)return;
+    var W=t.w||(t.img&&t.img.naturalWidth)||1000,H=t.h||(t.img&&t.img.naturalHeight)||1500;
+    pc.width=W;pc.height=H;
+    var ctx=pc.getContext('2d');
+    ctx.fillStyle='#ffffff';ctx.fillRect(0,0,W,H);
+    for(var i=0;i<t.slots.length;i++){
+      var s=t.slots[i];
+      var im=imgs[i]||imgs[imgs.length-1];
+      ctplDrawCoverRect(ctx,im,s.x,s.y,s.w,s.h,S.gFlip);
+    }
+    if(t.img){try{ctx.drawImage(t.img,0,0,W,H)}catch(e){}}
+  }catch(e){}
+}
+
+/* === INIT === */
+function init(){
+  try{
+    try{if(!window.CFG_DEF)window.CFG_DEF=JSON.parse(JSON.stringify(CFG))}catch(e){}
+    loadSettings();
+    openDB().catch(function(){});
+    updateStorageInfo();
+    regSW();
+    try{licBoot()}catch(e){}
+    try{planApply()}catch(e){}
+    try{setInterval(function(){try{licBoot()}catch(e){}},6*3600000)}catch(e){}
+    try{gBoot()}catch(e){}
+    try{gInitDone()}catch(e){}
+    try{ctplBoot()}catch(e){}
+    var sg=$('stkGrid');
+    if(sg){
+      var html='';
+      for(var i=0;i<STICKERS.length;i++){
+        html+='<button onclick="placeSticker(\''+STICKERS[i]+'\')">'+STICKERS[i]+'</button>';
+      }
+      sg.innerHTML=html;
+    }
+  }catch(e){}
+}
+
+/* Boot */
+if(document.readyState==='loading'){
+  document.addEventListener('DOMContentLoaded',init);
+}else{
+  init();
+}
+</script>
+</body>
+</html>
