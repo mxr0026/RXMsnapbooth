@@ -240,7 +240,12 @@ html,body{height:100%;width:100%;overflow:hidden;font-family:'Segoe UI',system-u
 #gCopyN{font-size:30px;font-weight:900;min-width:40px;text-align:center}
 .g-print{width:100%;padding:20px;font-size:24px;font-weight:900;border:none;border-radius:16px;color:#fff;background:linear-gradient(135deg,var(--pri),var(--acc));box-shadow:0 6px 24px rgba(0,0,0,.35);cursor:pointer}
 .g-print:active{transform:scale(.98)}
-.g-done{background:transparent;border:none;color:var(--txm);font-size:15px;text-decoration:underline;cursor:pointer;padding:6px}
+.g-done{position:relative;overflow:hidden;margin-top:14px;width:100%;max-width:420px;padding:16px 18px;border-radius:14px;
+  border:2px solid var(--brd);background:var(--bg3);color:var(--tx);font-size:17px;font-weight:700;cursor:pointer;
+  -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;touch-action:none}
+.g-done .g-done-fill{position:absolute;left:0;top:0;bottom:0;width:0;background:var(--ok);opacity:.35;transition:none}
+.g-done.holding .g-done-fill{width:100%;transition:width 1.2s linear}
+.g-done .g-done-t{position:relative}
 body.guest #preview .send-btn,body.guest #preview .acts,body.guest #qrMod .qr-actions{display:none!important}
 #preview.gflow #prevCanvas{max-height:62vh}
 @media (orientation:landscape) and (min-width:700px){
@@ -475,7 +480,7 @@ body.notext #gTextBtn{display:none}
     <div class="g-row">
       <button class="g-btn" onclick="openQR()">&#x1f4f1; QR Code</button>
     </div>
-    <button class="g-done" onclick="gDone()">&#x2705; Done &mdash; next guest</button>
+    <button class="g-done" id="gDoneBtn"><span class="g-done-fill"></span><span class="g-done-t">&#x2705; Hold to finish &mdash; next guest</span></button>
   </div>
 </div>
 
@@ -792,7 +797,7 @@ body.notext #gTextBtn{display:none}
 <div id="gToast"></div>
 <div id="vTimer">&#x23f1;&#xfe0f; <span id="vTimerT">10:00</span> left</div>
 <div id="adminHot"></div>
-<div id="appVer" style="position:fixed;right:8px;bottom:6px;z-index:600;font:11px system-ui,sans-serif;color:rgba(255,255,255,.45);pointer-events:none">SnapBooth v34</div>
+<div id="appVer" style="position:fixed;right:8px;bottom:6px;z-index:600;font:11px system-ui,sans-serif;color:rgba(255,255,255,.45);pointer-events:none">SnapBooth v35</div>
 
 <!-- ===== SLIDESHOW ===== -->
 <div id="slideshow">
@@ -2152,7 +2157,7 @@ function gToIdle(){
     S.gSeq++;S.gBusy=false;S.gReviewing=false;S.gActive=false;S.gQrExt=0;
     try{vClose()}catch(e){}
     try{gtClose();gtReset()}catch(e){}
-    S.gReLayout=null;S.gKeepShots=false;try{var hd1=$('layHdr');if(hd1)hd1.textContent='Choose your layout'}catch(e){}
+    S.gReLayout=null;S.gKeepShots=false;S.gOrigShots=null;try{var hd1=$('layHdr');if(hd1)hd1.textContent='Choose your layout'}catch(e){}
     try{sessionStorage.removeItem(G_RESUME_KEY)}catch(e){}
     try{gResetFilter()}catch(e){}
     gClearIdle();
@@ -2172,9 +2177,10 @@ function gChangeLayout(){
   try{
     if(S.gBusy)return;
     try{closeQR()}catch(e){}
-    S.gReLayout={layout:S.gLayout,shots:(S.gShots||[]).slice(),flip:S.gFlip,filter:S.gFilter};
+    if(!S.gOrigShots||!S.gOrigShots.length)S.gOrigShots=(S.gShots||[]).slice();
+    S.gReLayout={layout:S.gLayout,shots:S.gOrigShots.slice(),flip:S.gFlip,filter:S.gFilter};
     S.gReviewing=false;
-    var hd=$('layHdr');if(hd)hd.textContent='Pick another layout \u2014 your photos are kept';
+    var hd=$('layHdr');if(hd)hd.textContent='Pick another layout \u2014 same photos, no retake';
     gShowLayouts();
     gClearIdle();
   }catch(e){}
@@ -2195,7 +2201,7 @@ function gLayoutBack(){
 
 function capClose(){
   try{
-    if(S.gActive&&S.gKeepShots&&S.gShots&&S.gShots.length&&!S.gBusy){S.gKeepShots=false;stopCam();gShowLayouts();S.gReLayout={layout:S.gLayout,shots:S.gShots.slice(),flip:S.gFlip,filter:S.gFilter};var hd=$('layHdr');if(hd)hd.textContent='Pick another layout \u2014 your photos are kept';return}
+    if(S.gActive&&S.gKeepShots&&S.gShots&&S.gShots.length&&!S.gBusy){S.gKeepShots=false;stopCam();gShowLayouts();S.gReLayout={layout:S.gLayout,shots:S.gShots.slice(),flip:S.gFlip,filter:S.gFilter};var hd=$('layHdr');if(hd)hd.textContent='Pick another layout \u2014 same photos, no retake';return}
     if(S.gActive){gToIdle();return}
     stopCam();showScreen('home');
   }catch(e){}
@@ -2441,6 +2447,31 @@ function vTimerTick(){
   }catch(e){}
 }
 
+
+/* --- Done: press and hold 1.2s so it can't be tapped by accident --- */
+function gInitDone(){
+  try{
+    var b=$('gDoneBtn');if(!b||b._init)return;b._init=true;
+    var t=null,txt=b.querySelector('.g-done-t');
+    var label='\u2705 Hold to finish \u2014 next guest';
+    var start=function(ev){
+      try{if(ev&&ev.preventDefault)ev.preventDefault()}catch(e){}
+      if(t)clearTimeout(t);
+      b.classList.add('holding');if(txt)txt.textContent='Keep holding\u2026';
+      t=setTimeout(function(){t=null;b.classList.remove('holding');if(txt)txt.textContent=label;gDone()},1200);
+    };
+    var cancel=function(){
+      if(t){clearTimeout(t);t=null;if(txt)txt.textContent=label;gToast('Press and hold to finish your session.')}
+      b.classList.remove('holding');
+    };
+    b.addEventListener('pointerdown',start);
+    b.addEventListener('pointerup',cancel);
+    b.addEventListener('pointerleave',cancel);
+    b.addEventListener('pointercancel',cancel);
+    b.addEventListener('contextmenu',function(ev){try{ev.preventDefault()}catch(e){}});
+  }catch(e){}
+}
+
 function gDone(){
   try{S.vOk=false;S.vLeft=0;S.vCode='';vTimerStop();}catch(e){}
   gToIdle();
@@ -2629,9 +2660,13 @@ function gPickLayout(key){
       S.gShots=rl.shots.slice();S.gFlip=rl.flip;
       S.mode=(key==='receipt4')?'receipt':(key==='single'?'classic':'strip');
       gClearIdle();
-      var need=G_LAYOUTS[key].n||1;
-      if(S.gShots.length>=need){S.gShots=S.gShots.slice(0,need);gCompose(true);return}
-      S.gKeepShots=true;gStartCap();return;
+      var need=G_LAYOUTS[key].n||1,have=S.gShots.length;
+      /* reuse the photos already taken: cycle them into any extra slots (no retake) */
+      var src=S.gShots.slice(),fill=[];
+      for(var q=0;q<need;q++){fill.push(src[q%have])}
+      S.gShots=fill;
+      if(need>have)gToast('Your '+have+' photo'+(have>1?'s were':' was')+' reused to fill '+need+' spots. Tap Retake for new photos.');
+      gCompose(true);return;
     }
     if(!G_LAYOUTS[key])key='strip4';
     S.gLayout=key;S.gActive=true;S.gShots=[];S.gImgs=null;S.gFlip=false;S.gCopies=1;
@@ -2754,7 +2789,7 @@ function gStartSeq(){
     if(S.gBusy)return;
     gClearIdle();
     getAudioCtx();
-    S.gBusy=true;if(!S.gKeepShots){S.gShots=[];S.gLiveShots=[];S.gCurSlot=0}S.gKeepShots=false;S.gImgs=null;
+    S.gBusy=true;S.gOrigShots=null;if(!S.gKeepShots){S.gShots=[];S.gLiveShots=[];S.gCurSlot=0}S.gKeepShots=false;S.gImgs=null;
     S.gSeq++;var token=S.gSeq;
     var def=G_LAYOUTS[S.gLayout]||G_LAYOUTS.strip4;
     var n=def.n,i=S.gShots.length||0;
@@ -3081,7 +3116,7 @@ function gToggleMirror(){
 }
 function gRetake(){
   try{
-    S.gReLayout=null;S.gKeepShots=false;
+    S.gReLayout=null;S.gKeepShots=false;S.gOrigShots=null;
     S.gReviewing=false;gClearIdle();
     S.gShots=[];S.gImgs=null;S.gFlip=false;S.gTime=null;gResetFilter();
     try{closeQR()}catch(e){}
@@ -3736,6 +3771,7 @@ function init(){
     try{licBoot()}catch(e){}
     try{setInterval(function(){try{licBoot()}catch(e){}},6*3600000)}catch(e){}
     try{gBoot()}catch(e){}
+    try{gInitDone()}catch(e){}
     try{ctplBoot()}catch(e){}
     var sg=$('stkGrid');
     if(sg){
