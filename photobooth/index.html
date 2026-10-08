@@ -570,7 +570,7 @@ body.notext #gTextBtn{display:none}
   <!-- Branding -->
   <div class="s-sec">
     <h3>&#x1f3a8; Branding</h3>
-    <div class="s-row"><label>Booth Name</label><input type="text" id="sName" value="Grinzy" onchange="saveSettings()"></div>
+    <div class="s-row"><label>Booth Name</label><input type="text" id="sName" value="Grinzy Booth" onchange="saveSettings()"></div>
     <div class="s-row"><label>Logo</label><input type="file" id="sLogo" accept="image/*" onchange="handleLogo(this)" style="font-size:12px"></div>
     <div id="logoPreview" class="tpl-prv" style="display:none"><img id="logoPrvImg" src=""><button class="rm-btn" onclick="removeLogo()">&#x2715;</button></div>
     <div class="s-row"><label>Primary</label><input type="color" id="cPri" value="#6c5ce7" onchange="saveSettings()"></div>
@@ -632,7 +632,7 @@ body.notext #gTextBtn{display:none}
     <div class="s-row"><label>Line 2 Left</label><input type="text" id="rL2L" value="GUEST"></div>
     <div class="s-row"><label>Line 2 Right</label><input type="text" id="rL2R" value=""></div>
     <div class="s-row"><label>Custom Message</label><textarea id="rMsg" rows="2">Thank you for visiting our booth!</textarea></div>
-    <div class="s-row"><label>Footer</label><input type="text" id="rFooter" value="www.snapbooth.app"></div>
+    <div class="s-row"><label>Footer</label><input type="text" id="rFooter" value=""></div>
     <div class="s-row"><label>Show Order #</label><label class="tgl"><input type="checkbox" id="rOrder" checked><span class="tgl-s"></span></label></div>
     <div class="s-row"><label>Show Date/Time</label><label class="tgl"><input type="checkbox" id="rDate" checked><span class="tgl-s"></span></label></div>
   </div>
@@ -695,12 +695,13 @@ body.notext #gTextBtn{display:none}
     <div data-feat="vouchers">
     <div class="s-row"><label>Require a code to start</label><label class="tgl"><input type="checkbox" id="sVoucherOn"><span class="tgl-s"></span></label></div>
     <div class="s-row"><label>Price text</label><input type="text" id="sVPrice" placeholder="&#x20b1;100 per session"></div>
+    <div class="s-row"><label>Booth name (on tickets)</label><input type="text" id="sVBooth" maxlength="20" placeholder="Booth 1"></div>
     <div class="s-row"><label>Ticket message</label><input type="text" id="sVTicketMsg" maxlength="48" placeholder="Thank you! Valid today only"></div>
     <div class="s-row"><label>Auto-cut after each ticket</label><input type="checkbox" id="sVCut" checked></div>
     <div class="s-row"><label>Cut type</label><select id="sVCutType"><option value="partial">Partial cut (tickets stay hanging)</option><option value="full">Full cut</option></select></div>
     <div class="s-row"><label>Prints per code</label><input type="number" id="sVCopies" min="1" max="10" value="1"></div>
     <div class="s-row"><label>Code valid for (minutes)</label><input type="number" id="sVMin" min="2" max="120" value="10"></div>
-    <div class="s-note">Guests pay at the counter, get a one-time code, and enter it on the start screen. Each code works once. Codes are stored on <b>this device only</b>; each booth needs its own list.</div>
+    <div class="s-note">Guests pay at the counter, get a one-time code, and enter it on the start screen. Each code works once. Each booth has its own codes. Generate them on this booth while online; tickets show the booth name. Codes work on this booth only, even without internet, and each works once. Used codes sync to your account when the internet is back.</div>
     <div class="s-row"><label>Generate new codes</label><span style="display:flex;gap:6px"><input type="number" id="sVGenN" min="1" max="500" value="50" style="width:80px"><button class="btn bp" onclick="vGenerate()">Generate</button></span></div>
     <div class="s-row" style="flex-direction:column;align-items:stretch"><label>Or paste your own codes (one per line)</label>
       <textarea id="sVAdd" rows="3" style="width:100%;margin-top:6px;border-radius:8px;background:var(--bg3);color:var(--tx);border:1px solid var(--brd);padding:8px" placeholder="482913&#10;771045"></textarea>
@@ -729,7 +730,7 @@ body.notext #gTextBtn{display:none}
     <div class="s-note">Used to share your own templates with your other devices. Use a <b>separate unsigned preset with no &ldquo;snapbooth&rdquo; tag</b>, so the 2-hour photo cleanup doesn&rsquo;t delete your templates.</div>
     <div class="s-note">Free CDN hosting \u2014 loads on any device. Get both at <a href="https://cloudinary.com/users/register_free" target="_blank">cloudinary.com</a> (see setup steps in chat).</div>
     </div>
-    <div class="s-row"><label>File Prefix</label><input type="text" id="sPrefix" value="snapbooth"></div>
+    <div class="s-row"><label>File Prefix</label><input type="text" id="sPrefix" value="grinzy"></div>
     <div class="s-row"><label>File Naming</label>
       <select id="sNaming"><option value="prefix_seq">Prefix + Sequence</option><option value="date">Date</option><option value="timestamp">Timestamp</option><option value="guest">Guest Name</option></select>
     </div>
@@ -896,7 +897,7 @@ body.notext #gTextBtn{display:none}
 <div id="vTimer">&#x23f1;&#xfe0f; <span id="vTimerT">10:00</span> left</div>
 <div id="adminHot"></div>
 <div id="appCopy" style="position:fixed;left:8px;bottom:6px;z-index:600;font:10px system-ui,sans-serif;color:rgba(255,255,255,.35);pointer-events:none">&copy; 2026 Grinzy</div>
-<div id="appVer" style="position:fixed;right:8px;bottom:6px;z-index:600;font:11px system-ui,sans-serif;color:rgba(255,255,255,.45);pointer-events:none">Grinzy Beta 1.4</div>
+<div id="appVer" style="position:fixed;right:8px;bottom:6px;z-index:600;font:11px system-ui,sans-serif;color:rgba(255,255,255,.45);pointer-events:none">Grinzy Beta 1.7</div>
 
 <!-- ===== SLIDESHOW ===== -->
 <div id="slideshow">
@@ -930,15 +931,15 @@ var S = {
 
 /* === SETTINGS OBJECT === */
 var CFG = {
-  name:'Grinzy',pri:'#6c5ce7',acc:'#fd79a8',bg:'#1a1a2e',bg2:'#16213e',tx:'#ffffff',
+  name:'Grinzy Booth',pri:'#6c5ce7',acc:'#fd79a8',bg:'#1a1a2e',bg2:'#16213e',tx:'#ffffff',
   camSrc:'user',countdown:5,mirror:true,
   tiles:4,layout:'vertical',tplBg:'#1a1a2e',overlayData:null,
   rBizName:'Grinzy Studio',rTagline:'Memories Made Instantly',
   rL1L:'EVENT',rL1R:'Photo Session',rL2L:'GUEST',rL2R:'',
-  rMsg:'Thank you for visiting our booth!',rFooter:'www.snapbooth.app',
+  rMsg:'Thank you for visiting our booth!',rFooter:'',
   rOrder:true,rDate:true,
   askName:false,printName:false,kiosk:false,restart:15,
-  cloudName:'',cloudPreset:'',tplPreset:'',prefix:'snapbooth',naming:'prefix_seq',autoDL:false,
+  cloudName:'',cloudPreset:'',tplPreset:'',prefix:'grinzy',naming:'prefix_seq',autoDL:false,
   quality:'0.85',format:'jpeg',autoGal:true,
   guestMode:true,adminPin:'1234',hashtag:'#RXMPHOTOBOOTH',footDate:true,bw:'receipt',paper:'58mm',printMode:'rawbt',pw:76,ph:0,dpi:203,fit:'auto',guestText:true,hiddenLayouts:{},voucherOn:false,vMsg:'',vPrice:'',vCopies:1,vMin:10,thermal:'atkinson',thBri:5,thCon:15,
   logoData:null
@@ -969,7 +970,7 @@ function showScreen(id){
     else document.body.classList.remove('on-idle');
   }catch(e){}
   try{
-    if(id==='settings')ctplRenderList();
+    if(id==='settings'){ctplRenderList();try{vRefresh()}catch(e){}}
     if(id==='layouts')ctplRenderTiles();
   }catch(e){}
 }
@@ -1585,7 +1586,7 @@ function downloadPhotoBlob(dataUrl){
 function getFilename(){
   var ext=CFG.format==='png'?'.png':CFG.format==='webp'?'.webp':'.jpg';
   var n=CFG.naming||'prefix_seq';
-  var p=CFG.prefix||'snapbooth';
+  var p=CFG.prefix||'grinzy';
   if(n==='date'){return p+'_'+new Date().toISOString().slice(0,10)+ext}
   if(n==='timestamp'){return p+'_'+Date.now()+ext}
   if(n==='guest'&&S.guestName){return p+'_'+S.guestName.replace(/[^a-zA-Z0-9]/g,'_')+ext}
@@ -2034,7 +2035,7 @@ function saveSettings(){
     CFG.cloudName=($('sCloudName')||{}).value||'';
     CFG.cloudPreset=($('sCloudPreset')||{}).value||'';
     CFG.tplPreset=(($('sTplPreset')||{}).value||'').trim();
-    CFG.prefix=($('sPrefix')||{}).value||'snapbooth';
+    CFG.prefix=($('sPrefix')||{}).value||'grinzy';
     CFG.naming=($('sNaming')||{}).value||'prefix_seq';
     CFG.autoDL=!!($('sAutoDL')||{}).checked;
     CFG.quality=($('sQuality')||{}).value||'0.85';
@@ -2056,6 +2057,7 @@ function saveSettings(){
     if(!CFG.voucherOn){try{vTimerStop()}catch(e){}}
     CFG.vPrice=(($('sVPrice')||{}).value||'').trim();
     CFG.vMsg=(($('sVTicketMsg')||{}).value||'').trim();
+    CFG.vBooth=(($('sVBooth')||{}).value||'').trim();
     CFG.vCut=($('sVCut')||{}).checked!==false;
     CFG.vCutType=(($('sVCutType')||{}).value)||'partial';
     CFG.vCopies=Math.max(1,Math.min(10,parseInt(($('sVCopies')||{}).value)||1));
@@ -2069,6 +2071,21 @@ function saveSettings(){
   }catch(e){}
 }
 
+
+/* Rename leftover SnapBooth values saved by older versions (Beta 1.6) */
+function cfgRenameOld(){
+  var chg=false;
+  try{
+    var nm=String(CFG.name||'').trim();
+    if(!nm||/^snap ?booth$/i.test(nm)||nm==='Grinzy'){CFG.name='Grinzy Booth';chg=true}
+    if(/snapbooth\.app/i.test(String(CFG.rFooter||''))){CFG.rFooter='';chg=true}
+    if(/^snapbooth$/i.test(String(CFG.prefix||''))){CFG.prefix='grinzy';chg=true}
+    if(/^snap ?booth$/i.test(String(CFG.rBizName||''))){CFG.rBizName='Grinzy Booth';chg=true}
+    if(chg){try{localStorage.setItem('snapbooth_cfg',JSON.stringify(CFG))}catch(e){}}
+  }catch(e){}
+  return chg;
+}
+
 function loadSettings(){
   try{
     var raw=localStorage.getItem('snapbooth_cfg');
@@ -2077,6 +2094,7 @@ function loadSettings(){
       for(var k in c){if(c.hasOwnProperty(k))CFG[k]=c[k]}
     }
   }catch(e){}
+  try{if(cfgRenameOld())setTimeout(function(){try{syncMark()}catch(e){}},4000)}catch(e){}
   populateSettingsUI();
   applyBranding();
   try{vRenderAdmin()}catch(e){}
@@ -2094,7 +2112,7 @@ function populateSettingsUI(){
       'rMsg':'rMsg','rFooter':'rFooter',
       'sCloudName':'cloudName','sCloudPreset':'cloudPreset','sTplPreset':'tplPreset','sPrefix':'prefix','sNaming':'naming',
       'sQuality':'quality','sFormat':'format',
-      'sAdminPin':'adminPin','sHashtag':'hashtag','sBW':'bw','sPaper':'paper','sPrintMode':'printMode','sDPI':'dpi','sFit':'fit','sThermal':'thermal','sVPrice':'vPrice','sVTicketMsg':'vMsg','sVCutType':'vCutType','sThBri':'thBri','sThCon':'thCon','sPW':'pw','sPH':'ph'
+      'sAdminPin':'adminPin','sHashtag':'hashtag','sBW':'bw','sPaper':'paper','sPrintMode':'printMode','sDPI':'dpi','sFit':'fit','sThermal':'thermal','sVPrice':'vPrice','sVTicketMsg':'vMsg','sVBooth':'vBooth','sVCutType':'vCutType','sThBri':'thBri','sThCon':'thCon','sPW':'pw','sPH':'ph'
     };
     for(var id in map){
       var el=$(id);if(el)el.value=CFG[map[id]]||el.value;
@@ -2141,8 +2159,8 @@ function applyBranding(){
   r.setProperty('--tx2',mixColor(CFG.tx,CFG.bg,0.7));
   r.setProperty('--txm',mixColor(CFG.tx,CFG.bg,0.45));
   r.setProperty('--brd',lighten(CFG.bg,15));
-  var t=$('boothTitle');if(t)t.textContent=CFG.name||'Grinzy';
-  document.title=CFG.name||'Grinzy';
+  var t=$('boothTitle');if(t)t.textContent=CFG.name||'Grinzy Booth';
+  document.title=CFG.name||'Grinzy Booth';
   try{gSyncIdle()}catch(e){}
 }
 
@@ -2280,7 +2298,7 @@ function gEnterGuest(){
 }
 function gSyncIdle(){
   try{
-    var t=$('idleTitle');if(t)t.textContent=CFG.name||'Grinzy';
+    var t=$('idleTitle');if(t)t.textContent=CFG.name||'Grinzy Booth';
     var tg=$('idleTag');if(tg)tg.textContent=CFG.hashtag||'';
     var lg=$('idleLogo'),em=$('idleEmoji');
     var src=CFG.logoData||S.logoData;
@@ -2493,16 +2511,18 @@ function tgRender(){
       var sub=n+(n>1?' photos':' photo');
       if(t.source==='account'){
         d+=tgCard(t.key,t.name,sub,img,'Your account','<br><button class="btn bo" style="margin-top:6px;padding:4px 10px;font-size:12px" onclick="event.stopPropagation();ctplDeleteAcc(\''+String(t.uid).replace(/[^0-9a-f]/g,'')+'\')">&#x1f5d1;&#xfe0f; Delete</button>');
+      }else if(t.source==='plan'){
+        g+=tgCard(t.key,t.name,sub,img,'Your plan');
       }else if(t.source==='tablet'){
         d+=tgCard(t.key,t.name,sub,img,'This device','<br><button class="btn bo" style="margin-top:6px;padding:4px 10px;font-size:12px" onclick="event.stopPropagation();ctplDelete('+Number(t.id)+');setTimeout(tgRender,400)">&#x1f5d1;&#xfe0f; Delete</button>');
       }else{
         g+=tgCard(t.key,t.name,sub,img,'GitHub');
       }
     }
-    var lk=(S.ctplLocked||[]).slice().sort(function(a,b2){return (a.ord||0)-(b2.ord||0)});
+    var lk=(S.ctplLocked||[]).concat(S.ctplLockedPlan||[]).slice().sort(function(a,b2){return (a.ord||0)-(b2.ord||0)});
     for(i=0;i<lk.length;i++){
       g+='<div class="tg-card locked" onclick="gToast(\''+planLockText('ownTemplates').replace(/'/g,'').replace('Available on Pro','This template is on '+planName(lk[i].min))+'\')">'+
-        '<div class="tg-chk">\ud83d\udd12</div><img src="'+ctplEsc(lk[i].src)+'" alt=""><b>'+ctplEsc(lk[i].name)+'</b>'+
+        '<div class="tg-chk">\ud83d\udd12</div>'+(lk[i].src?'<img src="'+ctplEsc(lk[i].src)+'" alt="">':'<div style="font-size:40px;padding:20px 0">\ud83d\udd12</div>')+'<b>'+ctplEsc(lk[i].name)+'</b>'+
         '<small>Not in your plan</small><br><span class="tg-lockbadge">\ud83d\udd12 '+planName(lk[i].min)+'</span></div>';
     }
     for(i=0;i<TG_BUILT.length;i++){
@@ -2755,13 +2775,13 @@ function accInitListeners(){
 /* ================= SETTINGS SYNC (v37) ================= */
 var SYNC_KEY='snapbooth_sync';
 /* device-specific settings that stay on each device */
-var SYNC_SKIP={cloudName:1,cloudPreset:1,tplPreset:1,camSrc:1,logoData:1,overlayData:1,printMode:1,paper:1,pw:1,ph:1,dpi:1,fit:1,thermal:1,thBri:1,thCon:1};
+var SYNC_SKIP={vBooth:1,cloudName:1,cloudPreset:1,tplPreset:1,camSrc:1,logoData:1,overlayData:1,printMode:1,paper:1,pw:1,ph:1,dpi:1,fit:1,thermal:1,thBri:1,thCon:1};
 function syncState(){try{return JSON.parse(localStorage.getItem(SYNC_KEY)||'{}')||{}}catch(e){return {}}}
 function syncStateSet(o){try{localStorage.setItem(SYNC_KEY,JSON.stringify(o||{}))}catch(e){}}
 function syncCollect(){
   var cfg={};
   for(var k in CFG){if(CFG.hasOwnProperty(k)&&!SYNC_SKIP[k])cfg[k]=CFG[k]}
-  return {v:1,cfg:cfg,vouchers:vLoad(),tpls:syncState().tpls||[]};
+  return {v:1,cfg:cfg,vouchers:vServer()?[]:vLoad(),tpls:syncState().tpls||[]};
 }
 /* called whenever a synced setting changes */
 function syncMark(){
@@ -2788,6 +2808,7 @@ function syncApply(data,updatedAt){
   try{
     if(data&&data.cfg){
       for(var k in data.cfg){if(data.cfg.hasOwnProperty(k)&&!SYNC_SKIP[k])CFG[k]=data.cfg[k]}
+      try{if(cfgRenameOld())S.syncFixName=true}catch(e){}
       try{localStorage.setItem('snapbooth_cfg',JSON.stringify(CFG))}catch(e){}
       try{populateSettingsUI()}catch(e){}
       try{applyBranding()}catch(e){}
@@ -2799,6 +2820,7 @@ function syncApply(data,updatedAt){
     try{var tg=$('tgal');if(tg&&tg.classList.contains('active'))tgRender()}catch(e){}
   }catch(e){}
   S.syncApplying=false;
+  if(S.syncFixName){S.syncFixName=false;setTimeout(function(){try{syncMark()}catch(e){}},1500)}
 }
 function syncPull(){
   try{
@@ -2807,6 +2829,10 @@ function syncPull(){
       try{
         if(!r||!r.ok){if(r&&r.status==='invalid_session')licBoot();return}
         var st=syncState(),server=r.data,sAt=r.updatedAt||0;
+        if(vServer()){
+          if(server&&sAt>(st.updatedAt||0))syncApply(server,sAt);
+          st=syncState();st.lastSync=Date.now();syncStateSet(st);accRenderSettings();try{vRefresh()}catch(e){}return;
+        }
         var sv=(server&&server.vouchers)||[];
         var merged=vMerge(vLoad(),sv);
         var vKeyOf=function(list){var o=[];for(var z=0;z<list.length;z++)o.push(list[z].c+':'+(list[z].used||0));o.sort();return o.join(',')};
@@ -2922,8 +2948,44 @@ function gtDraw(pc){
 /* ================= BOOTH CODES (pay at counter) ================= */
 var V_KEY='snapbooth_vouchers';
 function vLoad(){try{var a=JSON.parse(localStorage.getItem(V_KEY)||'[]');return Array.isArray(a)?a:[]}catch(e){return[]}}
-function vSave(a){try{localStorage.setItem(V_KEY,JSON.stringify(a))}catch(e){gToast('Could not save codes on this device.')}try{syncMark()}catch(e){}}
+function vSave(a){try{localStorage.setItem(V_KEY,JSON.stringify(a))}catch(e){gToast('Could not save codes on this device.')}if(!vServer()){try{syncMark()}catch(e){}}}
 function vOn(){return !!CFG.voucherOn&&planHas('vouchers')}
+
+/* ===== Server booth codes (Beta 1.5): codes live on the licence server ===== */
+function vServer(){try{return accOn()&&!!accEmail()}catch(e){return false}}
+function vSrvCall(path,extra){
+  var A=accGet()||{},b={token:A.token,device:licDevId()};
+  for(var k in (extra||{})){if(extra.hasOwnProperty(k))b[k]=extra[k]}
+  return licPost(path,b);
+}
+function vSrvFail(r){
+  var st=r&&r.status;
+  if(st==='tier_locked')return 'Booth codes are not included in your plan.';
+  if(st==='invalid_session'){try{licBoot()}catch(e){}return 'Please sign in again.'}
+  if(st==='too_many')return 'Too many codes stored. Remove used codes first.';
+  if(st==='revoked'||st==='expired')return licReason(st);
+  return 'Could not reach the server. Check the internet connection.';
+}
+function vSrvApply(r){try{if(r&&r.ok&&Array.isArray(r.codes)){vSave(r.codes);vRenderAdmin()}}catch(e){}}
+/* load the list from the server; first time on this account, move old device codes up */
+function vRefresh(){
+  try{
+    if(!vServer()||!planHas('vouchers'))return;
+    var me=accEmail(),flag='snapbooth_vmig_'+me,moved=false;
+    try{moved=localStorage.getItem(flag)==='1'}catch(e){}
+    var st=$('vStats');if(st)st.textContent='Loading codes from the server\u2026';
+    var go=function(){vSyncQueue(function(){vSrvCall('/voucher/list').then(function(r){if(r&&r.ok)vSrvApply(r);else{var s2=$('vStats');if(s2)s2.textContent=vSrvFail(r)}}).catch(function(){var s3=$('vStats');if(s3)s3.textContent=vSrvFail(null)})})};
+    if(moved){go();return}
+    var old=vLoad(),up=[];
+    for(var i=0;i<old.length;i++){if(old[i]&&old[i].c)up.push({c:old[i].c,used:old[i].used||0})}
+    if(!up.length){try{localStorage.setItem(flag,'1')}catch(e){}go();return}
+    vSrvCall('/voucher/create',{codes:up,boothName:vBoothName()}).then(function(r){
+      if(r&&r.ok){try{localStorage.setItem(flag,'1')}catch(e){}vSrvApply(r);gToast('Your booth codes are now kept on your account.')}
+      else go();
+    }).catch(function(){go()});
+  }catch(e){}
+}
+
 function vSessionValid(){
   if(!S.vOk)return false;
   var mins=CFG.vMin||10;
@@ -3058,11 +3120,75 @@ function vSubmit(){
     var i=$('vInput'),msg=$('vMsg');
     var code=String(i?i.value:'').replace(/\s/g,'');
     if(!code){if(msg)msg.textContent='Please enter your code.';return}
+    if(vServer()){
+      if(S.vBusy)return;
+      S.vBusy=true;if(msg)msg.textContent='Checking code\u2026';
+      if(navigator.onLine===false){S.vBusy=false;vOfflineRedeem(code,msg,i);return}
+      vSrvCall('/voucher/redeem',{code:code}).then(function(r){
+        S.vBusy=false;
+        try{
+          if(r&&r.ok){
+            try{var a2=vLoad();for(var q=0;q<a2.length;q++){if(String(a2[q].c)===String(r.code)){a2[q].used=Date.now()}}vSave(a2)}catch(e){}
+            vStartSession(code);return;
+          }
+          var st=r&&r.status;
+          if(!st||st==='invalid_session'||st==='revoked'||st==='expired'){
+            if(!st){vOfflineRedeem(code,msg,i);return}
+          }
+          if(msg)msg.textContent=st==='not_found'?'Code not found. Please check with the counter.':(st==='used'?'This code was already used.':(st==='other_booth'?'This code is for '+(r.booth||'another booth')+'. Please use that booth.':vSrvFail(r)));
+          if(i&&(st==='not_found'||st==='used'||st==='other_booth'))i.value='';
+        }catch(e){}
+      }).catch(function(){S.vBusy=false;vOfflineRedeem(code,msg,i)});
+      return;
+    }
     var a=vLoad(),hit=-1;
     for(var k=0;k<a.length;k++){if(String(a[k].c)===code){hit=k;break}}
     if(hit<0){if(msg)msg.textContent='Code not found. Please check with the counter.';if(i)i.value='';return}
     if(a[hit].used){if(msg)msg.textContent='This code was already used.';if(i)i.value='';return}
     a[hit].used=Date.now();vSave(a);
+    vStartSession(code);
+  }catch(e){}
+}
+
+/* ===== Per-booth codes + offline (Beta 1.6) ===== */
+var VQ_KEY='snapbooth_vqueue';
+function vBoothName(){try{return CFG.vBooth||localStorage.getItem('snapbooth_devname')||'Booth 1'}catch(e){return 'Booth 1'}}
+function vQLoad(){try{var q=JSON.parse(localStorage.getItem(VQ_KEY)||'[]');return Array.isArray(q)?q:[]}catch(e){return[]}}
+function vQSave(q){try{localStorage.setItem(VQ_KEY,JSON.stringify(q||[]))}catch(e){}}
+/* send codes used while offline */
+function vSyncQueue(cb){
+  try{
+    var q=vQLoad();
+    if(!q.length||!vServer()){if(cb)cb();return}
+    vSrvCall('/voucher/sync-used',{used:q}).then(function(r){
+      try{
+        if(r&&r.ok){
+          vQSave([]);vSrvApply(r);
+          if(r.synced)gToast(r.synced+' offline code(s) synced to your account.');
+          if(r.clash)gToast(r.clash+' offline code(s) were already used elsewhere.');
+        }
+      }catch(e){}
+      if(cb)cb();
+    }).catch(function(){if(cb)cb()});
+  }catch(e){if(cb)cb()}
+}
+/* offline check against this booth's saved list */
+function vOfflineRedeem(code,msg,inp){
+  try{
+    var a=vLoad(),hit=-1;
+    for(var k=0;k<a.length;k++){if(String(a[k].c).toUpperCase()===String(code).toUpperCase()){hit=k;break}}
+    if(hit<0){if(msg)msg.textContent='Code not found on this booth. Check the booth name on your ticket.';if(inp)inp.value='';return}
+    if(a[hit].used){if(msg)msg.textContent='This code was already used.';if(inp)inp.value='';return}
+    if(a[hit].shared){if(msg)msg.textContent='No internet. This older code needs internet to check. Use a code made for this booth.';return}
+    a[hit].used=Date.now();vSave(a);
+    var q=vQLoad();q.push({c:a[hit].c,at:a[hit].used});vQSave(q);
+    vStartSession(code);
+  }catch(e){}
+}
+try{window.addEventListener('online',function(){try{vSyncQueue()}catch(e){}})}catch(e){}
+
+function vStartSession(code){
+  try{
     S.vOk=true;S.vAt=Date.now();S.vCode=code;S.vLeft=CFG.vCopies||1;
     vTimerStart();
     vClose();
@@ -3156,6 +3282,13 @@ function vNewCode(existing){
   return c;
 }
 function vGenerate(){
+  if(vServer()){
+    try{var n0=Math.max(1,Math.min(500,parseInt(($('sVGenN')||{}).value)||50));
+      gToast('Creating codes…');
+      vSrvCall('/voucher/create',{n:n0,boothName:vBoothName()}).then(function(r){if(r&&r.ok){vSrvApply(r);gToast(r.added+' new codes created. Print them for the counter.')}else gToast(vSrvFail(r))}).catch(function(){gToast(vSrvFail(null))});
+    }catch(e){}
+  return}
+
   try{
     var n=Math.max(1,Math.min(500,parseInt(($('sVGenN')||{}).value)||50));
     var a=vLoad(),seen={};
@@ -3166,6 +3299,15 @@ function vGenerate(){
   }catch(e){}
 }
 function vAddPasted(){
+  if(vServer()){
+    try{var t0=$('sVAdd');if(!t0)return;
+      var ls=String(t0.value||'').split(/[\s,;]+/),cs=[];
+      for(var z=0;z<ls.length;z++){var cz=ls[z].replace(/[^0-9A-Za-z]/g,'');if(cz.length>=4)cs.push(cz)}
+      if(!cs.length){gToast('No codes to add.');return}
+      vSrvCall('/voucher/create',{codes:cs,boothName:vBoothName()}).then(function(r){if(r&&r.ok){t0.value='';vSrvApply(r);gToast(r.added+' code(s) added.')}else gToast(vSrvFail(r))}).catch(function(){gToast(vSrvFail(null))});
+    }catch(e){}
+  return}
+
   try{
     var t=$('sVAdd');if(!t)return;
     var lines=String(t.value||'').split(/[\s,;]+/),a=vLoad(),seen={},added=0;
@@ -3180,10 +3322,19 @@ function vAddPasted(){
   }catch(e){}
 }
 function vClearUsed(){
+  if(vServer()){
+    try{vSrvCall('/voucher/clear-used').then(function(r){if(r&&r.ok){vSrvApply(r);gToast(r.removed+' used code(s) removed.')}else gToast(vSrvFail(r))}).catch(function(){gToast(vSrvFail(null))})}catch(e){}
+  return}
+
   try{var a=vLoad(),k=[];for(var i=0;i<a.length;i++){if(!a[i].used)k.push(a[i])}
     vSave(k);vRenderAdmin();gToast((a.length-k.length)+' used code(s) removed.')}catch(e){}
 }
 function vDeleteAll(){
+  if(vServer()){
+    try{if(!confirm('Delete ALL booth codes for this booth?'))return;
+      vSrvCall('/voucher/delete-all').then(function(r){if(r&&r.ok){vSrvApply(r)}else gToast(vSrvFail(r))}).catch(function(){gToast(vSrvFail(null))})}catch(e){}
+  return}
+
   try{if(!confirm('Delete ALL booth codes on this device?'))return;vSave([]);vRenderAdmin()}catch(e){}
 }
 function vRenderAdmin(){
@@ -3215,7 +3366,7 @@ function vPrintSheet(){
     var a=vLoad(),cells='',n=0;
     for(var i=0;i<a.length;i++){
       if(a[i].used)continue;n++;
-      cells+='<div class="t"><div class="b">'+ctplEsc(CFG.name||'Grinzy')+'</div><div class="c">'+a[i].c+'</div><div class="p">'+ctplEsc(CFG.vPrice||'')+'</div><div class="s">One-time booth code</div></div>';
+      cells+='<div class="t"><div class="b">'+ctplEsc(CFG.name||'Grinzy Booth')+'</div><div class="c">'+a[i].c+'</div><div class="p">'+ctplEsc(CFG.vPrice||'')+'</div><div class="s">One-time code'+(vServer()?' \u2022 '+ctplEsc(vBoothName())+' only':'')+'</div></div>';
     }
     if(!n){gToast('No unused codes to print. Generate some first.');return}
     var doc='<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Booth codes</title><style>'+
@@ -3263,7 +3414,7 @@ function vThermalRoll(list,logo,single){
   var x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);
   x.fillStyle='#000';x.textBaseline='middle';
   var SANS='"Segoe UI",system-ui,sans-serif',MONO='ui-monospace,Consolas,"Courier New",monospace';
-  var nm=CFG.name||'Grinzy',pr=CFG.vPrice||'',tag=CFG.hashtag||'',msg=CFG.vMsg||'';
+  var nm=CFG.name||'Grinzy Booth',pr=CFG.vPrice||'',tag=CFG.hashtag||'',msg=CFG.vMsg||'';
   /* roll header */
   x.textAlign='center';
   if(!single){
@@ -3285,7 +3436,8 @@ function vThermalRoll(list,logo,single){
     var lineY=y+tickH*0.15,lx=tx;
     if(logo){var lh=Math.round(tickH*0.16),lw=Math.round(lh*logo.width/logo.height);if(lw>tw*0.4){lw=Math.round(tw*0.4);lh=Math.round(lw*logo.height/logo.width)}
       try{x.drawImage(logo,tx,lineY-lh/2,lw,lh)}catch(e){}lx=tx+lw+Math.round(W*0.015)}
-    vFitText(x,nm,W-pad-lx,Math.round(W*0.042),'700',SANS);x.fillText(nm,lx,lineY);
+    var nmB=nm+(vServer()?' \u2022 '+vBoothName():'');
+    vFitText(x,nmB,W-pad-lx,Math.round(W*0.042),'700',SANS);x.fillText(nmB,lx,lineY);
     /* code */
     var code=String(list[i]).split('').join(' ');
     vFitText(x,code,tw,Math.round(W*0.1),'900',MONO);x.fillText(code,tx,y+tickH*0.38);
@@ -3294,7 +3446,7 @@ function vThermalRoll(list,logo,single){
     if(pr){vFitText(x,pr,tw,Math.round(W*0.042),'700',SANS);x.fillText(pr,tx,ly);ly+=step}
     if(tag){vFitText(x,tag,tw,Math.round(W*0.036),'600',SANS);x.fillText(tag,tx,ly);ly+=step}
     if(msg){vFitText(x,msg,tw,Math.round(W*0.034),'',SANS);x.fillText(msg,tx,ly);ly+=step}
-    if(ly<y+tickH*0.95){vFitText(x,'Scan or enter this code on the booth',tw,Math.round(W*0.028),'',SANS);x.fillText('Scan or enter this code on the booth',tx,Math.min(ly,y+tickH*0.9))}
+    if(ly<y+tickH*0.95){vFitText(x,(vServer()?'Valid on '+vBoothName()+' only':'Scan or enter this code on the booth'),tw,Math.round(W*0.028),'',SANS);x.fillText((vServer()?'Valid on '+vBoothName()+' only':'Scan or enter this code on the booth'),tx,Math.min(ly,y+tickH*0.9))}
   }
   if(!single)dash(head+list.length*tickH);
   return c;
@@ -3901,7 +4053,7 @@ function gReceiptLayout(ctx,rw,imgs,def){
   if(ctx){
     ctx.fillStyle='#ffffff';ctx.fillRect(0,0,rw,ctx.canvas.height);
     ctx.fillStyle='#111';ctx.textAlign='center';ctx.font='bold 30px Courier New,monospace';
-    ctx.fillText(CFG.rBizName||CFG.name||'Grinzy',rw/2,yy);
+    ctx.fillText(CFG.rBizName||CFG.name||'Grinzy Booth',rw/2,yy);
   }
   yy+=28;
   if(CFG.rTagline){
@@ -4138,7 +4290,7 @@ function gPrintShare(){
      gBuildCopiesFrom(one,gIsInkjet()?1:n,function(du){
       try{
         var blob=gDataUrlToBlob(du);
-        var f=new File([blob],'snapbooth_print.png',{type:'image/png'});
+        var f=new File([blob],'grinzy_print.png',{type:'image/png'});
         if(navigator.canShare&&navigator.canShare({files:[f]})){
           navigator.share({files:[f],title:'Print photo'}).catch(function(){});
         }else{
@@ -4263,7 +4415,7 @@ function gPrepPrint(){
         try{
           if(tok!==S.gPrepTok)return;
           var blob=gDataUrlToBlob(du);
-          S.gPrintFile=new File([blob],'snapbooth_print.'+(/jpeg/.test(blob.type)?'jpg':'png'),{type:blob.type});
+          S.gPrintFile=new File([blob],'grinzy_print.'+(/jpeg/.test(blob.type)?'jpg':'png'),{type:blob.type});
           S.gPrintUrl=du;
           try{
             var ti=new Image();ti.onload=function(){try{var c=document.createElement('canvas');c.width=ti.width;c.height=ti.height;var x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);x.drawImage(ti,0,0);S.gPrintFileJpg=c.toDataURL('image/jpeg',0.9)}catch(e){}};ti.src=du;
@@ -4594,14 +4746,69 @@ function ctplDeleteAcc(uid){
 function ctplReloadAccount(){
   try{
     var cur=(S.ctpls||[]).slice();
-    for(var i=0;i<cur.length;i++){if(cur[i].source==='tablet'||cur[i].source==='account')ctplUnregister(cur[i].key)}
-    ctplLoadTablet();ctplLoadAccount();
+    for(var i=0;i<cur.length;i++){if(cur[i].source==='tablet'||cur[i].source==='account'||cur[i].source==='plan')ctplUnregister(cur[i].key)}
+    ctplLoadTablet();ctplLoadAccount();ctplLoadPlan();
   }catch(e){}
 }
 
 /* --- Boot: load GitHub + tablet + account templates --- */
+
+/* ===== Plan templates from the licence server (Beta 1.5) =====
+   Paid template PNGs are not on GitHub. The server sends them only to plans allowed to use them. */
+function ctplLoadPlan(){
+  try{
+    if(!accOn()||!accEmail()||!window.fetch)return;
+    var A=accGet()||{};
+    licPost('/tpl/list',{token:A.token,device:licDevId()}).then(function(r){
+      try{
+        if(!r||!r.ok)return;
+        var want={},i;
+        for(i=0;i<(r.allowed||[]).length;i++)want[r.allowed[i].id]=r.allowed[i];
+        /* drop plan templates no longer allowed */
+        var cur=(S.ctpls||[]).slice();
+        for(i=0;i<cur.length;i++){if(cur[i].source==='plan'&&!want[cur[i].ptid])ctplUnregister(cur[i].key)}
+        S.ctplLockedPlan=[];
+        for(i=0;i<(r.locked||[]).length;i++){var L=r.locked[i];S.ctplLockedPlan.push({name:L.name,src:L.thumb||'',min:L.min,ord:1000+i})}
+        ctplDbAll().then(function(recs){
+          var local={},j;
+          for(j=0;j<recs.length;j++){
+            if(!recs[j].ptid)continue;
+            if(!want[recs[j].ptid]||recs[j].ptver!==want[recs[j].ptid].ver){ctplDbDel(recs[j].id).then(function(){}).catch(function(){});continue}
+            local[recs[j].ptid]=recs[j];
+          }
+          var n=0;
+          for(var id in want){
+            if(!want.hasOwnProperty(id))continue;
+            (function(t,ix){
+              var show=function(data,rid){
+                try{
+                  var img=new Image();
+                  img.onload=function(){
+                    try{var d=ctplDetect(img);if(!d.slots.length)return;
+                      ctplRegister({key:'tpl_p'+t.id,ptid:t.id,id:rid,name:t.name||'Template',src:data,w:d.w,h:d.h,slots:d.slots,source:'plan',ord:500+ix,img:img})}catch(e){}
+                  };
+                  img.src=data;
+                }catch(e){}
+              };
+              if(local[t.id]){show(local[t.id].data,local[t.id].id);return}
+              licPost('/tpl/get',{token:A.token,device:licDevId(),id:t.id}).then(function(g){
+                try{
+                  if(!g||!g.ok||!g.data)return;
+                  ctplDbAdd({name:t.name,data:g.data,ptid:t.id,ptver:t.ver,owner:accEmail(),added:Date.now()}).then(function(rid){show(g.data,rid)}).catch(function(){show(g.data,null)});
+                }catch(e){}
+              }).catch(function(){});
+            })(want[id],n++);
+          }
+          try{if($('tgal')&&$('tgal').classList.contains('active'))tgRender()}catch(e){}
+        }).catch(function(){});
+      }catch(e){}
+    }).catch(function(){});
+  }catch(e){}
+}
+
 function ctplBoot(){
   try{ctplLoadGithub()}catch(e){}
+  try{ctplLoadPlan()}catch(e){}
   try{ctplLoadTablet()}catch(e){}
   try{ctplLoadAccount()}catch(e){}
 }
@@ -4619,6 +4826,7 @@ function ctplLoadGithub(){
           try{
             if(!item||!item.file)return;
             var src='templates/'+encodeURI(String(item.file));
+            if(accOn()&&item.tiers&&item.tiers.length)return;   /* paid templates now come from the licence server */
             if(!planTplAllowed(item)){
               /* not on this plan: show greyed in Template Gallery only */
               if(!S.ctplLocked)S.ctplLocked=[];
@@ -4652,8 +4860,10 @@ function ctplLoadTablet(){
       for(var i=0;i<list.length;i++){
         (function(rec){
           try{
+            if(rec.ptid)return;
             if(accOn()){
               var me=accEmail();
+              if(rec.ptid)return;                        /* plan template: ctplLoadPlan handles it */
               if(rec.uid)return;                         /* synced template: ctplLoadAccount handles it */
               if(rec.owner&&rec.owner!==me)return;       /* belongs to another account */
               if(!rec.owner&&me){rec.owner=me;ctplDbPut(rec).then(function(){}).catch(function(){})}
@@ -4740,6 +4950,8 @@ function ctplRenderList(){
         '<div class="ctpl-meta"><b>'+ctplEsc(t.name)+'</b><small>'+n+(n>1?' photos':' photo')+' \u2022 '+t.w+'\u00d7'+t.h+'px</small></div>';
       if(t.source==='tablet'){
         html+='<span class="ctpl-src">Tablet</span><button class="ctpl-del" onclick="ctplDelete('+Number(t.id)+')">&#x1f5d1;&#xfe0f;</button>';
+      }else if(t.source==='plan'){
+        html+='<span class="ctpl-src">Plan</span>';
       }else if(t.source==='account'){
         html+='<span class="ctpl-src">Account</span><button class="ctpl-del" onclick="ctplDeleteAcc(\''+String(t.uid).replace(/[^0-9a-f]/g,'')+'\')">&#x1f5d1;&#xfe0f;</button>';
       }else{
