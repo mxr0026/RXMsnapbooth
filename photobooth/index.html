@@ -896,7 +896,7 @@ body.notext #gTextBtn{display:none}
 <div id="vTimer">&#x23f1;&#xfe0f; <span id="vTimerT">10:00</span> left</div>
 <div id="adminHot"></div>
 <div id="appCopy" style="position:fixed;left:8px;bottom:6px;z-index:600;font:10px system-ui,sans-serif;color:rgba(255,255,255,.35);pointer-events:none">&copy; 2026 Grinzy</div>
-<div id="appVer" style="position:fixed;right:8px;bottom:6px;z-index:600;font:11px system-ui,sans-serif;color:rgba(255,255,255,.45);pointer-events:none">Grinzy Beta 1.2</div>
+<div id="appVer" style="position:fixed;right:8px;bottom:6px;z-index:600;font:11px system-ui,sans-serif;color:rgba(255,255,255,.45);pointer-events:none">Grinzy Beta 1.3</div>
 
 <!-- ===== SLIDESHOW ===== -->
 <div id="slideshow">
@@ -3389,10 +3389,18 @@ function vTicketsPDF(){
         var mm=gPaperMM(),wmm=mm[0];if(mm[1]||gIsInkjet())wmm=72;
         var pages=[];
         for(var k=0;k<list.length;k++){
-          var cv=vThermalRoll([list[k]],logo,true);
+          var tc=vThermalRoll([list[k]],logo,true);
+          /* full roll width page (58 or 80mm), min 70mm tall, extra blank space at bottom for the cut */
+          var rollMM=(wmm<=58)?58:80;
+          var pxPerMM=tc.width/wmm;
+          var cw=Math.round(rollMM*pxPerMM),side=Math.round((cw-tc.width)/2);
+          var ch=Math.max(Math.round(70*pxPerMM),tc.height+Math.round(14*pxPerMM));
+          var cv=document.createElement('canvas');cv.width=cw;cv.height=ch;
+          var cx=cv.getContext('2d');cx.fillStyle='#fff';cx.fillRect(0,0,cw,ch);
+          cx.drawImage(tc,side,Math.round(3*pxPerMM));
           var jpg=vB64ToBin(cv.toDataURL('image/jpeg',0.95).split(',')[1]||'');
-          var pw=wmm*72/25.4;
-          pages.push({jpg:jpg,w:cv.width,h:cv.height,pw:pw,ph:pw*cv.height/cv.width});
+          var pw=rollMM*72/25.4;
+          pages.push({jpg:jpg,w:cw,h:ch,pw:pw,ph:pw*ch/cw});
         }
         var blob=vMakePDF(pages);
         var name='booth_codes_'+new Date().toISOString().slice(0,10)+'.pdf';
