@@ -710,6 +710,7 @@ body.notext #gTextBtn{display:none}
     <div class="vbtns">
       <button class="btn bp" onclick="vPrintSheet()">&#x1f4c4; Print on A4 (cut-out sheet)</button>
       <button class="btn bp" onclick="vPrintThermal()">&#x1f9fe; Print on thermal (continuous)</button>
+      <button class="btn bp" onclick="vTicketsPDF()">&#x1f4e5; Save tickets PDF (1 page per code, for RawBT)</button>
       <button class="btn bo" onclick="vExportCSV()">&#x2b07;&#xfe0f; Download list (CSV)</button>
       <button class="btn bo" onclick="vClearUsed()">Remove used codes</button>
       <button class="btn bo" onclick="vDeleteAll()">Delete all codes</button>
@@ -895,7 +896,7 @@ body.notext #gTextBtn{display:none}
 <div id="vTimer">&#x23f1;&#xfe0f; <span id="vTimerT">10:00</span> left</div>
 <div id="adminHot"></div>
 <div id="appCopy" style="position:fixed;left:8px;bottom:6px;z-index:600;font:10px system-ui,sans-serif;color:rgba(255,255,255,.35);pointer-events:none">&copy; 2026 Grinzy</div>
-<div id="appVer" style="position:fixed;right:8px;bottom:6px;z-index:600;font:11px system-ui,sans-serif;color:rgba(255,255,255,.45);pointer-events:none">Grinzy Beta 1.1</div>
+<div id="appVer" style="position:fixed;right:8px;bottom:6px;z-index:600;font:11px system-ui,sans-serif;color:rgba(255,255,255,.45);pointer-events:none">Grinzy Beta 1.2</div>
 
 <!-- ===== SLIDESHOW ===== -->
 <div id="slideshow">
@@ -3350,6 +3351,70 @@ function vPrintTicketsPaged(list,logo){
     if(w&&w.document){w.document.open();w.document.write(doc);w.document.close()}
     else{gToast('Pop-up blocked. Allow pop-ups to print.')}
   }catch(e){gToast('Could not print codes.')}
+}
+
+
+/* ===== Tickets PDF: one page per code (Beta 1.2) ===== */
+function vB64ToBin(b64){try{return atob(b64)}catch(e){return ''}}
+function vMakePDF(pages){
+  /* pages: [{jpg:binaryString,w:px,h:px,pw:pt,ph:pt}] */
+  var objs=[],n=pages.length,i;
+  var kids='';for(i=0;i<n;i++)kids+=(3+i*3)+' 0 R ';
+  objs[1]='<< /Type /Catalog /Pages 2 0 R >>';
+  objs[2]='<< /Type /Pages /Kids ['+kids+'] /Count '+n+' >>';
+  for(i=0;i<n;i++){
+    var pg=pages[i],po=3+i*3,co=po+1,io=po+2;
+    var pw=pg.pw.toFixed(2),ph=pg.ph.toFixed(2);
+    var cs='q '+pw+' 0 0 '+ph+' 0 0 cm /Im0 Do Q';
+    objs[po]='<< /Type /Page /Parent 2 0 R /MediaBox [0 0 '+pw+' '+ph+'] /Resources << /XObject << /Im0 '+io+' 0 R >> >> /Contents '+co+' 0 R >>';
+    objs[co]='<< /Length '+cs.length+' >>\nstream\n'+cs+'\nendstream';
+    objs[io]='<< /Type /XObject /Subtype /Image /Width '+pg.w+' /Height '+pg.h+' /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length '+pg.jpg.length+' >>\nstream\n'+pg.jpg+'\nendstream';
+  }
+  var out='%PDF-1.4\n%\xE2\xE3\xCF\xD3\n',off=[];
+  for(i=1;i<objs.length;i++){off[i]=out.length;out+=i+' 0 obj\n'+objs[i]+'\nendobj\n'}
+  var xref=out.length;
+  out+='xref\n0 '+objs.length+'\n0000000000 65535 f \n';
+  for(i=1;i<objs.length;i++){out+=('0000000000'+off[i]).slice(-10)+' 00000 n \n'}
+  out+='trailer\n<< /Size '+objs.length+' /Root 1 0 R >>\nstartxref\n'+xref+'\n%%EOF';
+  var u=new Uint8Array(out.length);for(i=0;i<out.length;i++)u[i]=out.charCodeAt(i)&255;
+  return new Blob([u],{type:'application/pdf'});
+}
+function vTicketsPDF(){
+  try{
+    var a=vLoad(),list=[];
+    for(var i=0;i<a.length;i++){if(!a[i].used)list.push(a[i].c)}
+    if(!list.length){gToast('No unused codes. Generate some first.');return}
+    vLogoImg(function(logo){
+      try{
+        var mm=gPaperMM(),wmm=mm[0];if(mm[1]||gIsInkjet())wmm=72;
+        var pages=[];
+        for(var k=0;k<list.length;k++){
+          var cv=vThermalRoll([list[k]],logo,true);
+          var jpg=vB64ToBin(cv.toDataURL('image/jpeg',0.95).split(',')[1]||'');
+          var pw=wmm*72/25.4;
+          pages.push({jpg:jpg,w:cv.width,h:cv.height,pw:pw,ph:pw*cv.height/cv.width});
+        }
+        var blob=vMakePDF(pages);
+        var name='booth_codes_'+new Date().toISOString().slice(0,10)+'.pdf';
+        /* Android: offer share sheet -> RawBT */
+        if(gIsAndroid()&&navigator.share&&navigator.canShare){
+          try{
+            var f=new File([blob],name,{type:'application/pdf'});
+            if(navigator.canShare({files:[f]})){navigator.share({files:[f],title:'Booth codes'}).catch(function(){vSaveBlob(blob,name)});return}
+          }catch(e){}
+        }
+        vSaveBlob(blob,name);
+      }catch(e){gToast('Could not make the PDF.')}
+    });
+  }catch(e){gToast('Could not make the PDF.')}
+}
+function vSaveBlob(blob,name){
+  try{
+    var u=URL.createObjectURL(blob),l=document.createElement('a');
+    l.href=u;l.download=name;document.body.appendChild(l);l.click();
+    setTimeout(function(){try{document.body.removeChild(l);URL.revokeObjectURL(u)}catch(e){}},3000);
+    gToast('Saved '+name);
+  }catch(e){gToast('Could not save the PDF.')}
 }
 
 function vPrintThermal(){
