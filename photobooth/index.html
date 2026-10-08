@@ -344,6 +344,24 @@ body.notext #gTextBtn{display:none}
 #licLock button{width:100%;padding:14px;font-size:17px;font-weight:700;border:none;border-radius:10px;background:var(--pri);color:#fff}
 #licBanner{position:fixed;left:50%;bottom:28px;transform:translateX(-50%);z-index:640;background:#e17055;color:#fff;padding:8px 16px;border-radius:999px;font:600 13px system-ui,sans-serif;display:none}
 #licBanner.on{display:block}
+
+/* ===== Template Gallery (v36) ===== */
+#tgal{background:var(--bg);overflow-y:auto;-webkit-overflow-scrolling:touch}
+#tgal .tg-wrap{padding:14px;max-width:1100px;margin:0 auto;width:100%}
+#tgal h4{margin:18px 0 8px;color:var(--tx2);font-size:14px;text-transform:uppercase;letter-spacing:1px}
+.tg-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px}
+.tg-card{background:var(--bg2);border:3px solid var(--brd);border-radius:14px;padding:12px;text-align:center;cursor:pointer;position:relative;transition:border-color .15s,opacity .15s}
+.tg-card.off{opacity:.45;border-style:dashed}
+.tg-card.on{border-color:var(--ok)}
+.tg-card img{max-width:100%;max-height:150px;background:#fff;border-radius:6px;display:block;margin:0 auto 8px}
+.tg-card .lp{margin:0 auto 8px}
+.tg-card b{display:block;font-size:14px}
+.tg-card small{color:var(--txm);font-size:12px}
+.tg-chk{position:absolute;top:8px;right:8px;width:28px;height:28px;border-radius:50%;background:var(--ok);color:#fff;font-weight:800;display:flex;align-items:center;justify-content:center}
+.tg-card.off .tg-chk{background:var(--bg3);color:var(--txm)}
+.tg-src{display:inline-block;font-size:11px;padding:2px 8px;border-radius:999px;background:var(--bg3);margin-top:4px}
+.tg-bar{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}
+#tgCount{color:var(--tx2);font-size:14px}
 </style>
 </head>
 <body>
@@ -357,22 +375,16 @@ body.notext #gTextBtn{display:none}
     <span class="logo-icon">&#x1f4f8;</span>
     <div class="logo" id="boothTitle">SnapBooth</div>
   </div>
-  <div class="sub">Tap a mode to start</div>
+  <div class="sub">Choose what to open</div>
   <div class="modes">
-    <div class="mcard" onclick="startMode('classic')">
-      <div class="ic">&#x1f4f7;</div><h3>Classic</h3><p>Single photo with filters</p>
-    </div>
-    <div class="mcard" onclick="startMode('strip')">
-      <div class="ic">&#x1f39e;&#xfe0f;</div><h3>Photo Strip</h3><p>Multi-shot strip layout</p>
-    </div>
-    <div class="mcard" onclick="startMode('receipt')">
-      <div class="ic">&#x1f9fe;</div><h3>Receipt</h3><p>Vintage receipt style</p>
+    <div class="mcard" onclick="gEnterGuest()">
+      <div class="ic">&#x1f39f;&#xfe0f;</div><h3>Guest Kiosk</h3><p>Start the booth for guests</p>
     </div>
     <div class="mcard" onclick="showScreen('gallery');loadGallery()">
       <div class="ic">&#x1f5c2;&#xfe0f;</div><h3>Gallery</h3><p>View saved photos</p>
     </div>
-    <div class="mcard" onclick="gEnterGuest()">
-      <div class="ic">&#x1f39f;&#xfe0f;</div><h3>Guest Kiosk</h3><p>Tap-to-start guest flow</p>
+    <div class="mcard" onclick="tgOpen()">
+      <div class="ic">&#x1f5bc;&#xfe0f;</div><h3>Template Gallery</h3><p>Choose which layouts guests see</p>
     </div>
   </div>
 </div>
@@ -399,12 +411,12 @@ body.notext #gTextBtn{display:none}
     <div style="width:42px"></div>
   </div>
   <div class="lay-grid">
-    <div class="ltile" onclick="gPickLayout('single')"><div class="lp l1"><i></i><b></b></div><h4>1 Photo</h4></div>
-    <div class="ltile" onclick="gPickLayout('strip2')"><div class="lp ls"><i></i><i></i><b></b></div><h4>2 Strip</h4></div>
-    <div class="ltile" onclick="gPickLayout('strip3')"><div class="lp ls"><i></i><i></i><i></i><b></b></div><h4>3 Strip</h4></div>
-    <div class="ltile" onclick="gPickLayout('strip4')"><div class="lp ls"><i></i><i></i><i></i><i></i><b></b></div><h4>4 Strip</h4></div>
-    <div class="ltile" onclick="gPickLayout('grid4')"><div class="lp lg"><i></i><i></i><i></i><i></i><b style="grid-column:span 2"></b></div><h4>2&#xd7;2 Grid</h4></div>
-    <div class="ltile" onclick="gPickLayout('receipt4')"><div class="lp lr"><b class="hd"></b><i></i><i></i><i></i><i></i><b></b></div><h4>Receipt (4)</h4></div>
+    <div class="ltile" data-key="single" onclick="gPickLayout('single')"><div class="lp l1"><i></i><b></b></div><h4>1 Photo</h4></div>
+    <div class="ltile" data-key="strip2" onclick="gPickLayout('strip2')"><div class="lp ls"><i></i><i></i><b></b></div><h4>2 Strip</h4></div>
+    <div class="ltile" data-key="strip3" onclick="gPickLayout('strip3')"><div class="lp ls"><i></i><i></i><i></i><b></b></div><h4>3 Strip</h4></div>
+    <div class="ltile" data-key="strip4" onclick="gPickLayout('strip4')"><div class="lp ls"><i></i><i></i><i></i><i></i><b></b></div><h4>4 Strip</h4></div>
+    <div class="ltile" data-key="grid4" onclick="gPickLayout('grid4')"><div class="lp lg"><i></i><i></i><i></i><i></i><b style="grid-column:span 2"></b></div><h4>2&#xd7;2 Grid</h4></div>
+    <div class="ltile" data-key="receipt4" onclick="gPickLayout('receipt4')"><div class="lp lr"><b class="hd"></b><i></i><i></i><i></i><i></i><b></b></div><h4>Receipt (4)</h4></div>
   </div>
 </div>
 
@@ -481,6 +493,34 @@ body.notext #gTextBtn{display:none}
       <button class="g-btn" onclick="openQR()">&#x1f4f1; QR Code</button>
     </div>
     <button class="g-done" id="gDoneBtn"><span class="g-done-fill"></span><span class="g-done-t">&#x2705; Hold to finish &mdash; next guest</span></button>
+  </div>
+</div>
+
+
+<!-- ===== TEMPLATE GALLERY ===== -->
+<div id="tgal" class="scr">
+  <div class="s-hdr">
+    <button class="ibtn" onclick="showScreen('home')" style="background:var(--bg3)">&#x2190;</button>
+    <h2>&#x1f5bc;&#xfe0f; Template Gallery</h2>
+  </div>
+  <div class="tg-wrap">
+    <div class="s-note">Tap a card to show or hide it on the guest layout picker. A green &#x2713; means guests can choose it.</div>
+    <div class="tg-bar">
+      <span id="tgCount"></span>
+      <button class="btn bo" onclick="tgAll(true)">Show all</button>
+      <button class="btn bo" onclick="tgAll(false)">Hide all</button>
+      <button class="btn bo" onclick="ctplBoot();setTimeout(tgRender,1200)">&#x1f504; Reload GitHub templates</button>
+    </div>
+    <h4>Your GitHub templates</h4><div class="tg-grid" id="tgGit"></div>
+    <h4>Added on this device</h4><div class="tg-grid" id="tgDev"></div>
+    <h4>Built-in layouts</h4><div class="tg-grid" id="tgBuilt"></div>
+    <h4>Add a template on this device</h4>
+    <div class="s-sec" style="margin:0">
+      <div class="s-row"><label>Template Name</label><input type="text" id="tgName" placeholder="e.g. Wedding 4-Strip"></div>
+      <div class="s-row"><label>PNG File</label><input type="file" id="tgFile" accept="image/png" style="font-size:12px"></div>
+      <div class="s-row"><label></label><button class="btn bp" onclick="tgAdd()">&#x2795; Add template</button></div>
+      <div id="tgMsg" class="s-note"></div>
+    </div>
   </div>
 </div>
 
@@ -797,7 +837,7 @@ body.notext #gTextBtn{display:none}
 <div id="gToast"></div>
 <div id="vTimer">&#x23f1;&#xfe0f; <span id="vTimerT">10:00</span> left</div>
 <div id="adminHot"></div>
-<div id="appVer" style="position:fixed;right:8px;bottom:6px;z-index:600;font:11px system-ui,sans-serif;color:rgba(255,255,255,.45);pointer-events:none">SnapBooth v35</div>
+<div id="appVer" style="position:fixed;right:8px;bottom:6px;z-index:600;font:11px system-ui,sans-serif;color:rgba(255,255,255,.45);pointer-events:none">SnapBooth v36</div>
 
 <!-- ===== SLIDESHOW ===== -->
 <div id="slideshow">
@@ -841,7 +881,7 @@ var CFG = {
   askName:false,printName:false,kiosk:false,restart:15,
   cloudName:'',cloudPreset:'',prefix:'snapbooth',naming:'prefix_seq',autoDL:false,
   quality:'0.85',format:'jpeg',autoGal:true,
-  guestMode:true,adminPin:'1234',hashtag:'#RXMPHOTOBOOTH',footDate:true,bw:'receipt',paper:'58mm',printMode:'rawbt',pw:76,ph:0,dpi:203,fit:'auto',guestText:true,voucherOn:false,vPrice:'',vCopies:1,vMin:10,thermal:'atkinson',thBri:5,thCon:15,
+  guestMode:true,adminPin:'1234',hashtag:'#RXMPHOTOBOOTH',footDate:true,bw:'receipt',paper:'58mm',printMode:'rawbt',pw:76,ph:0,dpi:203,fit:'auto',guestText:true,hiddenLayouts:{},voucherOn:false,vPrice:'',vCopies:1,vMin:10,thermal:'atkinson',thBri:5,thCon:15,
   logoData:null
 };
 
@@ -2211,6 +2251,91 @@ function capClose(){
 
 
 
+
+/* ================= TEMPLATE GALLERY (v36) ================= */
+var TG_BUILT=[['single','1 Photo','l1',1],['strip2','2 Strip','ls',2],['strip3','3 Strip','ls',3],['strip4','4 Strip','ls',4],['grid4','2\u00d72 Grid','lg',4],['receipt4','Receipt (4)','lr',4]];
+function tgHidden(){if(!CFG.hiddenLayouts||typeof CFG.hiddenLayouts!=='object')CFG.hiddenLayouts={};return CFG.hiddenLayouts}
+function tgVisible(key){return !tgHidden()[key]}
+function tgSaveCfg(){try{localStorage.setItem('snapbooth_cfg',JSON.stringify(CFG))}catch(e){}}
+function tgToggle(key){
+  try{
+    var hd=tgHidden();
+    if(hd[key])delete hd[key];else hd[key]=1;
+    /* never allow zero visible layouts */
+    if(tgVisibleCount()===0){delete hd[key];gToast('At least one layout must stay visible.')}
+    tgSaveCfg();tgRender();tgApplyPicker();
+  }catch(e){}
+}
+function tgAllKeys(){
+  var k=[],i;
+  for(i=0;i<TG_BUILT.length;i++)k.push(TG_BUILT[i][0]);
+  for(i=0;i<(S.ctpls||[]).length;i++)k.push(S.ctpls[i].key);
+  return k;
+}
+function tgVisibleCount(){var k=tgAllKeys(),n=0;for(var i=0;i<k.length;i++){if(tgVisible(k[i]))n++}return n}
+function tgAll(on){
+  try{
+    var hd=tgHidden(),k=tgAllKeys();
+    for(var i=0;i<k.length;i++){if(on)delete hd[k[i]];else hd[k[i]]=1}
+    if(!on){delete hd[k[0]];gToast('All hidden except one \u2014 tap cards to choose which to show.')}
+    tgSaveCfg();tgRender();tgApplyPicker();
+  }catch(e){}
+}
+function tgCard(key,title,sub,imgHtml,src,extra){
+  var on=tgVisible(key);
+  return '<div class="tg-card '+(on?'on':'off')+'" onclick="tgToggle(\''+key.replace(/'/g,'')+'\')">'+
+    '<div class="tg-chk">'+(on?'\u2713':'')+'</div>'+imgHtml+'<b>'+ctplEsc(title)+'</b><small>'+sub+'</small>'+
+    (src?'<br><span class="tg-src">'+src+'</span>':'')+(extra||'')+'</div>';
+}
+function tgRender(){
+  try{
+    var g='',d='',b='',i,t,n;
+    for(i=0;i<(S.ctpls||[]).length;i++){
+      t=S.ctpls[i];n=t.slots.length;
+      var img='<img src="'+ctplEsc(t.src)+'" alt="">';
+      var sub=n+(n>1?' photos':' photo');
+      if(t.source==='tablet'){
+        d+=tgCard(t.key,t.name,sub,img,'This device','<br><button class="btn bo" style="margin-top:6px;padding:4px 10px;font-size:12px" onclick="event.stopPropagation();ctplDelete('+Number(t.id)+');setTimeout(tgRender,400)">&#x1f5d1;&#xfe0f; Delete</button>');
+      }else{
+        g+=tgCard(t.key,t.name,sub,img,'GitHub');
+      }
+    }
+    for(i=0;i<TG_BUILT.length;i++){
+      var x=TG_BUILT[i],cells='';
+      for(var q=0;q<x[3];q++)cells+='<i></i>';
+      b+=tgCard(x[0],x[1],x[3]+(x[3]>1?' photos':' photo'),'<div class="lp '+x[2]+'">'+(x[2]==='lr'?'<b class="hd"></b>':'')+cells+'<b></b></div>','Built-in');
+    }
+    var eg=$('tgGit'),ed=$('tgDev'),eb=$('tgBuilt');
+    if(eg)eg.innerHTML=g||'<div class="s-note">None yet. Upload PNGs to photobooth/templates/ on GitHub and list them in templates.json.</div>';
+    if(ed)ed.innerHTML=d||'<div class="s-note">None on this device.</div>';
+    if(eb)eb.innerHTML=b;
+    var ct=$('tgCount');if(ct)ct.textContent=tgVisibleCount()+' of '+tgAllKeys().length+' shown to guests';
+  }catch(e){}
+}
+function tgApplyPicker(){
+  try{
+    var tiles=document.querySelectorAll('#layouts .lay-grid .ltile');
+    for(var i=0;i<tiles.length;i++){
+      var k=tiles[i].getAttribute('data-key');
+      if(k)tiles[i].style.display=tgVisible(k)?'':'none';
+    }
+  }catch(e){}
+}
+function tgOpen(){try{showScreen('tgal');tgRender();if(!(S.ctpls||[]).length){ctplBoot();setTimeout(tgRender,1200)}}catch(e){}}
+function tgAdd(){
+  try{
+    /* reuse the existing tablet-template upload */
+    var a=$('ctplName'),b=$('ctplFile'),na=$('tgName'),fb=$('tgFile');
+    if(!fb||!fb.files||!fb.files[0]){var m=$('tgMsg');if(m)m.textContent='Choose a PNG file first.';return}
+    if(a&&na)a.value=na.value;
+    if(b){try{var dt=new DataTransfer();dt.items.add(fb.files[0]);b.files=dt.files}catch(e){}}
+    S.tgFile=fb.files[0];
+    ctplAdd();
+    setTimeout(function(){var m=$('tgMsg'),cm=$('ctplMsg');if(m&&cm)m.innerHTML=cm.innerHTML;tgRender();tgApplyPicker()},900);
+    if(na)na.value='';fb.value='';
+  }catch(e){}
+}
+
 /* ================= LICENCE (v33) ================= */
 /* Set this to your Cloudflare Worker URL to turn licensing on. Empty = no licence needed. */
 var LIC_SERVER='';
@@ -2596,6 +2721,7 @@ function gShowLayouts(){
       if(!S.ctpls.length)ctplBoot();
       ctplRenderTiles();
     }catch(e){}
+    try{tgApplyPicker()}catch(e){}
     showScreen('layouts');
     gArmIdle(60000);
   }catch(e){}
@@ -3528,6 +3654,7 @@ function ctplRegister(t){
     });
     G_LAYOUTS[t.key]={n:t.slots.length,type:'tpl',label:t.name,tpl:t};
     ctplRenderTiles();ctplRenderList();
+    try{if($('tgal')&&$('tgal').classList.contains('active'))tgRender()}catch(e){}
   }catch(e){}
 }
 function ctplUnregister(key){
@@ -3648,8 +3775,8 @@ function ctplLoadTablet(){
 function ctplAdd(){
   try{
     var f=$('ctplFile'),nm=$('ctplName');
-    if(!f||!f.files||!f.files[0]){ctplMsgSet('Choose a PNG file first.',true);return}
-    var file=f.files[0];
+    var file=(S.tgFile)||(f&&f.files&&f.files[0]);S.tgFile=null;
+    if(!file){ctplMsgSet('Choose a PNG file first.',true);return}
     if(file.type&&file.type!=='image/png'){ctplMsgSet('Please use a PNG file (JPG has no transparency).',true);return}
     var name=((nm&&nm.value)||'').trim()||String(file.name||'Template').replace(/\.[^.]+$/,'');
     ctplMsgSet('Reading template\u2026',false);
@@ -3721,6 +3848,7 @@ function ctplRenderTiles(){
         try{
           var d=document.createElement('div');
           d.className='ltile ctpl-tile';
+          d.setAttribute('data-key',t.key);
           var n=t.slots.length;
           d.innerHTML='<img class="ctpl-th" src="'+ctplEsc(t.src)+'" alt=""><h4>'+ctplEsc(t.name)+'</h4><small>'+n+(n>1?' photos':' photo')+'</small>';
           d.addEventListener('click',function(){gPickLayout(t.key)});
@@ -3729,6 +3857,8 @@ function ctplRenderTiles(){
       })(S.ctpls[j]);
     }
   }catch(e){}
+
+  try{tgApplyPicker()}catch(e){}
 }
 
 /* --- Compose: photos into windows, design on top --- */
