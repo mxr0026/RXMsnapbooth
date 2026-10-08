@@ -1,4 +1,4 @@
-var CACHE_NAME = 'grinzy-beta-1.3';
+var CACHE_NAME = 'grinzy-beta-1.4';
 var ASSETS = [
   'index.html',
   'dl.html',
