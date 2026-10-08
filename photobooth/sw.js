@@ -1,4 +1,4 @@
-var CACHE_NAME = 'snapbooth-v35';
+var CACHE_NAME = 'snapbooth-v36';
 var ASSETS = [
   'index.html',
   'dl.html',
@@ -70,4 +70,3 @@ self.addEventListener('fetch', function(event){
     }).catch(function(){})
   );
 });
-
