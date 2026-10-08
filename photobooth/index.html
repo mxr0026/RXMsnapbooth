@@ -696,6 +696,8 @@ body.notext #gTextBtn{display:none}
     <div class="s-row"><label>Require a code to start</label><label class="tgl"><input type="checkbox" id="sVoucherOn"><span class="tgl-s"></span></label></div>
     <div class="s-row"><label>Price text</label><input type="text" id="sVPrice" placeholder="&#x20b1;100 per session"></div>
     <div class="s-row"><label>Ticket message</label><input type="text" id="sVTicketMsg" maxlength="48" placeholder="Thank you! Valid today only"></div>
+    <div class="s-row"><label>Auto-cut after each ticket</label><input type="checkbox" id="sVCut" checked></div>
+    <div class="s-row"><label>Cut type</label><select id="sVCutType"><option value="partial">Partial cut (tickets stay hanging)</option><option value="full">Full cut</option></select></div>
     <div class="s-row"><label>Prints per code</label><input type="number" id="sVCopies" min="1" max="10" value="1"></div>
     <div class="s-row"><label>Code valid for (minutes)</label><input type="number" id="sVMin" min="2" max="120" value="10"></div>
     <div class="s-note">Guests pay at the counter, get a one-time code, and enter it on the start screen. Each code works once. Codes are stored on <b>this device only</b>; each booth needs its own list.</div>
@@ -893,7 +895,7 @@ body.notext #gTextBtn{display:none}
 <div id="vTimer">&#x23f1;&#xfe0f; <span id="vTimerT">10:00</span> left</div>
 <div id="adminHot"></div>
 <div id="appCopy" style="position:fixed;left:8px;bottom:6px;z-index:600;font:10px system-ui,sans-serif;color:rgba(255,255,255,.35);pointer-events:none">&copy; 2026 Grinzy</div>
-<div id="appVer" style="position:fixed;right:8px;bottom:6px;z-index:600;font:11px system-ui,sans-serif;color:rgba(255,255,255,.45);pointer-events:none">Grinzy Beta 1.0</div>
+<div id="appVer" style="position:fixed;right:8px;bottom:6px;z-index:600;font:11px system-ui,sans-serif;color:rgba(255,255,255,.45);pointer-events:none">Grinzy Beta 1.1</div>
 
 <!-- ===== SLIDESHOW ===== -->
 <div id="slideshow">
@@ -2053,6 +2055,8 @@ function saveSettings(){
     if(!CFG.voucherOn){try{vTimerStop()}catch(e){}}
     CFG.vPrice=(($('sVPrice')||{}).value||'').trim();
     CFG.vMsg=(($('sVTicketMsg')||{}).value||'').trim();
+    CFG.vCut=($('sVCut')||{}).checked!==false;
+    CFG.vCutType=(($('sVCutType')||{}).value)||'partial';
     CFG.vCopies=Math.max(1,Math.min(10,parseInt(($('sVCopies')||{}).value)||1));
     CFG.vMin=Math.max(2,Math.min(120,parseInt(($('sVMin')||{}).value)||10));
     CFG.thermal=($('sThermal')||{}).value||'atkinson';
@@ -2089,7 +2093,7 @@ function populateSettingsUI(){
       'rMsg':'rMsg','rFooter':'rFooter',
       'sCloudName':'cloudName','sCloudPreset':'cloudPreset','sTplPreset':'tplPreset','sPrefix':'prefix','sNaming':'naming',
       'sQuality':'quality','sFormat':'format',
-      'sAdminPin':'adminPin','sHashtag':'hashtag','sBW':'bw','sPaper':'paper','sPrintMode':'printMode','sDPI':'dpi','sFit':'fit','sThermal':'thermal','sVPrice':'vPrice','sVTicketMsg':'vMsg','sThBri':'thBri','sThCon':'thCon','sPW':'pw','sPH':'ph'
+      'sAdminPin':'adminPin','sHashtag':'hashtag','sBW':'bw','sPaper':'paper','sPrintMode':'printMode','sDPI':'dpi','sFit':'fit','sThermal':'thermal','sVPrice':'vPrice','sVTicketMsg':'vMsg','sVCutType':'vCutType','sThBri':'thBri','sThCon':'thCon','sPW':'pw','sPH':'ph'
     };
     for(var id in map){
       var el=$(id);if(el)el.value=CFG[map[id]]||el.value;
@@ -2098,6 +2102,7 @@ function populateSettingsUI(){
     for(var nid in numMap){
       var nel=$(nid);if(nel)nel.value=CFG[numMap[nid]];
     }
+    try{var vcEl=$('sVCut');if(vcEl)vcEl.checked=CFG.vCut!==false}catch(e){}
     var chkMap={'sMirror':'mirror','rOrder':'rOrder','rDate':'rDate',
       'sAskName':'askName','sPrintName':'printName','sKiosk':'kiosk',
       'sAutoDL':'autoDL','sAutoGal':'autoGal','sGuestMode':'guestMode','sVoucherOn':'voucherOn','sGuestText':'guestText','sFootDate':'footDate'};
@@ -3246,13 +3251,13 @@ function vFitText(x,t,maxW,px,weight,family){
   var f=px;x.font=(weight||'')+' '+f+'px '+family;
   while(f>10&&x.measureText(t).width>maxW){f--;x.font=(weight||'')+' '+f+'px '+family}
 }
-function vThermalRoll(list,logo){
+function vThermalRoll(list,logo,single){
   var mm=gPaperMM(),wmm=mm[0];
   /* receipt rolls only; for label/photo paper sizes fall back to 72mm (80mm roll) */
   if(mm[1]||gIsInkjet())wmm=72;
   var W=Math.round(wmm/25.4*(CFG.dpi||203));
   var tickH=Math.round(W*0.44),pad=Math.round(W*0.05);
-  var head=Math.round(W*0.18),foot=Math.round(W*0.16);
+  var head=single?Math.round(W*0.02):Math.round(W*0.18),foot=single?Math.round(W*0.02):Math.round(W*0.16);
   var c=document.createElement('canvas');c.width=W;c.height=head+list.length*tickH+foot;
   var x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);
   x.fillStyle='#000';x.textBaseline='middle';
@@ -3260,15 +3265,17 @@ function vThermalRoll(list,logo){
   var nm=CFG.name||'Grinzy',pr=CFG.vPrice||'',tag=CFG.hashtag||'',msg=CFG.vMsg||'';
   /* roll header */
   x.textAlign='center';
+  if(!single){
   vFitText(x,nm.toUpperCase(),W-pad*2,Math.round(W*0.075),'800',SANS);x.fillText(nm.toUpperCase(),W/2,head*0.45);
   x.font=Math.round(W*0.04)+'px '+SANS;
   x.fillText(list.length+' booth code'+(list.length>1?'s':'')+' - '+new Date().toLocaleDateString(),W/2,head*0.82);
+  }
   var dash=function(y){x.save();x.strokeStyle='#000';x.lineWidth=Math.max(2,Math.round(W/190));x.setLineDash([Math.round(W/40),Math.round(W/55)]);
     x.beginPath();x.moveTo(pad,y);x.lineTo(W-pad,y);x.stroke();x.restore()};
   var qs=Math.round(tickH*0.78);                 /* QR size */
   var tx=pad+qs+Math.round(W*0.04),tw=W-tx-pad;   /* text column */
   for(var i=0;i<list.length;i++){
-    var y=head+i*tickH;dash(y);
+    var y=head+i*tickH;if(!single)dash(y);
     /* QR of the code, left */
     var qc=vQrCanvas(list[i],qs);
     if(qc)x.drawImage(qc,pad,y+(tickH-qs)/2,qs,qs);
@@ -3288,9 +3295,63 @@ function vThermalRoll(list,logo){
     if(msg){vFitText(x,msg,tw,Math.round(W*0.034),'',SANS);x.fillText(msg,tx,ly);ly+=step}
     if(ly<y+tickH*0.95){vFitText(x,'Scan or enter this code on the booth',tw,Math.round(W*0.028),'',SANS);x.fillText('Scan or enter this code on the booth',tx,Math.min(ly,y+tickH*0.9))}
   }
-  dash(head+list.length*tickH);
+  if(!single)dash(head+list.length*tickH);
   return c;
 }
+
+/* ===== Thermal auto-cut (Beta 1.1) ===== */
+function vEscRaster(cv){
+  /* canvas -> ESC/POS GS v 0 raster bytes (black = dot) */
+  var w=cv.width,h=cv.height,bw=Math.ceil(w/8);
+  var d=cv.getContext('2d').getImageData(0,0,w,h).data;
+  var out=[0x1D,0x76,0x30,0x00,bw&255,(bw>>8)&255,h&255,(h>>8)&255];
+  for(var y=0;y<h;y++){
+    for(var b=0;b<bw;b++){
+      var v=0;
+      for(var k=0;k<8;k++){
+        var xx=b*8+k;
+        if(xx<w){var o=(y*w+xx)*4;var lum=d[o]*0.299+d[o+1]*0.587+d[o+2]*0.114;if(d[o+3]>100&&lum<140)v|=(128>>k)}
+      }
+      out.push(v);
+    }
+  }
+  return out;
+}
+function vBytesToB64(arr){
+  var s='',CH=8192;
+  for(var i=0;i<arr.length;i+=CH){s+=String.fromCharCode.apply(null,arr.slice(i,i+CH))}
+  return btoa(s);
+}
+function vBuildEscJob(list,logo){
+  var bytes=[0x1B,0x40];                       /* init */
+  var full=(CFG.vCutType==='full');
+  /* roll header ticket */
+  for(var i=0;i<list.length;i++){
+    var cv=vThermalRoll([list[i]],logo,true);
+    bytes=bytes.concat(vEscRaster(cv));
+    bytes.push(0x1B,0x64,0x04);                 /* feed 4 lines so the cut clears the ticket */
+    bytes.push(0x1D,0x56,full?0x00:0x01);       /* GS V cut */
+  }
+  return bytes;
+}
+function vPrintTicketsPaged(list,logo){
+  /* system print fallback: one ticket per page -> drivers with 'cut per page' cut each */
+  try{
+    var mm=gPaperMM(),wmm=mm[0];if(mm[1]||gIsInkjet())wmm=72;
+    var imgs='',hmm=0;
+    for(var i=0;i<list.length;i++){
+      var cv=vThermalRoll([list[i]],logo,true);
+      hmm=Math.ceil(wmm*cv.height/cv.width)+4;
+      imgs+='<div class="t"><img src="'+cv.toDataURL('image/png')+'"></div>';
+    }
+    var w=null;try{w=window.open('','_blank')}catch(e){}
+    var doc='<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Booth codes</title><style>@page{size:'+wmm+'mm '+hmm+'mm;margin:0}body{margin:0}.t{page-break-after:always;break-after:page}img{width:100%;display:block}</style></head>'+
+      '<body onload="setTimeout(function(){window.print()},400)">'+imgs+'</body></html>';
+    if(w&&w.document){w.document.open();w.document.write(doc);w.document.close()}
+    else{gToast('Pop-up blocked. Allow pop-ups to print.')}
+  }catch(e){gToast('Could not print codes.')}
+}
+
 function vPrintThermal(){
   try{
     var a=vLoad(),list=[];
@@ -3299,8 +3360,14 @@ function vPrintThermal(){
     if(list.length>200&&!confirm('Print '+list.length+' codes in one long receipt? This uses a lot of paper.'))return;
     vLogoImg(function(logo){
     try{
-    var du=vThermalRoll(list,logo).toDataURL('image/png');
     var m=CFG.printMode||'rawbt';
+    if(CFG.vCut!==false){
+      if(m==='rawbt'&&gIsAndroid()){
+        try{var b64=vBytesToB64(vBuildEscJob(list,logo));window.location.href='intent:base64,'+b64+'#Intent;scheme=rawbt;package=ru.a402d.rawbtprinter;end;';return}catch(e){}
+      }
+      if(m!=='share'){vPrintTicketsPaged(list,logo);return}
+    }
+    var du=vThermalRoll(list,logo).toDataURL('image/png');
     if(m==='rawbt'&&gIsAndroid()){
       try{window.location.href='intent:'+du+'#Intent;scheme=rawbt;package=ru.a402d.rawbtprinter;end;';return}catch(e){}
     }
